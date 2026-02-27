@@ -1,24 +1,18 @@
 'use strict';
 
-const EvaluationRepo = require('./evaluation.repo');
-const { assertPositiveNumber } = require('../shared/utils/validation');
+const { assertEntityExists, assertPositiveNumber, ENTITIES, MANAGER_ROLES, requireRole } = require('../shared/services/validation');
 
 class EvaluationDomainService {
   constructor(_srv) {
-    this.repo = new EvaluationRepo();
   }
 
   async beforeCreate(req) {
+    requireRole(req, MANAGER_ROLES, 'Only managers can create evaluations');
     const data = req.data;
 
-    const userExists = await this.repo.existsUserById(data.userId);
-    if (!userExists) req.error(400, `Unknown userId '${data.userId}'`);
-
-    const evaluatorExists = await this.repo.existsUserById(data.evaluatorId);
-    if (!evaluatorExists) req.error(400, `Unknown evaluatorId '${data.evaluatorId}'`);
-
-    const projectExists = await this.repo.existsProjectById(data.projectId);
-    if (!projectExists) req.error(400, `Unknown projectId '${data.projectId}'`);
+    await assertEntityExists(ENTITIES.Users, data.userId, 'userId', req);
+    await assertEntityExists(ENTITIES.Users, data.evaluatorId, 'evaluatorId', req);
+    await assertEntityExists(ENTITIES.Projects, data.projectId, 'projectId', req);
 
     assertPositiveNumber(data.score, 'score', req);
   }

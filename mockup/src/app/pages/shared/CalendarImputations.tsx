@@ -381,7 +381,7 @@ export const CalendarImputations: React.FC<CalendarImputationsProps> = ({
   const rejectPeriod = async (period: ImputationPeriod) => {
     if (!currentUser) return;
     try {
-      const updated = await ImputationPeriodsAPI.reject(period.id, currentUser.id);
+      const updated = await ImputationPeriodsAPI.rejectEntry(period.id, currentUser.id);
       setPeriods((prev) => prev.map((entry) => (entry.id === updated.id ? updated : entry)));
       setImputations((prev) =>
         prev.map((entry) =>

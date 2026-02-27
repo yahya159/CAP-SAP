@@ -1,6 +1,9 @@
 'use strict';
 
 const TimeLogRepo = require('./time-log.repo');
+const AuthDomainService = require('../auth/auth.domain.service');
+const { assertEntityExists, ENTITIES } = require('../shared/services/validation');
+const { nowIso } = require('../shared/utils/timestamp');
 
 const extractEntityId = (req) => req.params?.[0]?.ID ?? req.params?.[0] ?? req.data?.ID;
 
@@ -15,19 +18,15 @@ const assertDuration = (value, req) => {
 class TimeLogDomainService {
   constructor(_srv) {
     this.repo = new TimeLogRepo();
+    this.auth = new AuthDomainService();
   }
 
   async beforeCreate(req) {
     const data = req.data;
 
-    const consultantExists = await this.repo.existsUserById(data.consultantId);
-    if (!consultantExists) req.error(400, `Unknown consultantId '${data.consultantId}'`);
-
-    const ticketExists = await this.repo.existsTicketById(data.ticketId);
-    if (!ticketExists) req.error(400, `Unknown ticketId '${data.ticketId}'`);
-
-    const projectExists = await this.repo.existsProjectById(data.projectId);
-    if (!projectExists) req.error(400, `Unknown projectId '${data.projectId}'`);
+    await assertEntityExists(ENTITIES.Users, data.consultantId, 'consultantId', req);
+    await assertEntityExists(ENTITIES.Tickets, data.ticketId, 'ticketId', req);
+    await assertEntityExists(ENTITIES.Projects, data.projectId, 'projectId', req);
 
     assertDuration(data.durationMinutes, req);
     if (!data.date) req.error(400, 'date is required');
@@ -42,21 +41,41 @@ class TimeLogDomainService {
       req.reject(409, 'TimeLog is immutable once sent to StraTIME');
     }
 
+    const protectedFields = ['sentToStraTIME', 'sentAt'];
+    for (const field of protectedFields) {
+      if (data[field] !== undefined && current && data[field] !== current[field]) {
+        req.reject(403, 'Use sendToStraTIME action to update StraTIME metadata');
+      }
+    }
+
     if (data.consultantId !== undefined) {
-      const consultantExists = await this.repo.existsUserById(data.consultantId);
-      if (!consultantExists) req.error(400, `Unknown consultantId '${data.consultantId}'`);
+      await assertEntityExists(ENTITIES.Users, data.consultantId, 'consultantId', req);
     }
     if (data.ticketId !== undefined) {
-      const ticketExists = await this.repo.existsTicketById(data.ticketId);
-      if (!ticketExists) req.error(400, `Unknown ticketId '${data.ticketId}'`);
+      await assertEntityExists(ENTITIES.Tickets, data.ticketId, 'ticketId', req);
     }
     if (data.projectId !== undefined) {
-      const projectExists = await this.repo.existsProjectById(data.projectId);
-      if (!projectExists) req.error(400, `Unknown projectId '${data.projectId}'`);
+      await assertEntityExists(ENTITIES.Projects, data.projectId, 'projectId', req);
     }
 
     assertDuration(data.durationMinutes, req);
     if (data.date !== undefined && !data.date) req.error(400, 'date is required');
+  }
+
+  async sendToStraTIME(req) {
+    const id = extractEntityId(req);
+    if (!id) req.reject(400, 'Missing TimeLogs ID');
+
+    const current = await this.repo.findById(id);
+    if (!current) req.reject(404, `TimeLogs '${id}' not found`);
+
+    const claims = this.auth.getRequestClaims(req);
+    this.auth.requireOwnerOrReviewer(req, current, 'consultantId', claims);
+
+    return this.repo.updateById(id, {
+      sentToStraTIME: true,
+      sentAt: nowIso(),
+    });
   }
 }
 

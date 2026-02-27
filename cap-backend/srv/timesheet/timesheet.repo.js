@@ -1,31 +1,11 @@
 'use strict';
 
 const cds = require('@sap/cds');
+const { ENTITIES } = require('../shared/services/validation');
 
 class TimesheetRepo {
-  async existsUserById(userId) {
-    const existing = await cds.db.run(
-      SELECT.one.from('sap.performance.dashboard.db.Users').columns('ID').where({ ID: userId })
-    );
-    return Boolean(existing);
-  }
-
-  async existsProjectById(projectId) {
-    const existing = await cds.db.run(
-      SELECT.one.from('sap.performance.dashboard.db.Projects').columns('ID').where({ ID: projectId })
-    );
-    return Boolean(existing);
-  }
-
-  async existsTicketById(ticketId) {
-    const existing = await cds.db.run(
-      SELECT.one.from('sap.performance.dashboard.db.Tickets').columns('ID').where({ ID: ticketId })
-    );
-    return Boolean(existing);
-  }
-
   async findById(id) {
-    return cds.db.run(SELECT.one.from('sap.performance.dashboard.db.Timesheets').where({ ID: id }));
+    return cds.db.run(SELECT.one.from(ENTITIES.Timesheets).where({ ID: id }));
   }
 }
 

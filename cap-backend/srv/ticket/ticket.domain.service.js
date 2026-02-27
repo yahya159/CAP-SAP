@@ -7,6 +7,7 @@
 const TicketRepo = require('./ticket.repo');
 const { generateTicketCode } = require('../shared/utils/id');
 const { nowIso } = require('../shared/utils/timestamp');
+const { assertEntityExists, ENTITIES, MANAGER_ROLES, requireRole } = require('../shared/services/validation');
 
 const TICKET_STATUS_TRANSITIONS = {
   NEW: new Set(['IN_PROGRESS', 'BLOCKED', 'REJECTED']),
@@ -38,10 +39,10 @@ class TicketDomainService {
     if (typeof data.assignedTo === 'string' && !data.assignedTo.trim()) data.assignedTo = null;
     if (typeof data.functionalTesterId === 'string' && !data.functionalTesterId.trim()) data.functionalTesterId = null;
 
-    await this._assertProjectExists(req, data.projectId);
-    await this._assertUserExists(req, data.createdBy, 'createdBy');
-    if (data.assignedTo) await this._assertUserExists(req, data.assignedTo, 'assignedTo');
-    if (data.functionalTesterId) await this._assertUserExists(req, data.functionalTesterId, 'functionalTesterId');
+    await assertEntityExists(ENTITIES.Projects, data.projectId, 'projectId', req);
+    await assertEntityExists(ENTITIES.Users, data.createdBy, 'createdBy', req);
+    if (data.assignedTo) await assertEntityExists(ENTITIES.Users, data.assignedTo, 'assignedTo', req);
+    if (data.functionalTesterId) await assertEntityExists(ENTITIES.Users, data.functionalTesterId, 'functionalTesterId', req);
 
     // Auto-generate ticketCode: TK-YYYY-XXXXXX
     const year = new Date().getFullYear();
@@ -53,10 +54,15 @@ class TicketDomainService {
     data.estimationHours = data.estimationHours ?? 0;
     data.createdAt     = data.createdAt    || nowIso();
 
-    // Serialize JSON arrays
-    data.history       = this._serializeArray(data.history ?? []);
-    data.tags          = this._serializeArray(data.tags ?? []);
-    data.documentationObjectIds = this._serializeArray(data.documentationObjectIds ?? []);
+    if (data.history !== undefined) {
+      data.history = this._coerceHistoryRows(data.history);
+    }
+    if (data.tags !== undefined) {
+      data.tags = this._coerceTagRows(data.tags);
+    }
+    if (data.documentationObjectIds !== undefined) {
+      data.documentationObjectIds = this._coerceDocumentationRows(data.documentationObjectIds);
+    }
   }
 
   /**
@@ -81,24 +87,23 @@ class TicketDomainService {
       }
     }
 
-    if (data.projectId !== undefined) await this._assertProjectExists(req, data.projectId);
-    if (data.createdBy !== undefined) await this._assertUserExists(req, data.createdBy, 'createdBy');
+    if (data.projectId !== undefined) await assertEntityExists(ENTITIES.Projects, data.projectId, 'projectId', req);
+    if (data.createdBy !== undefined) await assertEntityExists(ENTITIES.Users, data.createdBy, 'createdBy', req);
     if (data.assignedTo !== undefined && data.assignedTo !== null) {
-      await this._assertUserExists(req, data.assignedTo, 'assignedTo');
+      await assertEntityExists(ENTITIES.Users, data.assignedTo, 'assignedTo', req);
     }
     if (data.functionalTesterId !== undefined && data.functionalTesterId !== null) {
-      await this._assertUserExists(req, data.functionalTesterId, 'functionalTesterId');
+      await assertEntityExists(ENTITIES.Users, data.functionalTesterId, 'functionalTesterId', req);
     }
 
-    // Re-serialize JSON arrays if they were provided as arrays
-    if (Array.isArray(data.history)) {
-      data.history = JSON.stringify(data.history);
+    if (data.history !== undefined) {
+      data.history = this._coerceHistoryRows(data.history);
     }
-    if (Array.isArray(data.tags)) {
-      data.tags = JSON.stringify(data.tags);
+    if (data.tags !== undefined) {
+      data.tags = this._coerceTagRows(data.tags);
     }
-    if (Array.isArray(data.documentationObjectIds)) {
-      data.documentationObjectIds = JSON.stringify(data.documentationObjectIds);
+    if (data.documentationObjectIds !== undefined) {
+      data.documentationObjectIds = this._coerceDocumentationRows(data.documentationObjectIds);
     }
   }
 
@@ -119,10 +124,58 @@ class TicketDomainService {
 
   // ---- Private helpers ---------------------------------------------------
 
-  _serializeArray(value) {
-    if (Array.isArray(value)) return JSON.stringify(value);
-    if (typeof value === 'string') return value; // already serialized
-    return '[]';
+  _toArray(value) {
+    if (Array.isArray(value)) return value;
+    if (typeof value === 'string' && value.trim().startsWith('[')) {
+      try { return JSON.parse(value); } catch { return []; }
+    }
+    return [];
+  }
+
+  _coerceTagRows(value) {
+    const rows = this._toArray(value);
+    return rows
+      .map((row) => {
+        if (row && typeof row === 'object') {
+          const tag = String(row.tag ?? '').trim();
+          return tag ? { tag } : null;
+        }
+        const tag = String(row ?? '').trim();
+        return tag ? { tag } : null;
+      })
+      .filter(Boolean);
+  }
+
+  _coerceDocumentationRows(value) {
+    const rows = this._toArray(value);
+    return rows
+      .map((row) => {
+        if (row && typeof row === 'object') {
+          const docObjectId = String(row.docObjectId ?? '').trim();
+          return docObjectId ? { docObjectId } : null;
+        }
+        const docObjectId = String(row ?? '').trim();
+        return docObjectId ? { docObjectId } : null;
+      })
+      .filter(Boolean);
+  }
+
+  _coerceHistoryRows(value) {
+    const rows = this._toArray(value);
+    return rows
+      .map((row) => {
+        if (!row || typeof row !== 'object') {
+          const details = String(row ?? '').trim();
+          return details ? { event: 'LEGACY', details } : null;
+        }
+        const event = String(row.event ?? row.action ?? 'UPDATE').trim();
+        const details = row.details !== undefined ? row.details : JSON.stringify(row);
+        return {
+          event: event || 'UPDATE',
+          details: String(details ?? ''),
+        };
+      })
+      .filter(Boolean);
   }
 
   _deserializeArray(value) {
@@ -142,18 +195,6 @@ class TicketDomainService {
       }
     }
     throw new Error('Unable to allocate a unique ticketCode');
-  }
-
-  async _assertProjectExists(req, projectId) {
-    if (!projectId) return;
-    const exists = await this.repo.existsProjectById(projectId);
-    if (!exists) req.error(400, `Unknown projectId '${projectId}'`);
-  }
-
-  async _assertUserExists(req, userId, fieldName) {
-    if (!userId) return;
-    const exists = await this.repo.existsUserById(userId);
-    if (!exists) req.error(400, `Unknown ${fieldName} '${userId}'`);
   }
 }
 

@@ -1,8 +1,16 @@
 'use strict';
 
 const ImputationRepo = require('./imputation.repo');
+const AuthDomainService = require('../auth/auth.domain.service');
+const { assertEntityExists, ENTITIES } = require('../shared/services/validation');
+const { nowIso } = require('../shared/utils/timestamp');
 
 const extractEntityId = (req) => req.params?.[0]?.ID ?? req.params?.[0] ?? req.data?.ID;
+
+const IMPUTATION_TRANSITIONS = {
+  validate: new Set(['DRAFT', 'SUBMITTED', 'REJECTED']),
+  rejectEntry: new Set(['DRAFT', 'SUBMITTED']),
+};
 
 const assertHours = (value, req) => {
   if (value === undefined || value === null) return;
@@ -15,19 +23,15 @@ const assertHours = (value, req) => {
 class ImputationDomainService {
   constructor(_srv) {
     this.repo = new ImputationRepo();
+    this.auth = new AuthDomainService();
   }
 
   async beforeCreate(req) {
     const data = req.data;
 
-    const consultantExists = await this.repo.existsUserById(data.consultantId);
-    if (!consultantExists) req.error(400, `Unknown consultantId '${data.consultantId}'`);
-
-    const ticketExists = await this.repo.existsTicketById(data.ticketId);
-    if (!ticketExists) req.error(400, `Unknown ticketId '${data.ticketId}'`);
-
-    const projectExists = await this.repo.existsProjectById(data.projectId);
-    if (!projectExists) req.error(400, `Unknown projectId '${data.projectId}'`);
+    await assertEntityExists(ENTITIES.Users, data.consultantId, 'consultantId', req);
+    await assertEntityExists(ENTITIES.Tickets, data.ticketId, 'ticketId', req);
+    await assertEntityExists(ENTITIES.Projects, data.projectId, 'projectId', req);
 
     assertHours(data.hours, req);
     if (!String(data.periodKey ?? '').trim()) req.error(400, 'periodKey is required');
@@ -39,26 +43,16 @@ class ImputationDomainService {
     const id = extractEntityId(req);
     const current = id ? await this.repo.findById(id) : null;
 
-    if (
-      data.validationStatus !== undefined &&
-      current &&
-      data.validationStatus !== current.validationStatus
-    ) {
-      req.reject(403, 'Use validate/reject actions to change validation status');
+    const protectedFields = ['validationStatus', 'validatedBy', 'validatedAt'];
+    for (const field of protectedFields) {
+      if (data[field] !== undefined && current && data[field] !== current[field]) {
+        req.reject(403, 'Use validate/rejectEntry actions to change validation metadata');
+      }
     }
 
-    if (data.consultantId !== undefined) {
-      const consultantExists = await this.repo.existsUserById(data.consultantId);
-      if (!consultantExists) req.error(400, `Unknown consultantId '${data.consultantId}'`);
-    }
-    if (data.ticketId !== undefined) {
-      const ticketExists = await this.repo.existsTicketById(data.ticketId);
-      if (!ticketExists) req.error(400, `Unknown ticketId '${data.ticketId}'`);
-    }
-    if (data.projectId !== undefined) {
-      const projectExists = await this.repo.existsProjectById(data.projectId);
-      if (!projectExists) req.error(400, `Unknown projectId '${data.projectId}'`);
-    }
+    await assertEntityExists(ENTITIES.Users, data.consultantId, 'consultantId', req);
+    await assertEntityExists(ENTITIES.Tickets, data.ticketId, 'ticketId', req);
+    await assertEntityExists(ENTITIES.Projects, data.projectId, 'projectId', req);
 
     assertHours(data.hours, req);
     if (data.periodKey !== undefined && !String(data.periodKey).trim()) {
@@ -73,6 +67,44 @@ class ImputationDomainService {
     if (current && current.validationStatus !== 'DRAFT') {
       req.reject(409, 'Only DRAFT imputations can be deleted');
     }
+  }
+
+  async validate(req) {
+    return this._applyTransition(req, 'validate', {
+      validationStatus: 'VALIDATED',
+      validatedAt: nowIso(),
+    });
+  }
+
+  async rejectEntry(req) {
+    return this._applyTransition(req, 'rejectEntry', {
+      validationStatus: 'REJECTED',
+      validatedAt: nowIso(),
+    });
+  }
+
+  async _applyTransition(req, action, changes) {
+    const id = extractEntityId(req);
+    if (!id) req.reject(400, 'Missing Imputations ID');
+
+    const current = await this.repo.findById(id);
+    if (!current) req.reject(404, `Imputations '${id}' not found`);
+
+    const claims = this.auth.getRequestClaims(req);
+    this.auth.requireReviewerRole(req, claims);
+
+    const allowedFrom = IMPUTATION_TRANSITIONS[action] ?? new Set();
+    if (!allowedFrom.has(current.validationStatus)) {
+      req.reject(
+        409,
+        `Cannot ${action} Imputations '${id}': current validationStatus is '${current.validationStatus}'`
+      );
+    }
+
+    return this.repo.updateById(id, {
+      ...changes,
+      validatedBy: claims.sub,
+    });
   }
 }
 

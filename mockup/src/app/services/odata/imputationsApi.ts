@@ -68,17 +68,17 @@ export const ImputationsAPI = {
     return normalizeEntityRecord(data);
   },
 
-  async reject(
+  async rejectEntry(
     id: string,
     validatedBy: string,
     requestOptions?: ODataRequestOptions
   ): Promise<Imputation> {
-    const data = await odataFetch<Imputation>(`${entityPath('Imputations', id)}/reject`, {
+    const data = await odataFetch<Imputation>(`${entityPath('Imputations', id)}/rejectEntry`, {
       ...requestOptions,
       method: 'POST',
       body: JSON.stringify({ validatedBy }),
     });
-    if (!data) throw new Error(`reject returned no data for Imputation '${id}'`);
+    if (!data) throw new Error(`rejectEntry returned no data for Imputation '${id}'`);
     return normalizeEntityRecord(data);
   },
 };

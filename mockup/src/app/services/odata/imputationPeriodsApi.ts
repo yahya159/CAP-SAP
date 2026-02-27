@@ -78,17 +78,17 @@ export const ImputationPeriodsAPI = {
     return normalizeEntityRecord(data);
   },
 
-  async reject(
+  async rejectEntry(
     id: string,
     validatedBy: string,
     requestOptions?: ODataRequestOptions
   ): Promise<ImputationPeriod> {
-    const data = await odataFetch<ImputationPeriod>(`${entityPath('ImputationPeriods', id)}/reject`, {
+    const data = await odataFetch<ImputationPeriod>(`${entityPath('ImputationPeriods', id)}/rejectEntry`, {
       ...requestOptions,
       method: 'POST',
       body: JSON.stringify({ validatedBy }),
     });
-    if (!data) throw new Error(`reject returned no data for ImputationPeriod '${id}'`);
+    if (!data) throw new Error(`rejectEntry returned no data for ImputationPeriod '${id}'`);
     return normalizeEntityRecord(data);
   },
 };

@@ -1,6 +1,6 @@
 'use strict';
 
-const TimesheetRepo = require('./timesheet.repo');
+const { assertEntityExists, ENTITIES } = require('../shared/services/validation');
 
 const assertHoursRange = (hours, req) => {
   if (hours === undefined || hours === null) return;
@@ -12,22 +12,14 @@ const assertHoursRange = (hours, req) => {
 
 class TimesheetDomainService {
   constructor(_srv) {
-    this.repo = new TimesheetRepo();
   }
 
   async beforeCreate(req) {
     const data = req.data;
 
-    const userExists = await this.repo.existsUserById(data.userId);
-    if (!userExists) req.error(400, `Unknown userId '${data.userId}'`);
-
-    const projectExists = await this.repo.existsProjectById(data.projectId);
-    if (!projectExists) req.error(400, `Unknown projectId '${data.projectId}'`);
-
-    if (data.ticketId !== undefined && data.ticketId !== null && data.ticketId !== '') {
-      const ticketExists = await this.repo.existsTicketById(data.ticketId);
-      if (!ticketExists) req.error(400, `Unknown ticketId '${data.ticketId}'`);
-    }
+    await assertEntityExists(ENTITIES.Users, data.userId, 'userId', req);
+    await assertEntityExists(ENTITIES.Projects, data.projectId, 'projectId', req);
+    await assertEntityExists(ENTITIES.Tickets, data.ticketId, 'ticketId', req);
 
     assertHoursRange(data.hours, req);
     if (!data.date) req.error(400, 'date is required');
@@ -37,16 +29,13 @@ class TimesheetDomainService {
     const data = req.data;
 
     if (data.userId !== undefined) {
-      const userExists = await this.repo.existsUserById(data.userId);
-      if (!userExists) req.error(400, `Unknown userId '${data.userId}'`);
+      await assertEntityExists(ENTITIES.Users, data.userId, 'userId', req);
     }
     if (data.projectId !== undefined) {
-      const projectExists = await this.repo.existsProjectById(data.projectId);
-      if (!projectExists) req.error(400, `Unknown projectId '${data.projectId}'`);
+      await assertEntityExists(ENTITIES.Projects, data.projectId, 'projectId', req);
     }
-    if (data.ticketId !== undefined && data.ticketId !== null && data.ticketId !== '') {
-      const ticketExists = await this.repo.existsTicketById(data.ticketId);
-      if (!ticketExists) req.error(400, `Unknown ticketId '${data.ticketId}'`);
+    if (data.ticketId !== undefined) {
+      await assertEntityExists(ENTITIES.Tickets, data.ticketId, 'ticketId', req);
     }
 
     assertHoursRange(data.hours, req);

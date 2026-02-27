@@ -7,4 +7,8 @@ module.exports = (srv) => {
 
   srv.before('CREATE', 'ImputationPeriods', (req) => domain.beforeCreate(req));
   srv.before('UPDATE', 'ImputationPeriods', (req) => domain.beforeUpdate(req));
+  srv.on('submit', 'ImputationPeriods', (req) => domain.submit(req));
+  srv.on('validate', 'ImputationPeriods', (req) => domain.validate(req));
+  srv.on('rejectEntry', 'ImputationPeriods', (req) => domain.rejectEntry(req));
+  srv.on('sendToStraTIME', 'ImputationPeriods', (req) => domain.sendToStraTIME(req));
 };

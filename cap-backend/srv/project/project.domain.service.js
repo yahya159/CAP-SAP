@@ -1,6 +1,7 @@
 'use strict';
 
 const ProjectRepo = require('./project.repo');
+const { assertEntityExists, ENTITIES, MANAGER_ROLES, ADMIN_ONLY, requireRole } = require('../shared/services/validation');
 
 const PROJECT_TRANSITIONS = {
   PLANNED: new Set(['ACTIVE', 'CANCELLED']),
@@ -18,6 +19,7 @@ class ProjectDomainService {
   }
 
   async beforeCreate(req) {
+    requireRole(req, MANAGER_ROLES, 'Only managers can create projects');
     const data = req.data;
     if (!String(data.name ?? '').trim()) req.error(400, 'name is required');
     if (!data.managerId) req.error(400, 'managerId is required');
@@ -33,12 +35,10 @@ class ProjectDomainService {
   }
 
   async beforeUpdate(req) {
+    requireRole(req, MANAGER_ROLES, 'Only managers can update projects');
     const data = req.data;
 
-    if (data.managerId !== undefined) {
-      const exists = await this.repo.existsUserById(data.managerId);
-      if (!exists) req.error(400, `Unknown managerId '${data.managerId}'`);
-    }
+    await assertEntityExists(ENTITIES.Users, data.managerId, 'managerId', req);
 
     if (data.status !== undefined) {
       const id = extractEntityId(req);
@@ -55,6 +55,7 @@ class ProjectDomainService {
   }
 
   async beforeDelete(req) {
+    requireRole(req, ADMIN_ONLY, 'Only ADMIN can delete projects');
     const id = extractEntityId(req);
     if (!id) return;
 

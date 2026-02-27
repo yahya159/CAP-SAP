@@ -1,19 +1,22 @@
 'use strict';
 
 const cds = require('@sap/cds');
+const { ENTITIES } = require('../shared/services/validation');
 
 class ImputationPeriodRepo {
-  async existsUserById(userId) {
-    const existing = await cds.db.run(
-      SELECT.one.from('sap.performance.dashboard.db.Users').columns('ID').where({ ID: userId })
-    );
-    return Boolean(existing);
-  }
-
   async findById(id) {
     return cds.db.run(
-      SELECT.one.from('sap.performance.dashboard.db.ImputationPeriods').where({ ID: id })
+      SELECT.one.from(ENTITIES.ImputationPeriods).where({ ID: id })
     );
+  }
+
+  async updateById(id, changes) {
+    await cds.db.run(
+      UPDATE(ENTITIES.ImputationPeriods)
+        .where({ ID: id })
+        .with(changes)
+    );
+    return this.findById(id);
   }
 }
 

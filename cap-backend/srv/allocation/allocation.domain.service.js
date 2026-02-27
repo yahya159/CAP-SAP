@@ -1,7 +1,7 @@
 'use strict';
 
 const AllocationRepo = require('./allocation.repo');
-const { assertDateRange } = require('../shared/utils/validation');
+const { assertEntityExists, assertDateRange, ENTITIES, MANAGER_ROLES, requireRole } = require('../shared/services/validation');
 
 const extractEntityId = (req) => req.params?.[0]?.ID ?? req.params?.[0] ?? req.data?.ID;
 
@@ -19,32 +19,22 @@ class AllocationDomainService {
   }
 
   async beforeCreate(req) {
+    requireRole(req, MANAGER_ROLES, 'Only managers can manage allocations');
     const data = req.data;
 
-    if (data.userId !== undefined) {
-      const existsUser = await this.repo.existsUserById(data.userId);
-      if (!existsUser) req.error(400, `Unknown userId '${data.userId}'`);
-    }
-    if (data.projectId !== undefined) {
-      const existsProject = await this.repo.existsProjectById(data.projectId);
-      if (!existsProject) req.error(400, `Unknown projectId '${data.projectId}'`);
-    }
+    await assertEntityExists(ENTITIES.Users, data.userId, 'userId', req);
+    await assertEntityExists(ENTITIES.Projects, data.projectId, 'projectId', req);
 
     assertPercent(data.allocationPercent, req);
     assertDateRange(data.startDate, data.endDate, req);
   }
 
   async beforeUpdate(req) {
+    requireRole(req, MANAGER_ROLES, 'Only managers can manage allocations');
     const data = req.data;
 
-    if (data.userId !== undefined) {
-      const existsUser = await this.repo.existsUserById(data.userId);
-      if (!existsUser) req.error(400, `Unknown userId '${data.userId}'`);
-    }
-    if (data.projectId !== undefined) {
-      const existsProject = await this.repo.existsProjectById(data.projectId);
-      if (!existsProject) req.error(400, `Unknown projectId '${data.projectId}'`);
-    }
+    await assertEntityExists(ENTITIES.Users, data.userId, 'userId', req);
+    await assertEntityExists(ENTITIES.Projects, data.projectId, 'projectId', req);
 
     assertPercent(data.allocationPercent, req);
 

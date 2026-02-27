@@ -1,92 +1,20 @@
-using { sap.performance.dashboard.db as db } from '../db/schema';
+using from './allocation/allocation.service';
+using from './auth/auth.service';
+using from './deliverable/deliverable.service';
+using from './documentation/documentation.service';
+using from './evaluation/evaluation.service';
+using from './imputation/imputation.service';
+using from './imputation-period/imputation-period.service';
+using from './leave-request/leave-request.service';
+using from './notification/notification.service';
+using from './project/project.service';
+using from './reference-data/reference-data.service';
+using from './ticket/ticket.service';
+using from './time-log/time-log.service';
+using from './timesheet/timesheet.service';
+using from './user/user.service';
+using from './wricef/wricef.service';
 
-/**
- * Unified Performance Service – all entity sets exposed on one path.
- * Path matches the frontend: VITE_ODATA_BASE_URL = /odata/v4/performance
- *
- * Bound actions are registered in JS handlers (performance-service.js).
- * CAP auto-discovers this file and loads performance-service.js by convention.
- */
 @path: '/odata/v4/performance'
 service PerformanceService {
-
-  // ---- Ticket domain -------------------------------------------------------
-  entity Tickets             as projection on db.Tickets;
-
-  // ---- User & Project stubs ------------------------------------------------
-  entity Users               as projection on db.Users;
-  entity Projects            as projection on db.Projects;
-
-  // ---- Other entity stubs --------------------------------------------------
-  entity Timesheets          as projection on db.Timesheets;
-  entity Evaluations         as projection on db.Evaluations;
-  entity Deliverables        as projection on db.Deliverables;
-  entity Allocations         as projection on db.Allocations;
-  entity LeaveRequests       as projection on db.LeaveRequests;
-
-  // ---- Imputation domain ---------------------------------------------------
-  entity Imputations as projection on db.Imputations actions {
-    // POST /Imputations('<id>')/validate  { validatedBy }
-    action validate(validatedBy: String) returns Imputations;
-    // POST /Imputations('<id>')/reject    { validatedBy }
-    action reject(validatedBy: String) returns Imputations;
-  };
-
-  entity ImputationPeriods as projection on db.ImputationPeriods actions {
-    // POST /ImputationPeriods('<id>')/submit
-    action submit() returns ImputationPeriods;
-    // POST /ImputationPeriods('<id>')/validate   { validatedBy }
-    action validate(validatedBy: String) returns ImputationPeriods;
-    // POST /ImputationPeriods('<id>')/reject     { validatedBy }
-    action reject(validatedBy: String) returns ImputationPeriods;
-    // POST /ImputationPeriods('<id>')/sendToStraTIME { sentBy }
-    action sendToStraTIME(sentBy: String) returns ImputationPeriods;
-  };
-
-  entity TimeLogs as projection on db.TimeLogs actions {
-    // POST /TimeLogs('<id>')/sendToStraTIME
-    action sendToStraTIME() returns TimeLogs;
-  };
-
-  // ---- WRICEF domain ---------------------------------------------------------
-  entity Wricefs             as projection on db.Wricefs;
-  entity WricefObjects       as projection on db.WricefObjects;
-
-  // ---- Reference / Knowledge -----------------------------------------------
-  entity Abaques             as projection on db.Abaques;
-  entity DocumentationObjects as projection on db.DocumentationObjects;
-  entity Notifications       as projection on db.Notifications;
-  entity ReferenceData       as projection on db.ReferenceData;
-
-  type AuthUser {
-    id                 : String(50);
-    name               : String(100);
-    email              : String(150);
-    role               : db.UserRole;
-    active             : Boolean;
-    skills             : LargeString;
-    certifications     : LargeString;
-    availabilityPercent: Integer;
-    teamId             : String(50);
-    avatarUrl          : String(500);
-  }
-
-  type AuthSession {
-    token    : String(4096);
-    expiresAt: DateTime;
-    user     : AuthUser;
-  }
-
-  type QuickAccessAccount {
-    id   : String(50);
-    name : String(100);
-    email: String(150);
-    role : db.UserRole;
-  }
-
-  // ---- Authentication action ------------------------------------------------
-  // POST /authenticate { email, password }
-  action authenticate(email: String, password: String) returns AuthSession;
-  // GET/POST /quickAccessAccounts
-  action quickAccessAccounts() returns array of QuickAccessAccount;
 }

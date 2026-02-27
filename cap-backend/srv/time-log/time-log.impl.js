@@ -7,4 +7,5 @@ module.exports = (srv) => {
 
   srv.before('CREATE', 'TimeLogs', (req) => domain.beforeCreate(req));
   srv.before('UPDATE', 'TimeLogs', (req) => domain.beforeUpdate(req));
+  srv.on('sendToStraTIME', 'TimeLogs', (req) => domain.sendToStraTIME(req));
 };

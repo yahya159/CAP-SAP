@@ -1,6 +1,7 @@
 'use strict';
 
 const UserRepo = require('./user.repo');
+const { ADMIN_ONLY, requireRole } = require('../shared/services/validation');
 
 const extractEntityId = (req) => req.params?.[0]?.ID ?? req.params?.[0] ?? req.data?.ID;
 const normalizeEmail = (value) => String(value ?? '').trim().toLowerCase();
@@ -11,6 +12,7 @@ class UserDomainService {
   }
 
   async beforeCreate(req) {
+    requireRole(req, ADMIN_ONLY, 'Only ADMIN can create users');
     const email = normalizeEmail(req.data?.email);
     if (!email) req.reject(400, 'email is required');
     req.data.email = email;
@@ -20,6 +22,7 @@ class UserDomainService {
   }
 
   async beforeUpdate(req) {
+    requireRole(req, ADMIN_ONLY, 'Only ADMIN can update users');
     if (req.data?.email === undefined) return;
 
     const email = normalizeEmail(req.data.email);
@@ -34,6 +37,7 @@ class UserDomainService {
   }
 
   async beforeDelete(req) {
+    requireRole(req, ADMIN_ONLY, 'Only ADMIN can delete users');
     const id = extractEntityId(req);
     if (!id) return;
 

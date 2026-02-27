@@ -1,6 +1,7 @@
 'use strict';
 
 const ReferenceDataRepo = require('./reference-data.repo');
+const { ADMIN_ONLY, requireRole } = require('../shared/services/validation');
 
 const extractEntityId = (req) => req.params?.[0]?.ID ?? req.params?.[0] ?? req.data?.ID;
 
@@ -10,6 +11,7 @@ class ReferenceDataDomainService {
   }
 
   async beforeCreate(req) {
+    requireRole(req, ADMIN_ONLY, 'Only ADMIN can manage reference data');
     const type = String(req.data?.type ?? '').trim();
     const code = String(req.data?.code ?? '').trim();
     if (!type) req.error(400, 'type is required');
@@ -20,6 +22,7 @@ class ReferenceDataDomainService {
   }
 
   async beforeUpdate(req) {
+    requireRole(req, ADMIN_ONLY, 'Only ADMIN can manage reference data');
     const id = extractEntityId(req);
     if (!id) return;
 

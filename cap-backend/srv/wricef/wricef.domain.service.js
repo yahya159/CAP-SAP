@@ -1,7 +1,7 @@
 'use strict';
 
 const WricefRepo = require('./wricef.repo');
-const { assertInEnum } = require('../shared/utils/validation');
+const { assertEntityExists, assertInEnum, ENTITIES, MANAGER_ROLES, requireRole } = require('../shared/services/validation');
 
 const WRICEF_TYPES = ['W', 'R', 'I', 'C', 'E', 'F'];
 const extractEntityId = (req) => req.params?.[0]?.ID ?? req.params?.[0] ?? req.data?.ID;
@@ -12,8 +12,8 @@ class WricefDomainService {
   }
 
   async beforeCreate(req) {
-    const existsProject = await this.repo.existsProjectById(req.data.projectId);
-    if (!existsProject) req.error(400, `Unknown projectId '${req.data.projectId}'`);
+    requireRole(req, MANAGER_ROLES, 'Only managers can manage WRICEF data');
+    await assertEntityExists(ENTITIES.Projects, req.data.projectId, 'projectId', req);
   }
 
   async beforeDelete(req) {
@@ -23,19 +23,20 @@ class WricefDomainService {
   }
 
   async beforeCreateObject(req) {
+    requireRole(req, MANAGER_ROLES, 'Only managers can manage WRICEF objects');
     const data = req.data;
 
     const existsWricef = await this.repo.existsWricefById(data.wricefId);
     if (!existsWricef) req.error(400, `Unknown wricefId '${data.wricefId}'`);
 
-    const existsProject = await this.repo.existsProjectById(data.projectId);
-    if (!existsProject) req.error(400, `Unknown projectId '${data.projectId}'`);
+    await assertEntityExists(ENTITIES.Projects, data.projectId, 'projectId', req);
 
     assertInEnum(data.type, WRICEF_TYPES, 'type', req);
     if (!String(data.title ?? '').trim()) req.error(400, 'title is required');
   }
 
   async beforeUpdateObject(req) {
+    requireRole(req, MANAGER_ROLES, 'Only managers can manage WRICEF objects');
     const data = req.data;
 
     if (data.wricefId !== undefined) {
@@ -43,8 +44,7 @@ class WricefDomainService {
       if (!existsWricef) req.error(400, `Unknown wricefId '${data.wricefId}'`);
     }
     if (data.projectId !== undefined) {
-      const existsProject = await this.repo.existsProjectById(data.projectId);
-      if (!existsProject) req.error(400, `Unknown projectId '${data.projectId}'`);
+      await assertEntityExists(ENTITIES.Projects, data.projectId, 'projectId', req);
     }
   }
 }

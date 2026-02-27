@@ -182,6 +182,25 @@ describe('Projects entity', () => {
 });
 
 describe('Imputation state machine', () => {
+  beforeAll(async () => {
+    await ensureAuth();
+  });
+
+  const createDraftPeriod = async () => {
+    const suffix = Math.random().toString(36).slice(2, 10).toUpperCase();
+    const { data } = await POST(
+      '/odata/v4/performance/ImputationPeriods',
+      {
+        periodKey: `IT-${suffix}`,
+        consultantId: 'u-tech',
+        startDate: '2026-03-01',
+        endDate: '2026-03-15',
+      },
+      withAuth()
+    );
+    return data;
+  };
+
   test('POST /Imputations(id)/validate transitions DRAFT -> VALIDATED', async () => {
     const { data: list } = await GET('/odata/v4/performance/Imputations?$top=1', withAuth());
     expect(list.value.length).toBeGreaterThan(0);
@@ -200,50 +219,42 @@ describe('Imputation state machine', () => {
   });
 
   test('POST /ImputationPeriods(id)/submit transitions DRAFT -> SUBMITTED', async () => {
-    const { data: list } = await GET('/odata/v4/performance/ImputationPeriods?$top=5', withAuth());
-    expect(list.value.length).toBeGreaterThan(0);
-
-    // Find a period in DRAFT status
-    const draftPeriod = list.value.find((p) => p.status === 'DRAFT');
-    if (draftPeriod) {
-      const { status, data } = await POST(
-        `/odata/v4/performance/ImputationPeriods('${draftPeriod.ID}')/submit`,
-        {},
-        withAuth()
-      );
-      expect(status).toBe(200);
-      expect(data.status).toBe('SUBMITTED');
-    }
+    const draftPeriod = await createDraftPeriod();
+    const { status, data } = await POST(
+      `/odata/v4/performance/ImputationPeriods('${draftPeriod.ID}')/submit`,
+      {},
+      withAuth()
+    );
+    expect(status).toBe(200);
+    expect(data.status).toBe('SUBMITTED');
   });
 
   test('POST /ImputationPeriods(id)/validate on SUBMITTED transitions to VALIDATED', async () => {
-    const { data: list } = await GET('/odata/v4/performance/ImputationPeriods?$top=5', withAuth());
-    const submitted = list.value.find((p) => p.status === 'SUBMITTED');
-    if (submitted) {
-      const { status, data } = await POST(
-        `/odata/v4/performance/ImputationPeriods('${submitted.ID}')/validate`,
-        { validatedBy: 'u-manager' },
-        withAuth()
-      );
-      expect(status).toBe(200);
-      expect(data.status).toBe('VALIDATED');
-    }
+    const created = await createDraftPeriod();
+    await POST(`/odata/v4/performance/ImputationPeriods('${created.ID}')/submit`, {}, withAuth());
+
+    const { status, data } = await POST(
+      `/odata/v4/performance/ImputationPeriods('${created.ID}')/validate`,
+      { validatedBy: 'u-manager' },
+      withAuth()
+    );
+    expect(status).toBe(200);
+    expect(data.status).toBe('VALIDATED');
   });
 
   test('POST /ImputationPeriods(id)/submit on already SUBMITTED returns 409', async () => {
-    const { data: list } = await GET('/odata/v4/performance/ImputationPeriods?$top=5', withAuth());
-    const submitted = list.value.find((p) => p.status === 'SUBMITTED');
-    if (submitted) {
-      try {
-        await POST(
-          `/odata/v4/performance/ImputationPeriods('${submitted.ID}')/submit`,
-          {},
-          withAuth()
-        );
-        fail('Should have thrown a conflict error');
-      } catch (err) {
-        expect(err.response?.status ?? err.status).toBe(409);
-      }
+    const created = await createDraftPeriod();
+    await POST(`/odata/v4/performance/ImputationPeriods('${created.ID}')/submit`, {}, withAuth());
+
+    try {
+      await POST(
+        `/odata/v4/performance/ImputationPeriods('${created.ID}')/submit`,
+        {},
+        withAuth()
+      );
+      fail('Should have thrown a conflict error');
+    } catch (err) {
+      expect(err.response?.status ?? err.status).toBe(409);
     }
   });
 });

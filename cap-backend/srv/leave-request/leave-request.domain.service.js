@@ -2,7 +2,7 @@
 
 const LeaveRequestRepo = require('./leave-request.repo');
 const { nowIso } = require('../shared/utils/timestamp');
-const { assertDateRange } = require('../shared/utils/validation');
+const { assertEntityExists, assertDateRange, ENTITIES, MANAGER_ROLES, requireRole } = require('../shared/services/validation');
 
 const LEAVE_TRANSITIONS = {
   PENDING: new Set(['APPROVED', 'REJECTED']),
@@ -20,11 +20,8 @@ class LeaveRequestDomainService {
   async beforeCreate(req) {
     const data = req.data;
 
-    const consultantExists = await this.repo.existsUserById(data.consultantId);
-    if (!consultantExists) req.error(400, `Unknown consultantId '${data.consultantId}'`);
-
-    const managerExists = await this.repo.existsUserById(data.managerId);
-    if (!managerExists) req.error(400, `Unknown managerId '${data.managerId}'`);
+    await assertEntityExists(ENTITIES.Users, data.consultantId, 'consultantId', req);
+    await assertEntityExists(ENTITIES.Users, data.managerId, 'managerId', req);
 
     assertDateRange(data.startDate, data.endDate, req);
     if (data.status === undefined) data.status = 'PENDING';
@@ -35,14 +32,8 @@ class LeaveRequestDomainService {
     const id = extractEntityId(req);
     const current = id ? await this.repo.findById(id) : null;
 
-    if (data.consultantId !== undefined) {
-      const consultantExists = await this.repo.existsUserById(data.consultantId);
-      if (!consultantExists) req.error(400, `Unknown consultantId '${data.consultantId}'`);
-    }
-    if (data.managerId !== undefined) {
-      const managerExists = await this.repo.existsUserById(data.managerId);
-      if (!managerExists) req.error(400, `Unknown managerId '${data.managerId}'`);
-    }
+    await assertEntityExists(ENTITIES.Users, data.consultantId, 'consultantId', req);
+    await assertEntityExists(ENTITIES.Users, data.managerId, 'managerId', req);
 
     if (data.startDate !== undefined || data.endDate !== undefined) {
       const startDate = data.startDate ?? current?.startDate;
@@ -51,6 +42,7 @@ class LeaveRequestDomainService {
     }
 
     if (data.status !== undefined && current && data.status !== current.status) {
+      requireRole(req, MANAGER_ROLES, 'Only managers can approve/reject leave requests');
       const allowed = LEAVE_TRANSITIONS[current.status] || new Set();
       if (!allowed.has(data.status)) {
         req.reject(409, `Invalid leave request status transition: ${current.status} -> ${data.status}`);

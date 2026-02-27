@@ -1,21 +1,17 @@
 'use strict';
 
-const DocumentationRepo = require('./documentation.repo');
+const { assertEntityExists, ENTITIES } = require('../shared/services/validation');
 const { nowIso } = require('../shared/utils/timestamp');
 
 class DocumentationDomainService {
   constructor(_srv) {
-    this.repo = new DocumentationRepo();
   }
 
   async beforeCreate(req) {
     const data = req.data;
 
-    const existsProject = await this.repo.existsProjectById(data.projectId);
-    if (!existsProject) req.error(400, `Unknown projectId '${data.projectId}'`);
-
-    const existsAuthor = await this.repo.existsUserById(data.authorId);
-    if (!existsAuthor) req.error(400, `Unknown authorId '${data.authorId}'`);
+    await assertEntityExists(ENTITIES.Projects, data.projectId, 'projectId', req);
+    await assertEntityExists(ENTITIES.Users, data.authorId, 'authorId', req);
 
     const timestamp = nowIso();
     data.createdAt = timestamp;
@@ -26,14 +22,8 @@ class DocumentationDomainService {
     const data = req.data;
     data.updatedAt = nowIso();
 
-    if (data.projectId !== undefined) {
-      const existsProject = await this.repo.existsProjectById(data.projectId);
-      if (!existsProject) req.error(400, `Unknown projectId '${data.projectId}'`);
-    }
-    if (data.authorId !== undefined) {
-      const existsAuthor = await this.repo.existsUserById(data.authorId);
-      if (!existsAuthor) req.error(400, `Unknown authorId '${data.authorId}'`);
-    }
+    await assertEntityExists(ENTITIES.Projects, data.projectId, 'projectId', req);
+    await assertEntityExists(ENTITIES.Users, data.authorId, 'authorId', req);
   }
 }
 
