@@ -212,12 +212,6 @@ export const ROLE_ROUTE_REGISTRY: Record<UserRole, RoleRouteGroup> = {
         nav: { label: 'Projects', iconKey: 'folder-kanban' },
       },
       {
-        id: 'tech-tasks',
-        path: 'tasks',
-        lazy: lazyNamed(() => import('../pages/consultant-tech/MyTasks'), 'MyTasks'),
-        nav: { label: 'My Tasks', iconKey: 'layout-dashboard' },
-      },
-      {
         id: 'tech-tickets',
         path: 'tickets',
         lazy: lazyNamed(() => import('../pages/consultant-tech/TechTickets'), 'TechTickets'),

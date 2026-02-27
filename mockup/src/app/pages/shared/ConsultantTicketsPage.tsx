@@ -44,6 +44,8 @@ import {
   Scale,
   Send,
 } from 'lucide-react';
+import { DragDropContext, Droppable, Draggable, DropResult } from '@hello-pangea/dnd';
+import { cn } from '../../components/ui/utils';
 import { toast } from 'sonner';
 import { Button } from '../../components/ui/button';
 import { Input } from '../../components/ui/input';
@@ -606,23 +608,35 @@ export const ConsultantTicketsPage: React.FC<ConsultantTicketsPageProps> = ({
   };
 
   // ---------------------------------------------------------------------------
-  // Kanban drag/drop (native HTML5)
+  // Calendar drag/drop (native HTML5)
   // ---------------------------------------------------------------------------
 
   const onDragStart = (e: React.DragEvent, ticketId: string) => {
     e.dataTransfer.setData('text/plain', ticketId);
   };
 
-  const onDrop = (e: React.DragEvent, targetStatus: TicketStatus) => {
-    e.preventDefault();
-    const ticketId = e.dataTransfer.getData('text/plain');
-    const ticket = tickets.find((t) => t.id === ticketId);
-    if (ticket && ticket.status !== targetStatus) {
-      void changeStatus(ticket, targetStatus);
-    }
-  };
-
   const onDragOver = (e: React.DragEvent) => e.preventDefault();
+
+  // ---------------------------------------------------------------------------
+  // Kanban drag/drop (@hello-pangea/dnd)
+  // ---------------------------------------------------------------------------
+
+  const handleDragEnd = useCallback((result: DropResult) => {
+    if (!result.destination || viewMode !== 'kanban') return;
+    const sourceId = result.source.droppableId;
+    const destinationId = result.destination.droppableId;
+    if (sourceId === destinationId) return;
+
+    const ticketId = result.draggableId;
+    const ticket = tickets.find((t) => t.id === ticketId);
+    
+    if (ticket) {
+      const targetStatus = destinationId as TicketStatus;
+      if (ticket.status !== targetStatus) {
+        void changeStatus(ticket, targetStatus);
+      }
+    }
+  }, [tickets, viewMode, changeStatus]);
 
   // ---------------------------------------------------------------------------
   // Render
@@ -811,58 +825,75 @@ export const ConsultantTicketsPage: React.FC<ConsultantTicketsPageProps> = ({
             </div>
           </div>
         ) : (
-          <div className="flex gap-3 overflow-x-auto pb-4">
-            {STATUS_ORDER.map((status) => {
-              const col = filteredTickets.filter((t) => t.status === status);
-              return (
-                <div
-                  key={status}
-                  className="min-w-[240px] flex-1 rounded-lg border bg-muted/30 p-3"
-                  onDragOver={onDragOver}
-                  onDrop={(e) => onDrop(e, status)}
-                >
-                  <div className="mb-3 flex items-center justify-between">
-                    <Badge className={statusColor[status]}>{TICKET_STATUS_LABELS[status]}</Badge>
-                    <span className="text-xs text-muted-foreground">{col.length}</span>
-                  </div>
-                  <div className="space-y-2">
-                    {col.map((ticket) => (
+          <DragDropContext onDragEnd={handleDragEnd}>
+            <div className="flex gap-3 overflow-x-auto pb-4">
+              {STATUS_ORDER.map((status) => {
+                const col = filteredTickets.filter((t) => t.status === status);
+                return (
+                  <Droppable key={status} droppableId={status}>
+                    {(provided, snapshot) => (
                       <div
-                        key={ticket.id}
-                        draggable
-                        onDragStart={(e) => onDragStart(e, ticket.id)}
-                        onClick={() => openTicketDetails(ticket.id)}
-                        className="cursor-grab rounded-lg border bg-card p-3 shadow-sm hover:shadow transition"
+                        ref={provided.innerRef}
+                        {...provided.droppableProps}
+                        className={cn(
+                          "min-w-[240px] flex-1 rounded-lg border p-3 flex flex-col transition-colors",
+                          snapshot.isDraggingOver ? "bg-muted/50 border-primary/30" : "bg-muted/30"
+                        )}
                       >
-                        <div className="flex items-start justify-between gap-1">
-                          <p className="text-sm font-medium text-foreground">{ticket.title}</p>
-                          {isFullyImputed(ticket.id) && (
-                            <CheckCircle2 className="h-3.5 w-3.5 text-emerald-500 shrink-0 mt-0.5" />
-                          )}
+                        <div className="mb-3 flex items-center justify-between">
+                          <Badge className={statusColor[status]}>{TICKET_STATUS_LABELS[status]}</Badge>
+                          <span className="text-xs text-muted-foreground">{col.length}</span>
                         </div>
-                        <p className="mt-1 text-xs text-muted-foreground line-clamp-2">{ticket.description}</p>
-                        <div className="mt-2 flex items-center justify-between">
-                          <div className="flex gap-1">
-                            <Badge className={priorityColor[ticket.priority] + ' text-[10px]'}>{ticket.priority}</Badge>
-                            <Badge className={natureColor[ticket.nature] + ' text-[10px]'}>{TICKET_NATURE_LABELS[ticket.nature]}</Badge>
-                          </div>
-                          <div className="flex items-center gap-2">
-                            {(ticket.effortHours ?? 0) > 0 && (
-                              <span className="text-[10px] font-mono flex items-center gap-0.5 text-muted-foreground">
-                                <Clock className="h-2.5 w-2.5" />
-                                {ticket.effortHours}h
-                              </span>
-                            )}
-                            <span className="text-[10px] text-muted-foreground">{userName(ticket.assignedTo)}</span>
-                          </div>
+                        <div className="space-y-2 min-h-[100px] flex-1">
+                          {col.map((ticket, index) => (
+                            <Draggable key={ticket.id} draggableId={ticket.id} index={index}>
+                              {(provided, snapshot) => (
+                                <div
+                                  ref={provided.innerRef}
+                                  {...provided.draggableProps}
+                                  {...provided.dragHandleProps}
+                                  onClick={() => openTicketDetails(ticket.id)}
+                                  className={cn(
+                                    "rounded-lg border bg-card p-3 shadow-sm transition",
+                                    snapshot.isDragging ? "shadow-md scale-[1.02] rotate-2 z-50 ring-1 ring-primary/20 brightness-110 cursor-grabbing" : "cursor-grab hover:shadow"
+                                  )}
+                                  style={provided.draggableProps.style}
+                                >
+                                  <div className="flex items-start justify-between gap-1">
+                                    <p className="text-sm font-medium text-foreground">{ticket.title}</p>
+                                    {isFullyImputed(ticket.id) && (
+                                      <CheckCircle2 className="h-3.5 w-3.5 text-emerald-500 shrink-0 mt-0.5" />
+                                    )}
+                                  </div>
+                                  <p className="mt-1 text-xs text-muted-foreground line-clamp-2">{ticket.description}</p>
+                                  <div className="mt-2 flex items-center justify-between">
+                                    <div className="flex gap-1">
+                                      <Badge className={priorityColor[ticket.priority] + ' text-[10px]'}>{ticket.priority}</Badge>
+                                      <Badge className={natureColor[ticket.nature] + ' text-[10px]'}>{TICKET_NATURE_LABELS[ticket.nature]}</Badge>
+                                    </div>
+                                    <div className="flex items-center gap-2">
+                                      {(ticket.effortHours ?? 0) > 0 && (
+                                        <span className="text-[10px] font-mono flex items-center gap-0.5 text-muted-foreground">
+                                          <Clock className="h-2.5 w-2.5" />
+                                          {ticket.effortHours}h
+                                        </span>
+                                      )}
+                                      <span className="text-[10px] text-muted-foreground">{userName(ticket.assignedTo)}</span>
+                                    </div>
+                                  </div>
+                                </div>
+                              )}
+                            </Draggable>
+                          ))}
+                          {provided.placeholder}
                         </div>
                       </div>
-                    ))}
-                  </div>
-                </div>
-              );
-            })}
-          </div>
+                    )}
+                  </Droppable>
+                );
+              })}
+            </div>
+          </DragDropContext>
         )}
       </div>
 
@@ -1150,8 +1181,8 @@ export const ConsultantTicketsPage: React.FC<ConsultantTicketsPageProps> = ({
                 <div className="grid grid-cols-2 gap-3 text-sm">
                   <div><span className="text-muted-foreground">Ticket ID:</span> {selectedTicket.ticketCode}</div>
                   <div><span className="text-muted-foreground">WRICEF:</span> {selectedTicket.wricefId}</div>
-                  <div><span className="text-muted-foreground">Module:</span> {SAP_MODULE_LABELS[selectedTicket.module]}</div>
-                  <div><span className="text-muted-foreground">Complexity:</span> {TICKET_COMPLEXITY_LABELS[selectedTicket.complexity]}</div>
+                  <div><span className="text-muted-foreground">Module:</span> {selectedTicket.module ? SAP_MODULE_LABELS[selectedTicket.module as SAPModule] : '-'}</div>
+                  <div><span className="text-muted-foreground">Complexity:</span> {selectedTicket.complexity ? TICKET_COMPLEXITY_LABELS[selectedTicket.complexity] : '-'}</div>
                   <div><span className="text-muted-foreground">Estimation:</span> {selectedTicket.estimationHours}h</div>
                   <div><span className="text-muted-foreground">Actual Effort:</span> {selectedTicket.effortHours}h</div>
                   <div><span className="text-muted-foreground">Project:</span> {projectName(selectedTicket.projectId)}</div>

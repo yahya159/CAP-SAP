@@ -17,7 +17,6 @@ export const USER_ROLE_LABELS: Record<UserRole, string> = {
   DEV_COORDINATOR: 'Dev Coordinator',
 };
 
-export type TaskStatus = 'TO_DO' | 'IN_PROGRESS' | 'BLOCKED' | 'DONE' | 'CANCELLED';
 export type Priority = 'LOW' | 'MEDIUM' | 'HIGH' | 'CRITICAL';
 export type ProjectStatus = 'PLANNED' | 'ACTIVE' | 'ON_HOLD' | 'COMPLETED' | 'CANCELLED';
 export type RiskLevel = 'NONE' | 'LOW' | 'MEDIUM' | 'HIGH' | 'CRITICAL';
@@ -340,35 +339,13 @@ export interface Project {
   wricef?: never;
 }
 
-export interface Task {
-  id: string;
-  projectId: string;
-  title: string;
-  description: string;
-  status: TaskStatus;
-  priority: Priority;
-  assigneeId?: string;
-  assignerId?: string;
-  plannedStart: string;
-  plannedEnd: string;
-  realStart?: string;
-  realEnd?: string;
-  progressPercent: number;
-  estimatedHours: number;
-  actualHours: number;
-  effortHours: number;
-  isCritical: boolean;
-  riskLevel: RiskLevel;
-  comments?: string;
-}
-
 export interface Timesheet {
   id: string;
   userId: string;
   date: string;
   hours: number;
   projectId: string;
-  taskId?: string;
+  ticketId?: string;
   comment?: string;
 }
 
@@ -393,7 +370,7 @@ export interface Evaluation {
 export interface Deliverable {
   id: string;
   projectId: string;
-  taskId?: string;
+  ticketId?: string;
   type: string;
   name: string;
   url?: string;
@@ -430,9 +407,9 @@ export interface Ticket {
   /** Tags for search / AI matching */
   tags?: string[];
   /** WRICEF reference for the ticket */
-  wricefId: string;
+  wricefId?: string | null;
   /** SAP module assignment */
-  module: SAPModule;
+  module?: SAPModule | null;
   /** Estimation / chiffrage in hours */
   estimationHours: number;
   /** Business complexity level */
@@ -455,7 +432,7 @@ export interface Notification {
 
 export interface ReferenceData {
   id: string;
-  type: 'TASK_STATUS' | 'PRIORITY' | 'PROJECT_TYPE' | 'SKILL';
+  type: 'TICKET_STATUS' | 'PRIORITY' | 'PROJECT_TYPE' | 'SKILL';
   code: string;
   label: string;
   active: boolean;

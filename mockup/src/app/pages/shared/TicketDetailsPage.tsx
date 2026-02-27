@@ -192,7 +192,7 @@ export const TicketDetailsPage: React.FC = () => {
             <Badge className={statusColor[ticket.status]}>{TICKET_STATUS_LABELS[ticket.status]}</Badge>
             <Badge className={priorityColor[ticket.priority]}>{ticket.priority}</Badge>
             <Badge variant="outline">{TICKET_NATURE_LABELS[ticket.nature]}</Badge>
-            <Badge variant="outline">{SAP_MODULE_LABELS[ticket.module]}</Badge>
+            <Badge variant="outline">{ticket.module ? SAP_MODULE_LABELS[ticket.module] : '-'}</Badge>
             <Badge variant="outline">{TICKET_COMPLEXITY_LABELS[ticket.complexity]}</Badge>
           </div>
 
@@ -200,7 +200,7 @@ export const TicketDetailsPage: React.FC = () => {
 
           <div className="grid grid-cols-1 gap-3 text-sm sm:grid-cols-2 lg:grid-cols-3">
             <div><span className="text-muted-foreground">Project:</span> {project?.name ?? ticket.projectId}</div>
-            <div><span className="text-muted-foreground">WRICEF:</span> {ticket.wricefId}</div>
+            <div><span className="text-muted-foreground">WRICEF:</span> {ticket.wricefId ?? '-'}</div>
             <div><span className="text-muted-foreground">Ticket ID:</span> {ticket.ticketCode}</div>
             <div><span className="text-muted-foreground">Created by:</span> {userName(ticket.createdBy)}</div>
             <div><span className="text-muted-foreground">Assigned to:</span> {userName(ticket.assignedTo)}</div>

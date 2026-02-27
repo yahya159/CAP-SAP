@@ -29,12 +29,12 @@ import {
 export interface OverviewPanelViewModel {
   project: Project;
   managerName: string;
-  tasksCount: number;
+  ticketsCount: number;
   deliverablesCount: number;
   openTicketsCount: number;
   wricefObjectCount?: number;
-  blockedTasksCount: number;
-  criticalTasksCount: number;
+  blockedTicketsCount: number;
+  criticalTicketsCount: number;
   abaques: Abaque[];
   selectedAbaque: Abaque | null;
   abaqueTaskNatures: AbaqueTaskNature[];
@@ -111,8 +111,8 @@ export const OverviewPanel: React.FC<OverviewPanelProps> = ({ active, vm }) => {
         <div className="bg-card border border-border rounded-lg p-5 space-y-3">
           <h3 className="text-lg font-semibold text-foreground">Live Metrics</h3>
           <div className="flex justify-between text-sm">
-            <span className="text-muted-foreground">Tasks</span>
-            <span className="font-medium text-foreground">{vm.tasksCount}</span>
+            <span className="text-muted-foreground">Tickets</span>
+            <span className="font-medium text-foreground">{vm.ticketsCount}</span>
           </div>
           <div className="flex justify-between text-sm">
             <span className="text-muted-foreground">Deliverables</span>
@@ -123,12 +123,12 @@ export const OverviewPanel: React.FC<OverviewPanelProps> = ({ active, vm }) => {
             <span className="font-medium text-foreground">{vm.openTicketsCount}</span>
           </div>
           <div className="flex justify-between text-sm">
-            <span className="text-muted-foreground">Critical Tasks</span>
-            <span className="font-medium text-destructive">{vm.criticalTasksCount}</span>
+            <span className="text-muted-foreground">Critical Tickets</span>
+            <span className="font-medium text-destructive">{vm.criticalTicketsCount}</span>
           </div>
           <div className="flex justify-between text-sm">
             <span className="text-muted-foreground">Blocked</span>
-            <span className="font-medium text-accent-foreground">{vm.blockedTasksCount}</span>
+            <span className="font-medium text-accent-foreground">{vm.blockedTicketsCount}</span>
           </div>
         </div>
       </section>
@@ -175,7 +175,7 @@ export const OverviewPanel: React.FC<OverviewPanelProps> = ({ active, vm }) => {
               <Table>
                 <TableHeader className="bg-muted/55">
                   <TableRow>
-                    <TableHead className="px-4">Task Nature</TableHead>
+                    <TableHead className="px-4">Ticket Nature</TableHead>
                     <TableHead className="px-4">Low</TableHead>
                     <TableHead className="px-4">Medium</TableHead>
                     <TableHead className="px-4">High</TableHead>

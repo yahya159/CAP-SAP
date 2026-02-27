@@ -42,7 +42,7 @@ export const MyPerformance: React.FC = () => {
     {
       id: 'o2',
       type: 'INDIVIDUAL',
-      title: 'Reduce average cycle time on assigned tasks',
+      title: 'Reduce average cycle time on assigned tickets',
       target: '<= 5 days',
       progress: 64,
     },
@@ -50,7 +50,7 @@ export const MyPerformance: React.FC = () => {
       id: 'o3',
       type: 'TEAM',
       title: 'Raise sprint throughput for delivery team',
-      target: '>= 20 completed tasks',
+      target: '>= 20 completed tickets',
       progress: 71,
     },
   ]);

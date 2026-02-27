@@ -23,6 +23,15 @@ export const TicketsAPI = {
     );
   },
 
+  async getByUser(userId: string, requestOptions?: ODataRequestOptions): Promise<Ticket[]> {
+    return await TicketsAPI.list(
+      {
+        $filter: `assignedTo eq ${quoteLiteral(userId)}`,
+      },
+      requestOptions
+    );
+  },
+
   async getById(id: string, requestOptions?: ODataRequestOptions): Promise<Ticket | null> {
     return await getEntityById<Ticket>('Tickets', id, requestOptions);
   },

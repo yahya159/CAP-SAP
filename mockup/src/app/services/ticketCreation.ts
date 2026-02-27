@@ -35,7 +35,7 @@ export interface UnifiedTicketCreateResult {
   updatedProject?: Project;
 }
 
-const normalizeRef = (value?: string): string =>
+const normalizeRef = (value?: string | null): string =>
   (value ?? '').trim().toLowerCase();
 
 const sanitizeObjectId = (value: string): string => {

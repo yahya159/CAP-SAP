@@ -5,16 +5,12 @@ import { PageHeader } from '../../components/common/PageHeader';
 import { KPICard } from '../../components/common/KPICard';
 import { Card, CardContent, CardHeader, CardTitle } from '../../components/ui/card';
 import { Button } from '../../components/ui/button';
-import {
-  AllocationsAPI,
-  TasksAPI,
-  UsersAPI,
-} from '../../services/odataClient';
-import { Allocation, Task, TicketStatus, User } from '../../types/entities';
+import { AllocationsAPI, TicketsAPI, UsersAPI } from '../../services/odataClient';
+import { Allocation, Ticket, TicketStatus, User } from '../../types/entities';
 
 export const ManagerDashboard: React.FC = () => {
   const navigate = useNavigate();
-  const [tasks, setTasks] = useState<Task[]>([]);
+  const [tickets, setTickets] = useState<Ticket[]>([]);
   const [users, setUsers] = useState<User[]>([]);
   const [allocations, setAllocations] = useState<Allocation[]>([]);
   const [loadError, setLoadError] = useState<string | null>(null);
@@ -22,17 +18,15 @@ export const ManagerDashboard: React.FC = () => {
   const loadData = async () => {
     try {
       setLoadError(null);
-
-      const [fetchedTasks, fetchedUsers, fetchedAllocations] = await Promise.all([
-        TasksAPI.getAll(),
+      const [fetchedTickets, fetchedUsers, fetchedAllocations] = await Promise.all([
+        TicketsAPI.getAll(),
         UsersAPI.getAll(),
         AllocationsAPI.getAll(),
       ]);
-
-      setTasks(fetchedTasks);
+      setTickets(fetchedTickets);
       setUsers(fetchedUsers);
       setAllocations(fetchedAllocations);
-    } catch (error) {
+    } catch {
       setLoadError('Unable to load dashboard data. Some metrics may be outdated.');
     }
   };
@@ -41,40 +35,31 @@ export const ManagerDashboard: React.FC = () => {
     void loadData();
   }, []);
 
-  // ---------------------------------------------------------------------------
-  // TACE — Taux d'Activité Congés Exclus
-  // Measures utilisation rate of tech consultants based on current allocations.
-  // 0% = everyone on bench (available), 100% = everyone fully allocated (busy).
-  // ---------------------------------------------------------------------------
   const tace = useMemo(() => {
     const techConsultants = users.filter((u) => u.role === 'CONSULTANT_TECHNIQUE' && u.active);
     if (techConsultants.length === 0) return 0;
 
     const today = new Date().toISOString().slice(0, 10);
-
     const rates = techConsultants.map((consultant) => {
       const currentAllocations = allocations.filter(
         (a) => a.userId === consultant.id && a.startDate <= today && a.endDate >= today
       );
-      const totalAlloc = currentAllocations.reduce((sum, a) => sum + a.allocationPercent, 0);
-      return Math.min(totalAlloc, 100); // cap at 100%
+      return Math.min(currentAllocations.reduce((sum, a) => sum + a.allocationPercent, 0), 100);
     });
 
     return Math.round(rates.reduce((sum, r) => sum + r, 0) / techConsultants.length);
   }, [users, allocations]);
 
   const productivityMetrics = useMemo(() => {
-    const completed = tasks.filter((task) => task.status === 'DONE');
-
-    const throughput = tasks.length ? (completed.length / tasks.length) * 100 : 0;
-    const criticalIssues = tasks.filter(
-      (task) => task.riskLevel === 'CRITICAL' || task.status === 'BLOCKED'
+    const completed = tickets.filter((ticket) => ticket.status === 'DONE');
+    const throughput = tickets.length ? (completed.length / tickets.length) * 100 : 0;
+    const criticalIssues = tickets.filter(
+      (ticket) => ticket.priority === 'CRITICAL' || ticket.status === 'BLOCKED'
     ).length;
 
-    // SLA: percentage of completed tasks that were delivered on time
-    const onTime = completed.filter((task) => {
-      if (!task.realEnd) return false;
-      return task.realEnd <= task.plannedEnd;
+    const onTime = completed.filter((ticket) => {
+      if (!ticket.updatedAt || !ticket.dueDate) return false;
+      return ticket.updatedAt <= ticket.dueDate;
     }).length;
     const slaRate = completed.length ? (onTime / completed.length) * 100 : 100;
 
@@ -85,71 +70,67 @@ export const ManagerDashboard: React.FC = () => {
       slaOnTime: onTime,
       slaTotal: completed.length,
     };
-  }, [tasks]);
+  }, [tickets]);
 
-  const taskBreakdown = useMemo(() => {
-    const labels: Record<TicketStatus | Task['status'], string> = {
-      TO_DO: 'To Do',
+  const ticketBreakdown = useMemo(() => {
+    const labels: Record<TicketStatus, string> = {
+      NEW: 'New',
       IN_PROGRESS: 'In Progress',
+      IN_TEST: 'In Test',
       BLOCKED: 'Blocked',
       DONE: 'Done',
-      CANCELLED: 'Cancelled',
-      NEW: 'New',
-      IN_TEST: 'In Test',
       REJECTED: 'Rejected',
     };
 
-    const counts = tasks.reduce<Record<Task['status'], number>>(
-      (acc, task) => {
-        acc[task.status] += 1;
+    const counts = tickets.reduce<Record<TicketStatus, number>>(
+      (acc, ticket) => {
+        acc[ticket.status] += 1;
         return acc;
       },
       {
-        TO_DO: 0,
+        NEW: 0,
         IN_PROGRESS: 0,
+        IN_TEST: 0,
         BLOCKED: 0,
         DONE: 0,
-        CANCELLED: 0,
+        REJECTED: 0,
       }
     );
 
-    return (Object.entries(counts) as Array<[Task['status'], number]>)
+    return (Object.entries(counts) as Array<[TicketStatus, number]>)
       .filter(([, count]) => count > 0)
       .sort((a, b) => b[1] - a[1])
-      .map(([status, count]) => ({
-        label: labels[status],
-        count,
-      }));
-  }, [tasks]);
+      .map(([status, count]) => ({ label: labels[status], count }));
+  }, [tickets]);
 
   const criticalAlerts = useMemo(() => {
     const today = new Date();
-
-    const blocked = tasks
-      .filter((task) => task.status === 'BLOCKED')
+    const blocked = tickets
+      .filter((ticket) => ticket.status === 'BLOCKED')
       .slice(0, 3)
-      .map((task) => ({
+      .map((ticket) => ({
         type: 'blocked' as const,
-        label: 'Task Blocked',
-        message: task.title,
+        label: 'Ticket Blocked',
+        message: ticket.title,
       }));
 
-    const overdue = tasks
+    const overdue = tickets
       .filter(
-        (task) =>
-          task.status !== 'DONE' &&
-          task.status !== 'CANCELLED' &&
-          new Date(task.plannedEnd) < today
+        (ticket) =>
+          ticket.status !== 'DONE' &&
+          ticket.status !== 'REJECTED' &&
+          Boolean(ticket.dueDate) &&
+          new Date(ticket.dueDate as string) < today
       )
       .slice(0, 3)
-      .map((task) => ({
+      .map((ticket) => ({
         type: 'deadline' as const,
         label: 'Deadline Risk',
-        message: `${task.title} — overdue since ${new Date(task.plannedEnd).toLocaleDateString()}`,
+        message: `${ticket.title} - overdue since ${new Date(ticket.dueDate as string).toLocaleDateString()}`,
       }));
 
     return [...blocked, ...overdue].slice(0, 4);
-  }, [tasks]);
+  }, [tickets]);
 
   return (
     <div className="min-h-screen bg-transparent">
@@ -179,7 +160,7 @@ export const ManagerDashboard: React.FC = () => {
             title="TACE"
             value={tace}
             unit="%"
-            subtitle="Taux d'Activité (Congés Exclus)"
+            subtitle="Taux d'Activite (Conges Exclus)"
             icon="performance"
             state={tace >= 80 ? 'Positive' : tace >= 50 ? 'Warning' : 'Error'}
             progress={tace}
@@ -188,7 +169,7 @@ export const ManagerDashboard: React.FC = () => {
             title="SLA Respect"
             value={Math.round(productivityMetrics.slaRate)}
             unit="%"
-            subtitle={`${productivityMetrics.slaOnTime}/${productivityMetrics.slaTotal} livrées à temps`}
+            subtitle={`${productivityMetrics.slaOnTime}/${productivityMetrics.slaTotal} delivered on time`}
             icon="accept"
             state={productivityMetrics.slaRate >= 90 ? 'Positive' : productivityMetrics.slaRate >= 70 ? 'Warning' : 'Error'}
             progress={productivityMetrics.slaRate}
@@ -197,7 +178,7 @@ export const ManagerDashboard: React.FC = () => {
             title="Throughput"
             value={Math.round(productivityMetrics.throughputRate)}
             unit="%"
-            subtitle="Completed tasks ratio"
+            subtitle="Completed tickets ratio"
             icon="trend-up"
             state={productivityMetrics.throughputRate >= 70 ? 'Positive' : 'Warning'}
             progress={productivityMetrics.throughputRate}
@@ -205,7 +186,7 @@ export const ManagerDashboard: React.FC = () => {
           <KPICard
             title="Risk Hotspots"
             value={productivityMetrics.criticalIssues}
-            subtitle="Critical or blocked tasks"
+            subtitle="Critical or blocked tickets"
             icon="warning"
             state={productivityMetrics.criticalIssues > 0 ? 'Error' : 'Positive'}
           />
@@ -217,10 +198,10 @@ export const ManagerDashboard: React.FC = () => {
               <CardTitle className="text-lg">Delivery Snapshot</CardTitle>
             </CardHeader>
             <CardContent className="space-y-3">
-              {taskBreakdown.length === 0 ? (
-                <p className="text-sm text-muted-foreground">No task data available.</p>
+              {ticketBreakdown.length === 0 ? (
+                <p className="text-sm text-muted-foreground">No ticket data available.</p>
               ) : (
-                taskBreakdown.map((entry) => (
+                ticketBreakdown.map((entry) => (
                   <div key={entry.label} className="flex items-center justify-between rounded-md border border-border/70 p-3">
                     <span className="text-sm text-foreground">{entry.label}</span>
                     <span className="text-sm font-semibold text-foreground">{entry.count}</span>
@@ -278,22 +259,22 @@ export const ManagerDashboard: React.FC = () => {
                   variant="default"
                   onClick={() => navigate('/manager/allocations')}
                 >
+                  View Allocations
+                </Button>
+                <Button
+                  className="w-full justify-start"
+                  variant="secondary"
+                  onClick={() => navigate('/manager/risks')}
+                >
+                  Open Risks & Critical Tickets
+                </Button>
+                <Button
+                  className="w-full justify-start"
+                  variant="outline"
+                  onClick={() => navigate('/manager/team-performance')}
+                >
                   <Sparkles className="mr-2 h-4 w-4" />
-                  AI Dispatcher & Allocation
-                </Button>
-                <Button
-                  className="w-full justify-start"
-                  variant="outline"
-                  onClick={() => navigate('/manager/allocations')}
-                >
-                  Allocate Resources
-                </Button>
-                <Button
-                  className="w-full justify-start"
-                  variant="outline"
-                  onClick={() => navigate('/manager/tickets')}
-                >
-                  Manage Tickets
+                  Team Performance
                 </Button>
               </CardContent>
             </Card>

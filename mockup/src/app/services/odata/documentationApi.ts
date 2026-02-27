@@ -9,7 +9,23 @@ import { TicketsAPI } from './ticketsApi';
 
 const WRICEF_SOURCE_PREFIX = 'wricef-object:';
 
-const normalizeText = (value?: string): string => (value ?? '').trim().toLowerCase();
+const normalizeText = (value?: string | null): string => (value ?? '').trim().toLowerCase();
+const normalizeRef = (value?: string | null): string =>
+  normalizeText(value).replace(/[^a-z0-9_-]/g, '');
+
+const isTicketLinkedToWricefObject = (ticketRef?: string | null, objectRef?: string | null): boolean => {
+  const normalizedTicket = normalizeRef(ticketRef);
+  const normalizedObject = normalizeRef(objectRef);
+  if (!normalizedTicket || !normalizedObject) return false;
+  const compactTicket = normalizedTicket.replace(/[^a-z0-9]/g, '');
+  const compactObject = normalizedObject.replace(/[^a-z0-9]/g, '');
+  return (
+    normalizedTicket === normalizedObject ||
+    normalizedTicket.startsWith(`${normalizedObject}-tk-`) ||
+    compactTicket === compactObject ||
+    compactTicket.startsWith(`${compactObject}tk`)
+  );
+};
 
 const buildWricefObjectContent = (object: WricefObject): string => {
   return [
@@ -34,7 +50,7 @@ const resolveWricefLinkedTicketIds = (
   wricefObject: WricefObject
 ): string[] => {
   return projectTickets
-    .filter((t) => normalizeText(t.wricefId) === normalizeText(wricefObject.id))
+    .filter((t) => isTicketLinkedToWricefObject(t.wricefId, wricefObject.id))
     .map((t) => t.id);
 };
 
@@ -84,7 +100,7 @@ export const DocumentationAPI = {
   ): Promise<DocumentationObject[]> {
     return await DocumentationAPI.list(
       {
-        $filter: `relatedTicketIds/any(x:x eq ${quoteLiteral(ticketId)})`,
+        $filter: `contains(relatedTicketIds,${quoteLiteral(ticketId)})`,
       },
       requestOptions
     );

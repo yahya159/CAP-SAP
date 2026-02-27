@@ -15,7 +15,10 @@ export type {
 
 export {
   getODataClientConfig,
+  getODataAuthToken,
+  setODataAuthToken,
   configureODataClient,
+  onAuthExpired,
   listEntitiesPage,
   fetchNextPage,
   listAllPages,
@@ -26,7 +29,6 @@ export {
 export { AuthAPI } from './authApi';
 export { UsersAPI } from './usersApi';
 export { ProjectsAPI } from './projectsApi';
-export { TasksAPI } from './tasksApi';
 export { TimesheetsAPI } from './timesheetsApi';
 export { EvaluationsAPI } from './evaluationsApi';
 export { DeliverablesAPI } from './deliverablesApi';

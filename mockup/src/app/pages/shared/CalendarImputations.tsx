@@ -187,7 +187,7 @@ export const CalendarImputations: React.FC<CalendarImputationsProps> = ({
 
   const ticketLabel = (id: string) => {
     const t = tickets.find((tk) => tk.id === id);
-    return t ? `${t.ticketCode} — ${t.title}` : id;
+    return t ? `${t.ticketCode} - ${t.title}` : id;
   };
   const consultantName = (id: string) => users.find((u) => u.id === id)?.name ?? id;
 
@@ -294,7 +294,7 @@ export const CalendarImputations: React.FC<CalendarImputationsProps> = ({
         consultantId: currentUser.id,
         ticketId: addForm.ticketId,
         projectId: ticket.projectId,
-        module: ticket.module,
+        module: ticket.module ?? 'OTHER',
         date: selectedDate,
         hours: addForm.hours,
         description: addForm.description,
@@ -607,11 +607,11 @@ export const CalendarImputations: React.FC<CalendarImputationsProps> = ({
         {/* Calendar View */}
         <div className="rounded-lg border bg-card">
           <div className="flex items-center justify-between p-4 border-b">
-            <Button size="sm" variant="outline" onClick={prevMonth}>← Prev</Button>
+            <Button size="sm" variant="outline" onClick={prevMonth}>{'<'} Prev</Button>
             <h3 className="text-lg font-semibold">
               {new Date(Number(calendarMonth.split('-')[0]), Number(calendarMonth.split('-')[1]) - 1).toLocaleString('default', { month: 'long', year: 'numeric' })}
             </h3>
-            <Button size="sm" variant="outline" onClick={nextMonth}>Next →</Button>
+            <Button size="sm" variant="outline" onClick={nextMonth}>Next {'>'}</Button>
           </div>
           <div className="p-2">
             <div className="grid grid-cols-7 gap-px bg-border rounded overflow-hidden">
@@ -658,7 +658,7 @@ export const CalendarImputations: React.FC<CalendarImputationsProps> = ({
                         <div
                           key={imp.id}
                           className="mb-0.5 truncate rounded px-1 py-0.5 text-[9px] font-medium bg-primary/10 text-primary cursor-pointer hover:bg-primary/20"
-                          title={`${ticket?.ticketCode || ''} — ${imp.hours}h — ${imp.description || ''}`}
+                          title={`${ticket?.ticketCode || ''} - ${imp.hours}h - ${imp.description || ''}`}
                           onClick={(e) => { e.stopPropagation(); navigate(`${roleBasePath}/tickets/${imp.ticketId}`); }}
                         >
                           {imp.hours}h {ticket?.ticketCode || imp.ticketId.slice(0, 6)}
@@ -753,7 +753,7 @@ export const CalendarImputations: React.FC<CalendarImputationsProps> = ({
       <Dialog open={showAddDialog} onOpenChange={setShowAddDialog}>
         <DialogContent className="max-w-md">
           <DialogHeader>
-            <DialogTitle>Add Imputation — {selectedDate}</DialogTitle>
+            <DialogTitle>Add Imputation - {selectedDate}</DialogTitle>
           </DialogHeader>
           <div className="space-y-4">
             {/* Show existing imputations for this date */}
@@ -786,7 +786,7 @@ export const CalendarImputations: React.FC<CalendarImputationsProps> = ({
                 <SelectContent>
                   {myTickets.map((t) => (
                     <SelectItem key={t.id} value={t.id}>
-                      {t.ticketCode} — {t.title} ({t.module})
+                      {t.ticketCode} - {t.title} ({t.module ?? '-'})
                     </SelectItem>
                   ))}
                 </SelectContent>

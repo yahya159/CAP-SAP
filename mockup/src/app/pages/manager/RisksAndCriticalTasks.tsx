@@ -1,7 +1,7 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import { PageHeader } from '../../components/common/PageHeader';
-import { NotificationsAPI, ProjectsAPI, TasksAPI, UsersAPI } from '../../services/odataClient';
-import { Project, Task, TaskStatus, User } from '../../types/entities';
+import { NotificationsAPI, ProjectsAPI, TicketsAPI, UsersAPI } from '../../services/odataClient';
+import { Project, Ticket, TicketStatus, User } from '../../types/entities';
 import { AlertTriangle } from 'lucide-react';
 import { toast } from 'sonner';
 import { Label } from '../../components/ui/label';
@@ -16,8 +16,22 @@ import {
 import { Switch } from '../../components/ui/switch';
 import { Textarea } from '../../components/ui/textarea';
 
+const riskFromPriority = (priority: Ticket['priority']): 'LOW' | 'MEDIUM' | 'HIGH' | 'CRITICAL' => {
+  if (priority === 'CRITICAL') return 'CRITICAL';
+  if (priority === 'HIGH') return 'HIGH';
+  if (priority === 'MEDIUM') return 'MEDIUM';
+  return 'LOW';
+};
+
+const priorityFromRisk = (risk: 'LOW' | 'MEDIUM' | 'HIGH' | 'CRITICAL'): Ticket['priority'] => {
+  if (risk === 'CRITICAL') return 'CRITICAL';
+  if (risk === 'HIGH') return 'HIGH';
+  if (risk === 'MEDIUM') return 'MEDIUM';
+  return 'LOW';
+};
+
 export const RisksAndCriticalTasks: React.FC = () => {
-  const [tasks, setTasks] = useState<Task[]>([]);
+  const [tickets, setTickets] = useState<Ticket[]>([]);
   const [projects, setProjects] = useState<Project[]>([]);
   const [users, setUsers] = useState<User[]>([]);
   const [loading, setLoading] = useState(true);
@@ -30,12 +44,12 @@ export const RisksAndCriticalTasks: React.FC = () => {
   const loadData = async () => {
     setLoading(true);
     try {
-      const [taskData, projectData, userData] = await Promise.all([
-        TasksAPI.getAll(),
+      const [ticketData, projectData, userData] = await Promise.all([
+        TicketsAPI.getAll(),
         ProjectsAPI.getAll(),
         UsersAPI.getAll(),
       ]);
-      setTasks(taskData);
+      setTickets(ticketData);
       setProjects(projectData);
       setUsers(userData);
     } finally {
@@ -44,38 +58,36 @@ export const RisksAndCriticalTasks: React.FC = () => {
   };
 
   const rows = useMemo(() => {
-    const filtered = tasks.filter((task) => {
-      const riskCondition =
-        task.riskLevel === 'HIGH' ||
-        task.riskLevel === 'CRITICAL' ||
-        task.status === 'BLOCKED';
+    const filtered = tickets.filter((ticket) => {
+      const risk = riskFromPriority(ticket.priority);
+      const riskCondition = risk === 'HIGH' || risk === 'CRITICAL' || ticket.status === 'BLOCKED';
       if (showOnlyCritical) {
-        return task.isCritical || riskCondition;
+        return ticket.priority === 'CRITICAL' || riskCondition;
       }
       return true;
     });
 
     return filtered.sort((a, b) => {
-      const score = (task: Task) => {
+      const score = (ticket: Ticket) => {
         let risk = 0;
-        if (task.riskLevel === 'CRITICAL') risk += 40;
-        if (task.riskLevel === 'HIGH') risk += 30;
-        if (task.status === 'BLOCKED') risk += 20;
-        if (task.isCritical) risk += 10;
+        if (ticket.priority === 'CRITICAL') risk += 40;
+        if (ticket.priority === 'HIGH') risk += 30;
+        if (ticket.status === 'BLOCKED') risk += 20;
         return risk;
       };
       return score(b) - score(a);
     });
-  }, [showOnlyCritical, tasks]);
+  }, [showOnlyCritical, tickets]);
 
-  const counts = useMemo(() => {
-    return {
-      blocked: tasks.filter((task) => task.status === 'BLOCKED').length,
-      highRisk: tasks.filter((task) => task.riskLevel === 'HIGH').length,
-      criticalRisk: tasks.filter((task) => task.riskLevel === 'CRITICAL').length,
-      criticalTasks: tasks.filter((task) => task.isCritical).length,
-    };
-  }, [tasks]);
+  const counts = useMemo(
+    () => ({
+      blocked: tickets.filter((ticket) => ticket.status === 'BLOCKED').length,
+      highRisk: tickets.filter((ticket) => ticket.priority === 'HIGH').length,
+      criticalRisk: tickets.filter((ticket) => ticket.priority === 'CRITICAL').length,
+      criticalTickets: tickets.filter((ticket) => ticket.priority === 'CRITICAL').length,
+    }),
+    [tickets]
+  );
 
   const consultantAssignees = useMemo(
     () =>
@@ -91,104 +103,104 @@ export const RisksAndCriticalTasks: React.FC = () => {
     try {
       await NotificationsAPI.create({
         userId,
-        type: 'TASK_UPDATED',
+        type: 'TICKET_UPDATED',
         title,
         message,
         read: false,
       });
     } catch {
-      // Silent fallback.
+      // no-op
     }
   };
 
-  const updateTask = async (taskId: string, patch: Partial<Task>): Promise<Task | null> => {
+  const updateTicket = async (ticketId: string, patch: Partial<Ticket>): Promise<Ticket | null> => {
     try {
-      const updated = await TasksAPI.update(taskId, patch);
-      setTasks((prev) => prev.map((task) => (task.id === taskId ? updated : task)));
+      const updated = await TicketsAPI.update(ticketId, patch);
+      setTickets((prev) => prev.map((ticket) => (ticket.id === ticketId ? updated : ticket)));
       return updated;
-    } catch (error) {
-      toast.error('Failed to update task');
+    } catch {
+      toast.error('Failed to update ticket');
       return null;
     }
   };
 
-  const setMitigation = async (task: Task, mitigation: string) => {
+  const setMitigation = async (ticket: Ticket, mitigation: string) => {
     const nextComment = mitigation.trim();
-    if ((task.comments ?? '') === nextComment) return;
+    if ((ticket.effortComment ?? '') === nextComment) return;
 
-    const updated = await updateTask(task.id, { comments: nextComment });
+    const updated = await updateTicket(ticket.id, { effortComment: nextComment });
     if (updated) {
       await notifyAssignee(
-        updated.assigneeId,
+        updated.assignedTo,
         'Mitigation Updated',
         `${updated.title}: mitigation notes were updated by manager.`
       );
     }
   };
 
-  const setStatus = async (task: Task, status: TaskStatus) => {
-    const updated = await updateTask(task.id, { status });
+  const setStatus = async (ticket: Ticket, status: TicketStatus) => {
+    const updated = await updateTicket(ticket.id, { status });
     if (updated) {
       await notifyAssignee(
-        updated.assigneeId,
-        'Task Status Updated',
+        updated.assignedTo,
+        'Ticket Status Updated',
         `${updated.title}: status changed to ${status}.`
       );
     }
   };
 
-  const setRisk = async (task: Task, riskLevel: Task['riskLevel']) => {
-    const updated = await updateTask(task.id, { riskLevel });
+  const setRisk = async (ticket: Ticket, riskLevel: 'LOW' | 'MEDIUM' | 'HIGH' | 'CRITICAL') => {
+    const updated = await updateTicket(ticket.id, { priority: priorityFromRisk(riskLevel) });
     if (updated) {
       await notifyAssignee(
-        updated.assigneeId,
+        updated.assignedTo,
         'Risk Level Updated',
         `${updated.title}: risk level changed to ${riskLevel}.`
       );
     }
   };
 
-  const setAssignee = async (task: Task, assigneeId: string) => {
+  const setAssignee = async (ticket: Ticket, assigneeId: string) => {
     const nextAssigneeId = assigneeId || undefined;
-    const updated = await updateTask(task.id, { assigneeId: nextAssigneeId });
+    const updated = await updateTicket(ticket.id, { assignedTo: nextAssigneeId });
     if (updated && nextAssigneeId) {
       await notifyAssignee(
         nextAssigneeId,
-        'Task Reassigned',
+        'Ticket Reassigned',
         `${updated.title}: you have been assigned as mitigation owner.`
       );
     }
   };
 
-  const setDeadline = async (task: Task, plannedEnd: string) => {
-    if (!plannedEnd || task.plannedEnd === plannedEnd) return;
-    const updated = await updateTask(task.id, { plannedEnd });
+  const setDeadline = async (ticket: Ticket, dueDate: string) => {
+    if (!dueDate || ticket.dueDate === dueDate) return;
+    const updated = await updateTicket(ticket.id, { dueDate });
     if (updated) {
       await notifyAssignee(
-        updated.assigneeId,
+        updated.assignedTo,
         'Deadline Updated',
-        `${updated.title}: deadline changed to ${new Date(plannedEnd).toLocaleDateString()}.`
+        `${updated.title}: deadline changed to ${new Date(dueDate).toLocaleDateString()}.`
       );
     }
   };
 
-  const statusOptions: TaskStatus[] = ['TO_DO', 'IN_PROGRESS', 'BLOCKED', 'DONE'];
+  const statusOptions: TicketStatus[] = ['NEW', 'IN_PROGRESS', 'IN_TEST', 'BLOCKED', 'DONE', 'REJECTED'];
 
   return (
     <div className="min-h-screen bg-background">
       <PageHeader
-        title="Risks & Critical Tasks"
+        title="Risks & Critical Tickets"
         subtitle="Track blocked work, risk level and mitigation actions"
         breadcrumbs={[
           { label: 'Home', path: '/manager/dashboard' },
-          { label: 'Risks & Critical Tasks' },
+          { label: 'Risks & Critical Tickets' },
         ]}
       />
 
       <div className="p-6 space-y-6">
         <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
           <div className="bg-card border border-border rounded-lg p-4">
-            <p className="text-xs text-muted-foreground">Blocked Tasks</p>
+            <p className="text-xs text-muted-foreground">Blocked Tickets</p>
             <p className="text-2xl font-semibold text-destructive">{counts.blocked}</p>
           </div>
           <div className="bg-card border border-border rounded-lg p-4">
@@ -200,15 +212,15 @@ export const RisksAndCriticalTasks: React.FC = () => {
             <p className="text-2xl font-semibold text-destructive">{counts.criticalRisk}</p>
           </div>
           <div className="bg-card border border-border rounded-lg p-4">
-            <p className="text-xs text-muted-foreground">Critical Tasks</p>
-            <p className="text-2xl font-semibold text-foreground">{counts.criticalTasks}</p>
+            <p className="text-xs text-muted-foreground">Critical Tickets</p>
+            <p className="text-2xl font-semibold text-foreground">{counts.criticalTickets}</p>
           </div>
         </div>
 
         <div className="flex items-center justify-between">
           <div className="inline-flex items-center gap-3">
             <Label htmlFor="show-critical-risks" className="text-sm text-foreground">
-              Show only critical or risky tasks
+              Show only critical or risky tickets
             </Label>
             <Switch
               id="show-critical-risks"
@@ -216,36 +228,20 @@ export const RisksAndCriticalTasks: React.FC = () => {
               onCheckedChange={(checked) => setShowOnlyCritical(Boolean(checked))}
             />
           </div>
-          <div className="text-sm text-muted-foreground">
-            {rows.length} tasks displayed
-          </div>
+          <div className="text-sm text-muted-foreground">{rows.length} tickets displayed</div>
         </div>
 
         <div className="bg-card border border-border rounded-lg overflow-x-auto">
           <table className="w-full min-w-[1120px]">
             <thead className="bg-muted">
               <tr>
-                <th className="px-4 py-3 text-left text-xs uppercase text-muted-foreground">
-                  Task
-                </th>
-                <th className="px-4 py-3 text-left text-xs uppercase text-muted-foreground">
-                  Project
-                </th>
-                <th className="px-4 py-3 text-left text-xs uppercase text-muted-foreground">
-                  Assignee
-                </th>
-                <th className="px-4 py-3 text-left text-xs uppercase text-muted-foreground">
-                  Status
-                </th>
-                <th className="px-4 py-3 text-left text-xs uppercase text-muted-foreground">
-                  Risk
-                </th>
-                <th className="px-4 py-3 text-left text-xs uppercase text-muted-foreground">
-                  Deadline
-                </th>
-                <th className="px-4 py-3 text-left text-xs uppercase text-muted-foreground">
-                  Mitigation
-                </th>
+                <th className="px-4 py-3 text-left text-xs uppercase text-muted-foreground">Ticket</th>
+                <th className="px-4 py-3 text-left text-xs uppercase text-muted-foreground">Project</th>
+                <th className="px-4 py-3 text-left text-xs uppercase text-muted-foreground">Assignee</th>
+                <th className="px-4 py-3 text-left text-xs uppercase text-muted-foreground">Status</th>
+                <th className="px-4 py-3 text-left text-xs uppercase text-muted-foreground">Risk</th>
+                <th className="px-4 py-3 text-left text-xs uppercase text-muted-foreground">Deadline</th>
+                <th className="px-4 py-3 text-left text-xs uppercase text-muted-foreground">Mitigation</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-border">
@@ -258,16 +254,16 @@ export const RisksAndCriticalTasks: React.FC = () => {
               ) : rows.length === 0 ? (
                 <tr>
                   <td colSpan={7} className="px-4 py-8 text-center text-muted-foreground">
-                    No matching tasks.
+                    No matching tickets.
                   </td>
                 </tr>
               ) : (
-                rows.map((task) => (
-                  <tr key={task.id} className="hover:bg-accent/40 align-top">
+                rows.map((ticket) => (
+                  <tr key={ticket.id} className="hover:bg-accent/40 align-top">
                     <td className="px-4 py-3 text-sm text-foreground">
                       <div className="font-medium flex items-center gap-2">
-                        {task.title}
-                        {task.isCritical && (
+                        {ticket.title}
+                        {ticket.priority === 'CRITICAL' && (
                           <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded text-xs bg-destructive/12 text-destructive">
                             <AlertTriangle className="w-3 h-3" />
                             Critical
@@ -275,20 +271,20 @@ export const RisksAndCriticalTasks: React.FC = () => {
                         )}
                       </div>
                       <div className="text-xs text-muted-foreground mt-1">
-                        Planned end: {new Date(task.plannedEnd).toLocaleDateString()}
+                        Due: {ticket.dueDate ? new Date(ticket.dueDate).toLocaleDateString() : '-'}
                       </div>
                     </td>
                     <td className="px-4 py-3 text-sm text-muted-foreground">
-                      {projects.find((project) => project.id === task.projectId)?.name ?? '-'}
+                      {projects.find((project) => project.id === ticket.projectId)?.name ?? '-'}
                     </td>
                     <td className="px-4 py-3 text-sm text-muted-foreground">
                       <Select
-                        value={task.assigneeId ?? 'UNASSIGNED'}
+                        value={ticket.assignedTo ?? 'UNASSIGNED'}
                         onValueChange={(value) =>
-                          void setAssignee(task, value === 'UNASSIGNED' ? '' : value)
+                          void setAssignee(ticket, value === 'UNASSIGNED' ? '' : value)
                         }
                       >
-                        <SelectTrigger aria-label={`Assignee for ${task.title}`} className="min-w-[190px]">
+                        <SelectTrigger aria-label={`Assignee for ${ticket.title}`} className="min-w-[190px]">
                           <SelectValue placeholder="Unassigned" />
                         </SelectTrigger>
                         <SelectContent>
@@ -303,10 +299,10 @@ export const RisksAndCriticalTasks: React.FC = () => {
                     </td>
                     <td className="px-4 py-3">
                       <Select
-                        value={task.status}
-                        onValueChange={(value) => void setStatus(task, value as TaskStatus)}
+                        value={ticket.status}
+                        onValueChange={(value) => void setStatus(ticket, value as TicketStatus)}
                       >
-                        <SelectTrigger aria-label={`Status for ${task.title}`} className="min-w-[160px]">
+                        <SelectTrigger aria-label={`Status for ${ticket.title}`} className="min-w-[160px]">
                           <SelectValue />
                         </SelectTrigger>
                         <SelectContent>
@@ -320,14 +316,13 @@ export const RisksAndCriticalTasks: React.FC = () => {
                     </td>
                     <td className="px-4 py-3">
                       <Select
-                        value={task.riskLevel}
-                        onValueChange={(value) => void setRisk(task, value as Task['riskLevel'])}
+                        value={riskFromPriority(ticket.priority)}
+                        onValueChange={(value) => void setRisk(ticket, value as 'LOW' | 'MEDIUM' | 'HIGH' | 'CRITICAL')}
                       >
-                        <SelectTrigger aria-label={`Risk level for ${task.title}`} className="min-w-[140px]">
+                        <SelectTrigger aria-label={`Risk level for ${ticket.title}`} className="min-w-[140px]">
                           <SelectValue />
                         </SelectTrigger>
                         <SelectContent>
-                          <SelectItem value="NONE">NONE</SelectItem>
                           <SelectItem value="LOW">LOW</SelectItem>
                           <SelectItem value="MEDIUM">MEDIUM</SelectItem>
                           <SelectItem value="HIGH">HIGH</SelectItem>
@@ -338,17 +333,17 @@ export const RisksAndCriticalTasks: React.FC = () => {
                     <td className="px-4 py-3">
                       <Input
                         type="date"
-                        aria-label={`Deadline for ${task.title}`}
-                        defaultValue={task.plannedEnd}
+                        aria-label={`Deadline for ${ticket.title}`}
+                        defaultValue={ticket.dueDate ?? ''}
                         className="min-w-[170px]"
-                        onBlur={(event) => void setDeadline(task, event.target.value)}
+                        onBlur={(event) => void setDeadline(ticket, event.target.value)}
                       />
                     </td>
                     <td className="px-4 py-3">
                       <Textarea
-                        aria-label={`Mitigation notes for ${task.title}`}
-                        defaultValue={task.comments ?? ''}
-                        onBlur={(event) => void setMitigation(task, event.target.value)}
+                        aria-label={`Mitigation notes for ${ticket.title}`}
+                        defaultValue={ticket.effortComment ?? ''}
+                        onBlur={(event) => void setMitigation(ticket, event.target.value)}
                         placeholder="Mitigation action / blocker details"
                         rows={2}
                         className="w-full min-w-[240px]"

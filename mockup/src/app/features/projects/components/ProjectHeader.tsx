@@ -10,7 +10,7 @@ export const ProjectHeader: React.FC<ProjectHeaderProps> = ({ projectName, roleB
   return (
     <PageHeader
       title={projectName}
-      subtitle="Project cockpit with overview, tasks, team and documentation"
+      subtitle="Project cockpit with overview, tickets, team and documentation"
       breadcrumbs={[
         { label: 'Home', path: `${roleBasePath}/dashboard` },
         { label: 'Projects', path: `${roleBasePath}/projects` },

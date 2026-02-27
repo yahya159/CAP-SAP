@@ -4,7 +4,6 @@ import {
   DocumentationAPI as ODataDocumentationAPI,
   DeliverablesAPI as ODataDeliverablesAPI,
   ProjectsAPI as ODataProjectsAPI,
-  TasksAPI as ODataTasksAPI,
   TicketsAPI as ODataTicketsAPI,
   UsersAPI as ODataUsersAPI,
   WricefObjectsAPI as ODataWricefObjectsAPI,
@@ -16,7 +15,6 @@ import {
   Deliverable,
   DocumentationObject,
   Project,
-  Task,
   Ticket,
   User,
   WricefObject,
@@ -24,7 +22,6 @@ import {
 
 export interface ProjectDetailsBootstrapData {
   project: Project | null;
-  tasks: Task[];
   allocations: Allocation[];
   users: User[];
   deliverables: Deliverable[];
@@ -39,10 +36,9 @@ export const ProjectDetailsAPI = {
     projectId: string,
     requestOptions?: ODataRequestOptions
   ): Promise<ProjectDetailsBootstrapData> {
-    const [project, tasks, allocations, users, deliverables, tickets, abaques, documentationObjects, wricefObjects] =
+    const [project, allocations, users, deliverables, tickets, abaques, documentationObjects, wricefObjects] =
       await Promise.all([
         ODataProjectsAPI.getById(projectId, requestOptions),
-        ODataTasksAPI.getByProject(projectId, requestOptions),
         ODataAllocationsAPI.getByProject(projectId, requestOptions),
         ODataUsersAPI.getActive(requestOptions),
         ODataDeliverablesAPI.getByProject(projectId, requestOptions),
@@ -54,7 +50,6 @@ export const ProjectDetailsAPI = {
 
     return {
       project,
-      tasks,
       allocations,
       users,
       deliverables,
@@ -68,10 +63,6 @@ export const ProjectDetailsAPI = {
   ProjectsAPI: {
     getById: ODataProjectsAPI.getById,
     update: ODataProjectsAPI.update,
-  },
-  TasksAPI: {
-    getByProject: ODataTasksAPI.getByProject,
-    update: ODataTasksAPI.update,
   },
   AllocationsAPI: {
     getAll: ODataAllocationsAPI.getAll,
@@ -107,7 +98,6 @@ export const ProjectDetailsAPI = {
 
 export const {
   ProjectsAPI,
-  TasksAPI,
   AllocationsAPI,
   UsersAPI,
   DeliverablesAPI,

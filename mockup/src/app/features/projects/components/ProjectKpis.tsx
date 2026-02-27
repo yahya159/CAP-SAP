@@ -32,23 +32,23 @@ export const ProjectKpis: React.FC<ProjectKpisProps> = ({
     >
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
         <div className="rounded-lg border bg-card p-4">
-          <div className="text-xs text-muted-foreground">On Track Tasks</div>
+          <div className="text-xs text-muted-foreground">On Track Tickets</div>
           <div className="mt-1 text-2xl font-semibold text-foreground">{kpis.onTrack}</div>
         </div>
         <div className="rounded-lg border bg-card p-4">
-          <div className="text-xs text-muted-foreground">Late Tasks</div>
+          <div className="text-xs text-muted-foreground">Late Tickets</div>
           <div className="mt-1 text-2xl font-semibold text-destructive">{kpis.late}</div>
         </div>
         <div className="rounded-lg border bg-card p-4">
-          <div className="text-xs text-muted-foreground">Blocked Tasks</div>
+          <div className="text-xs text-muted-foreground">Blocked Tickets</div>
           <div className="mt-1 text-2xl font-semibold text-amber-600">{kpis.blocked}</div>
         </div>
         <div className="rounded-lg border bg-card p-4">
-          <div className="text-xs text-muted-foreground">Completed Tasks</div>
+          <div className="text-xs text-muted-foreground">Completed Tickets</div>
           <div className="mt-1 text-2xl font-semibold text-emerald-600">{kpis.completed}</div>
         </div>
         <div className="rounded-lg border bg-card p-4">
-          <div className="text-xs text-muted-foreground">Critical Tasks</div>
+          <div className="text-xs text-muted-foreground">Critical Tickets</div>
           <div className="mt-1 text-2xl font-semibold text-destructive">{kpis.critical}</div>
         </div>
         <div className="rounded-lg border bg-card p-4">

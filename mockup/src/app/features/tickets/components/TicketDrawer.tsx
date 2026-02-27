@@ -60,7 +60,7 @@ export const TicketDrawer: React.FC<TicketDrawerProps> = ({
                   {selectedTicket.priority}
                 </Badge>
                 <Badge variant="outline">{TICKET_NATURE_LABELS[selectedTicket.nature]}</Badge>
-                <Badge variant="outline">{selectedTicket.module}</Badge>
+                <Badge variant="outline">{selectedTicket.module ?? '-'}</Badge>
                 <Badge
                   variant="outline"
                   className={
@@ -80,11 +80,11 @@ export const TicketDrawer: React.FC<TicketDrawerProps> = ({
                 </div>
                 <div>
                   <span className="text-muted-foreground">WRICEF:</span>{' '}
-                  {selectedTicket.wricefId}
+                  {selectedTicket.wricefId ?? '-'}
                 </div>
                 <div>
                   <span className="text-muted-foreground">Module:</span>{' '}
-                  {SAP_MODULE_LABELS[selectedTicket.module]}
+                  {selectedTicket.module ? SAP_MODULE_LABELS[selectedTicket.module] : '-'}
                 </div>
                 <div>
                   <span className="text-muted-foreground">Complexity:</span>{' '}

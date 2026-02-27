@@ -8,7 +8,6 @@ using { sap.performance.dashboard.db as db } from '../db/schema';
  * CAP auto-discovers this file and loads performance-service.js by convention.
  */
 @path: '/odata/v4/performance'
-@requires: 'authenticated-user'
 service PerformanceService {
 
   // ---- Ticket domain -------------------------------------------------------
@@ -19,7 +18,6 @@ service PerformanceService {
   entity Projects            as projection on db.Projects;
 
   // ---- Other entity stubs --------------------------------------------------
-  entity Tasks               as projection on db.Tasks;
   entity Timesheets          as projection on db.Timesheets;
   entity Evaluations         as projection on db.Evaluations;
   entity Deliverables        as projection on db.Deliverables;
@@ -60,7 +58,35 @@ service PerformanceService {
   entity Notifications       as projection on db.Notifications;
   entity ReferenceData       as projection on db.ReferenceData;
 
+  type AuthUser {
+    id                 : String(50);
+    name               : String(100);
+    email              : String(150);
+    role               : db.UserRole;
+    active             : Boolean;
+    skills             : LargeString;
+    certifications     : LargeString;
+    availabilityPercent: Integer;
+    teamId             : String(50);
+    avatarUrl          : String(500);
+  }
+
+  type AuthSession {
+    token    : String(4096);
+    expiresAt: DateTime;
+    user     : AuthUser;
+  }
+
+  type QuickAccessAccount {
+    id   : String(50);
+    name : String(100);
+    email: String(150);
+    role : db.UserRole;
+  }
+
   // ---- Authentication action ------------------------------------------------
   // POST /authenticate { email, password }
-  action authenticate(email: String, password: String) returns Users;
+  action authenticate(email: String, password: String) returns AuthSession;
+  // GET/POST /quickAccessAccounts
+  action quickAccessAccounts() returns array of QuickAccessAccount;
 }

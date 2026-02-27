@@ -4,10 +4,10 @@ import {
   DeliverablesAPI,
   NotificationsAPI,
   ProjectsAPI,
-  TasksAPI,
+  TicketsAPI,
   UsersAPI,
 } from '../../services/odataClient';
-import { Deliverable, Project, Task, User } from '../../types/entities';
+import { Deliverable, Project, Ticket, User } from '../../types/entities';
 import { ExternalLink } from 'lucide-react';
 import { useAuth } from '../../context/AuthContext';
 import { Textarea } from '../../components/ui/textarea';
@@ -26,7 +26,7 @@ export const FuncProjects: React.FC = () => {
   const { currentUser } = useAuth();
   const [projects, setProjects] = useState<Project[]>([]);
   const [deliverables, setDeliverables] = useState<Deliverable[]>([]);
-  const [tasks, setTasks] = useState<Task[]>([]);
+  const [tickets, setTickets] = useState<Ticket[]>([]);
   const [users, setUsers] = useState<User[]>([]);
   const [loading, setLoading] = useState(true);
   const [feedbackDrafts, setFeedbackDrafts] = useState<Record<string, string>>({});
@@ -39,15 +39,15 @@ export const FuncProjects: React.FC = () => {
   const loadData = async () => {
     setLoading(true);
     try {
-      const [projectData, deliverableData, taskData, userData] = await Promise.all([
+      const [projectData, deliverableData, ticketData, userData] = await Promise.all([
         ProjectsAPI.getAll(),
         DeliverablesAPI.getAll(),
-        TasksAPI.getAll(),
+        TicketsAPI.getAll(),
         UsersAPI.getAll(),
       ]);
       setProjects(projectData);
       setDeliverables(deliverableData);
-      setTasks(taskData);
+      setTickets(ticketData);
       setUsers(userData);
     } finally {
       setLoading(false);
@@ -61,17 +61,17 @@ export const FuncProjects: React.FC = () => {
       const changes = projectDeliverables.filter(
         (deliverable) => deliverable.validationStatus === 'CHANGES_REQUESTED'
       ).length;
-      const projectTasks = tasks.filter((task) => task.projectId === project.id);
-      const blocked = projectTasks.filter((task) => task.status === 'BLOCKED').length;
+      const projectTickets = tickets.filter((ticket) => ticket.projectId === project.id);
+      const blocked = projectTickets.filter((ticket) => ticket.status === 'BLOCKED').length;
       const manager = users.find((user) => user.id === project.managerId);
       const technicalConsultant = users.find(
         (user) =>
           user.role === 'CONSULTANT_TECHNIQUE' &&
-          projectTasks.some((task) => task.assigneeId === user.id)
+          projectTickets.some((ticket) => ticket.assignedTo === user.id)
       );
       return { project, pending, changes, blocked, manager, technicalConsultant };
     });
-  }, [deliverables, projects, tasks, users]);
+  }, [deliverables, projects, tickets, users]);
 
   const openTeamsDiscussion = (tech?: User) => {
     if (!currentUser || !tech) return;
@@ -168,7 +168,7 @@ export const FuncProjects: React.FC = () => {
                   </div>
                   <div className="rounded border border-border p-2 text-center">
                     <div className="text-xl font-semibold text-accent-foreground">{blocked}</div>
-                    <div className="text-xs text-muted-foreground">Blocked Tasks</div>
+                    <div className="text-xs text-muted-foreground">Blocked Tickets</div>
                   </div>
                 </div>
 

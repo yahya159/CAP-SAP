@@ -4,8 +4,8 @@ import { useNavigate } from 'react-router';
 import { PageHeader } from '../../components/common/PageHeader';
 import { KPICard } from '../../components/common/KPICard';
 import { useAuth } from '../../context/AuthContext';
-import { EvaluationsAPI, ProjectsAPI, TasksAPI, TimesheetsAPI } from '../../services/odataClient';
-import { Evaluation, Project, Task, Timesheet } from '../../types/entities';
+import { EvaluationsAPI, ProjectsAPI, TicketsAPI, TimesheetsAPI } from '../../services/odataClient';
+import { Evaluation, Project, Ticket, Timesheet } from '../../types/entities';
 import { Card, CardContent, CardHeader, CardTitle } from '../../components/ui/card';
 import { Button } from '../../components/ui/button';
 import { Progress } from '../../components/ui/progress';
@@ -15,7 +15,7 @@ export const TechDashboard: React.FC = () => {
   const { currentUser } = useAuth();
   const navigate = useNavigate();
 
-  const [tasks, setTasks] = useState<Task[]>([]);
+  const [tickets, setTickets] = useState<Ticket[]>([]);
   const [projects, setProjects] = useState<Project[]>([]);
   const [evaluations, setEvaluations] = useState<Evaluation[]>([]);
   const [timesheets, setTimesheets] = useState<Timesheet[]>([]);
@@ -28,15 +28,15 @@ export const TechDashboard: React.FC = () => {
       setLoading(true);
 
       try {
-        const [taskData, allProjects, evals, timesheetData] = await Promise.all([
-          TasksAPI.getByUser(currentUser.id),
+        const [ticketData, allProjects, evals, timesheetData] = await Promise.all([
+          TicketsAPI.getByUser(currentUser.id),
           ProjectsAPI.getAll(),
           EvaluationsAPI.getByUser(currentUser.id),
           TimesheetsAPI.getByUser(currentUser.id),
         ]);
 
-        const myProjectIds = new Set(taskData.map((task) => task.projectId));
-        setTasks(taskData);
+        const myProjectIds = new Set(ticketData.map((ticket) => ticket.projectId));
+        setTickets(ticketData);
         setProjects(allProjects.filter((project) => myProjectIds.has(project.id)));
         setEvaluations(evals);
         setTimesheets(timesheetData);
@@ -48,9 +48,13 @@ export const TechDashboard: React.FC = () => {
     void loadDashboardData();
   }, [currentUser]);
 
-  const myTasksCount = tasks.length;
-  const overdueTasks = tasks.filter(
-    (task) => task.status !== 'DONE' && new Date(task.plannedEnd) < new Date() && !task.realEnd
+  const myTicketsCount = tickets.length;
+  const overdueTickets = tickets.filter(
+    (ticket) =>
+      ticket.status !== 'DONE' &&
+      ticket.status !== 'REJECTED' &&
+      Boolean(ticket.dueDate) &&
+      new Date(ticket.dueDate as string) < new Date()
   ).length;
 
   const weekStart = toLocalDateKey(getMondayOfWeek(new Date()));
@@ -65,9 +69,20 @@ export const TechDashboard: React.FC = () => {
       ? evaluations.reduce((sum, evaluation) => sum + evaluation.score, 0) / evaluations.length
       : 0;
 
-  const upcomingTasks = tasks
-    .filter((task) => task.status === 'TO_DO' || task.status === 'IN_PROGRESS')
-    .sort((a, b) => new Date(a.plannedEnd).getTime() - new Date(b.plannedEnd).getTime())
+  const progressByStatus: Record<Ticket['status'], number> = {
+    NEW: 0,
+    IN_PROGRESS: 50,
+    IN_TEST: 80,
+    BLOCKED: 40,
+    DONE: 100,
+    REJECTED: 100,
+  };
+  const upcomingTickets = tickets
+    .filter((ticket) => ticket.status === 'NEW' || ticket.status === 'IN_PROGRESS' || ticket.status === 'IN_TEST')
+    .sort(
+      (a, b) =>
+        new Date(a.dueDate ?? '9999-12-31').getTime() - new Date(b.dueDate ?? '9999-12-31').getTime()
+    )
     .slice(0, 5);
 
   return (
@@ -80,8 +95,8 @@ export const TechDashboard: React.FC = () => {
 
       <div className="space-y-6 p-6 lg:p-8">
         <div className="grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-5">
-          <KPICard title="My Tasks" value={myTasksCount} icon="task" color="blue" />
-          <KPICard title="Overdue Tasks" value={overdueTasks} icon="alert" color="red" />
+          <KPICard title="My Tickets" value={myTicketsCount} icon="task" color="blue" />
+          <KPICard title="Overdue Tickets" value={overdueTickets} icon="alert" color="red" />
           <KPICard title="Hours This Week" value={hoursThisWeek} icon="timesheet" color="green" />
           <KPICard
             title="Active Projects"
@@ -102,41 +117,41 @@ export const TechDashboard: React.FC = () => {
         <div className="grid grid-cols-1 gap-6 xl:grid-cols-[1.1fr_1fr]">
           <Card className="bg-card/92">
             <CardHeader className="flex-row items-center justify-between space-y-0">
-              <CardTitle className="text-lg">Upcoming Tasks</CardTitle>
-              <Button variant="secondary" size="sm" onClick={() => navigate('/consultant-tech/tasks')}>
+              <CardTitle className="text-lg">Upcoming Tickets</CardTitle>
+              <Button variant="secondary" size="sm" onClick={() => navigate('/consultant-tech/tickets')}>
                 View All
               </Button>
             </CardHeader>
             <CardContent className="space-y-3">
               {loading ? (
-                <p className="text-sm text-muted-foreground">Loading tasks...</p>
-              ) : upcomingTasks.length === 0 ? (
-                <p className="text-sm text-muted-foreground">No upcoming tasks.</p>
+                <p className="text-sm text-muted-foreground">Loading tickets...</p>
+              ) : upcomingTickets.length === 0 ? (
+                <p className="text-sm text-muted-foreground">No upcoming tickets.</p>
               ) : (
-                upcomingTasks.map((task) => (
+                upcomingTickets.map((ticket) => (
                   <button
-                    key={task.id}
+                    key={ticket.id}
                     type="button"
-                    onClick={() => navigate('/consultant-tech/tasks')}
+                    onClick={() => navigate('/consultant-tech/tickets')}
                     className="w-full rounded-xl border border-border/70 bg-surface-1 p-4 text-left transition hover-lift"
                   >
                     <div className="flex items-start justify-between gap-3">
                       <div>
-                        <p className="font-semibold text-foreground">{task.title}</p>
-                        <p className="mt-1 text-xs text-muted-foreground">{task.description}</p>
+                        <p className="font-semibold text-foreground">{ticket.title}</p>
+                        <p className="mt-1 text-xs text-muted-foreground">{ticket.description}</p>
                       </div>
                       <span className="rounded-full bg-muted px-2 py-1 text-xs font-medium text-muted-foreground">
-                        {task.priority}
+                        {ticket.priority}
                       </span>
                     </div>
                     <div className="mt-3 flex items-center justify-between text-xs text-muted-foreground">
                       <span className="inline-flex items-center gap-1">
                         <CalendarClock className="h-3.5 w-3.5" />
-                        Due {new Date(task.plannedEnd).toLocaleDateString()}
+                        Due {ticket.dueDate ? new Date(ticket.dueDate).toLocaleDateString() : 'n/a'}
                       </span>
-                      <span>{task.progressPercent}% done</span>
+                      <span>{progressByStatus[ticket.status]}% done</span>
                     </div>
-                    <Progress className="mt-2" value={task.progressPercent} />
+                    <Progress className="mt-2" value={progressByStatus[ticket.status]} />
                   </button>
                 ))
               )}
@@ -199,10 +214,10 @@ export const TechDashboard: React.FC = () => {
               </p>
             </div>
             <div className="rounded-xl border border-border/70 bg-surface-1 p-4">
-              <p className="text-xs uppercase tracking-[0.1em] text-muted-foreground">Tasks Completed</p>
+              <p className="text-xs uppercase tracking-[0.1em] text-muted-foreground">Tickets Completed</p>
               <p className="mt-2 inline-flex items-center gap-2 text-2xl font-semibold text-foreground">
                 <CheckCircle2 className="h-5 w-5 text-primary" />
-                {tasks.filter((task) => task.status === 'DONE').length}
+                {tickets.filter((ticket) => ticket.status === 'DONE').length}
               </p>
             </div>
             <div className="rounded-xl border border-border/70 bg-surface-1 p-4">

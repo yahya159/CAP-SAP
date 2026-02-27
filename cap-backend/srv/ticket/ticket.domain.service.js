@@ -8,6 +8,15 @@ const TicketRepo = require('./ticket.repo');
 const { generateTicketCode } = require('../shared/utils/id');
 const { nowIso } = require('../shared/utils/timestamp');
 
+const TICKET_STATUS_TRANSITIONS = {
+  NEW: new Set(['IN_PROGRESS', 'BLOCKED', 'REJECTED']),
+  IN_PROGRESS: new Set(['IN_TEST', 'BLOCKED', 'DONE', 'REJECTED']),
+  IN_TEST: new Set(['IN_PROGRESS', 'DONE', 'REJECTED']),
+  BLOCKED: new Set(['IN_PROGRESS', 'REJECTED']),
+  DONE: new Set([]),
+  REJECTED: new Set(['NEW']),
+};
+
 class TicketDomainService {
   constructor(_srv) {
     this.repo = new TicketRepo();
@@ -22,8 +31,17 @@ class TicketDomainService {
 
     // Guard required fields
     if (!data.projectId) req.error(400, 'projectId is required');
+    if (!data.createdBy) req.error(400, 'createdBy is required');
     if (!data.title)     req.error(400, 'title is required');
     if (!data.nature)    req.error(400, 'nature is required');
+
+    if (typeof data.assignedTo === 'string' && !data.assignedTo.trim()) data.assignedTo = null;
+    if (typeof data.functionalTesterId === 'string' && !data.functionalTesterId.trim()) data.functionalTesterId = null;
+
+    await this._assertProjectExists(req, data.projectId);
+    await this._assertUserExists(req, data.createdBy, 'createdBy');
+    if (data.assignedTo) await this._assertUserExists(req, data.assignedTo, 'assignedTo');
+    if (data.functionalTesterId) await this._assertUserExists(req, data.functionalTesterId, 'functionalTesterId');
 
     // Auto-generate ticketCode: TK-YYYY-XXXXXX
     const year = new Date().getFullYear();
@@ -47,6 +65,30 @@ class TicketDomainService {
    */
   async beforeUpdate(req) {
     const data = req.data;
+    data.updatedAt = nowIso();
+    const id = req.params?.[0]?.ID ?? req.params?.[0] ?? data.ID;
+
+    if (typeof data.assignedTo === 'string' && !data.assignedTo.trim()) data.assignedTo = null;
+    if (typeof data.functionalTesterId === 'string' && !data.functionalTesterId.trim()) data.functionalTesterId = null;
+
+    if (data.status !== undefined && id) {
+      const current = await this.repo.findById(id);
+      if (current && data.status !== current.status) {
+        const allowed = TICKET_STATUS_TRANSITIONS[current.status] || new Set();
+        if (!allowed.has(data.status)) {
+          req.reject(409, `Invalid ticket status transition: ${current.status} -> ${data.status}`);
+        }
+      }
+    }
+
+    if (data.projectId !== undefined) await this._assertProjectExists(req, data.projectId);
+    if (data.createdBy !== undefined) await this._assertUserExists(req, data.createdBy, 'createdBy');
+    if (data.assignedTo !== undefined && data.assignedTo !== null) {
+      await this._assertUserExists(req, data.assignedTo, 'assignedTo');
+    }
+    if (data.functionalTesterId !== undefined && data.functionalTesterId !== null) {
+      await this._assertUserExists(req, data.functionalTesterId, 'functionalTesterId');
+    }
 
     // Re-serialize JSON arrays if they were provided as arrays
     if (Array.isArray(data.history)) {
@@ -100,6 +142,18 @@ class TicketDomainService {
       }
     }
     throw new Error('Unable to allocate a unique ticketCode');
+  }
+
+  async _assertProjectExists(req, projectId) {
+    if (!projectId) return;
+    const exists = await this.repo.existsProjectById(projectId);
+    if (!exists) req.error(400, `Unknown projectId '${projectId}'`);
+  }
+
+  async _assertUserExists(req, userId, fieldName) {
+    if (!userId) return;
+    const exists = await this.repo.existsUserById(userId);
+    if (!exists) req.error(400, `Unknown ${fieldName} '${userId}'`);
   }
 }
 

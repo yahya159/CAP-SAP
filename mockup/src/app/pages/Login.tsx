@@ -7,7 +7,7 @@ import { Button } from '../components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '../components/ui/card';
 import { Input } from '../components/ui/input';
 import { Label } from '../components/ui/label';
-import { UsersAPI } from '../services/odataClient';
+import { AuthAPI } from '../services/odataClient';
 import { User, USER_ROLE_LABELS, UserRole } from '../types/entities';
 import inetumLogoDark from '@/assets/inetum-logo-dark.svg';
 import inetumLogoLight from '@/assets/inetum-logo.svg';
@@ -20,12 +20,14 @@ const QUICK_ACCESS_PASSWORDS: Record<UserRole, string> = {
   PROJECT_MANAGER: 'PM#2026',
   DEV_COORDINATOR: 'DevCo#2026',
 };
+const QUICK_ACCESS_AUTO_LOGIN = import.meta.env.VITE_ENABLE_QUICK_ACCESS_AUTO_LOGIN !== 'false'; // Enabled by default for now
+type QuickAccessUser = Pick<User, 'id' | 'name' | 'email' | 'role'>;
 
 export const Login: React.FC = () => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);
-  const [quickUsers, setQuickUsers] = useState<User[]>([]);
+  const [quickUsers, setQuickUsers] = useState<QuickAccessUser[]>([]);
 
   const { login, directLogin, isDirectLoginEnabled } = useAuth();
   const navigate = useNavigate();
@@ -35,9 +37,9 @@ export const Login: React.FC = () => {
   useEffect(() => {
     const loadQuickAccessUsers = async () => {
       try {
-        const users = await UsersAPI.getActive();
+        const users = await AuthAPI.quickAccessAccounts();
 
-        const dedupByRole = new Map<UserRole, User>();
+        const dedupByRole = new Map<UserRole, QuickAccessUser>();
         users.forEach((user) => {
           if (!dedupByRole.has(user.role)) {
             dedupByRole.set(user.role, user);
@@ -179,7 +181,7 @@ export const Login: React.FC = () => {
                         const quickPassword = QUICK_ACCESS_PASSWORDS[user.role];
                         setEmail(user.email);
                         setPassword('');
-                        if (!quickPassword) {
+                        if (!quickPassword || !QUICK_ACCESS_AUTO_LOGIN) {
                           toast.info(`Selected ${USER_ROLE_LABELS[user.role]}. Enter password to continue.`);
                           return;
                         }

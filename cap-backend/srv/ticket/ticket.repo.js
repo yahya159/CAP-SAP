@@ -6,43 +6,51 @@
 const cds = require('@sap/cds');
 
 class TicketRepo {
-  get db() {
-    return cds.db;
-  }
-
-  get Tickets() {
-    return cds.db.entities['sap.performance.dashboard.db.Tickets'];
-  }
-
   /** Check whether a ticket code already exists */
   async existsByTicketCode(ticketCode) {
-    const { Tickets } = this;
     const existing = await cds.db.run(
-      SELECT.one(Tickets)
+      SELECT.one.from('sap.performance.dashboard.db.Tickets')
         .columns('ID')
         .where({ ticketCode })
     );
     return Boolean(existing);
   }
 
+  /** Check whether a project exists */
+  async existsProjectById(projectId) {
+    const existing = await cds.db.run(
+      SELECT.one.from('sap.performance.dashboard.db.Projects')
+        .columns('ID')
+        .where({ ID: projectId })
+    );
+    return Boolean(existing);
+  }
+
+  /** Check whether a user exists */
+  async existsUserById(userId) {
+    const existing = await cds.db.run(
+      SELECT.one.from('sap.performance.dashboard.db.Users')
+        .columns('ID')
+        .where({ ID: userId })
+    );
+    return Boolean(existing);
+  }
+
   /** Fetch a ticket by ID */
   async findById(id) {
-    const { Tickets } = this;
-    return cds.db.run(SELECT.one(Tickets).where({ ID: id }));
+    return cds.db.run(SELECT.one.from('sap.performance.dashboard.db.Tickets').where({ ID: id }));
   }
 
   /** Persist a new ticket */
   async insert(data) {
-    const { Tickets } = this;
-    await cds.db.run(INSERT.into(Tickets).entries(data));
-    return cds.db.run(SELECT.one(Tickets).where({ ID: data.ID }));
+    await cds.db.run(INSERT.into('sap.performance.dashboard.db.Tickets').entries(data));
+    return cds.db.run(SELECT.one.from('sap.performance.dashboard.db.Tickets').where({ ID: data.ID }));
   }
 
   /** Update ticket fields */
   async update(id, changes) {
-    const { Tickets } = this;
-    await cds.db.run(UPDATE(Tickets).where({ ID: id }).with(changes));
-    return cds.db.run(SELECT.one(Tickets).where({ ID: id }));
+    await cds.db.run(UPDATE('sap.performance.dashboard.db.Tickets').where({ ID: id }).with(changes));
+    return cds.db.run(SELECT.one.from('sap.performance.dashboard.db.Tickets').where({ ID: id }));
   }
 }
 

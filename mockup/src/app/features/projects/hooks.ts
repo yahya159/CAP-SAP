@@ -5,17 +5,16 @@ import {
   Deliverable,
   DocumentationObject,
   Project,
-  Task,
   Ticket,
   User,
   WricefObject,
 } from '../../types/entities';
+import { isAbortError } from '../../utils/async';
 import { ProjectDetailsAPI } from './api';
 
 export interface ProjectDetailsBootstrapState {
   project: Project | null;
   abaques: Abaque[];
-  tasks: Task[];
   allocations: Allocation[];
   users: User[];
   deliverables: Deliverable[];
@@ -27,7 +26,6 @@ export interface ProjectDetailsBootstrapState {
 const EMPTY_BOOTSTRAP_STATE: ProjectDetailsBootstrapState = {
   project: null,
   abaques: [],
-  tasks: [],
   allocations: [],
   users: [],
   deliverables: [],
@@ -35,14 +33,6 @@ const EMPTY_BOOTSTRAP_STATE: ProjectDetailsBootstrapState = {
   documentationObjects: [],
   wricefObjects: [],
 };
-
-const isAbortError = (error: unknown): boolean =>
-  Boolean(
-    error &&
-      typeof error === 'object' &&
-      'isAbort' in error &&
-      (error as { isAbort?: boolean }).isAbort
-  );
 
 export const loadProjectDetailsBootstrap = async (
   projectId?: string,
@@ -53,7 +43,6 @@ export const loadProjectDetailsBootstrap = async (
   const data = await ProjectDetailsAPI.getBootstrapData(projectId, { signal });
   return {
     project: data.project,
-    tasks: data.tasks,
     allocations: data.allocations,
     users: data.users,
     deliverables: data.deliverables,
@@ -67,7 +56,6 @@ export const loadProjectDetailsBootstrap = async (
 export const useProjectDetailsBootstrap = (projectId?: string) => {
   const [project, setProject] = useState<Project | null>(null);
   const [abaques, setAbaques] = useState<Abaque[]>([]);
-  const [tasks, setTasks] = useState<Task[]>([]);
   const [allocations, setAllocations] = useState<Allocation[]>([]);
   const [users, setUsers] = useState<User[]>([]);
   const [deliverables, setDeliverables] = useState<Deliverable[]>([]);
@@ -90,7 +78,6 @@ export const useProjectDetailsBootstrap = (projectId?: string) => {
       if (controller.signal.aborted) return;
 
       setProject(data.project);
-      setTasks(data.tasks);
       setAllocations(data.allocations);
       setUsers(data.users);
       setDeliverables(data.deliverables);
@@ -125,8 +112,6 @@ export const useProjectDetailsBootstrap = (projectId?: string) => {
     setProject,
     abaques,
     setAbaques,
-    tasks,
-    setTasks,
     allocations,
     setAllocations,
     users,

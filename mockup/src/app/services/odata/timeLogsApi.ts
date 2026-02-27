@@ -52,6 +52,7 @@ export const TimeLogsAPI = {
       ...requestOptions,
       method: 'POST',
     });
+    if (!data) throw new Error(`sendToStraTIME returned no data for TimeLog '${id}'`);
     return normalizeEntityRecord(data);
   },
 };

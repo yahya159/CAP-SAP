@@ -1,7 +1,7 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import { PageHeader } from '../../components/common/PageHeader';
-import { EvaluationsAPI, TasksAPI, UsersAPI } from '../../services/odataClient';
-import { Evaluation, Task, User } from '../../types/entities';
+import { EvaluationsAPI, TicketsAPI, UsersAPI } from '../../services/odataClient';
+import { Evaluation, Ticket, User } from '../../types/entities';
 import { SkillsRadarChart } from '../../components/charts/SkillsRadarChart';
 import {
   Select,
@@ -14,7 +14,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '../../components/ui/ca
 
 export const TeamPerformance: React.FC = () => {
   const [users, setUsers] = useState<User[]>([]);
-  const [tasks, setTasks] = useState<Task[]>([]);
+  const [tickets, setTickets] = useState<Ticket[]>([]);
   const [evaluations, setEvaluations] = useState<Evaluation[]>([]);
   const [loading, setLoading] = useState(true);
   const [selectedConsultant, setSelectedConsultant] = useState<string>('NONE');
@@ -26,13 +26,13 @@ export const TeamPerformance: React.FC = () => {
   const loadData = async () => {
     setLoading(true);
     try {
-      const [userData, taskData, evalData] = await Promise.all([
+      const [userData, ticketData, evalData] = await Promise.all([
         UsersAPI.getAll(),
-        TasksAPI.getAll(),
+        TicketsAPI.getAll(),
         EvaluationsAPI.getAll(),
       ]);
       setUsers(userData.filter((user) => user.role !== 'ADMIN' && user.role !== 'MANAGER'));
-      setTasks(taskData);
+      setTickets(ticketData);
       setEvaluations(evalData);
     } finally {
       setLoading(false);
@@ -41,11 +41,15 @@ export const TeamPerformance: React.FC = () => {
 
   const rows = useMemo(() => {
     return users.map((user) => {
-      const userTasks = tasks.filter((task) => task.assigneeId === user.id);
-      const done = userTasks.filter((task) => task.status === 'DONE').length;
-      const blocked = userTasks.filter((task) => task.status === 'BLOCKED').length;
-      const overdue = userTasks.filter(
-        (task) => task.status !== 'DONE' && new Date(task.plannedEnd) < new Date()
+      const userTickets = tickets.filter((ticket) => ticket.assignedTo === user.id);
+      const done = userTickets.filter((ticket) => ticket.status === 'DONE').length;
+      const blocked = userTickets.filter((ticket) => ticket.status === 'BLOCKED').length;
+      const overdue = userTickets.filter(
+        (ticket) =>
+          ticket.status !== 'DONE' &&
+          ticket.status !== 'REJECTED' &&
+          Boolean(ticket.dueDate) &&
+          new Date(ticket.dueDate as string) < new Date()
       ).length;
 
       const userEvals = evaluations.filter((evaluation) => evaluation.userId === user.id);
@@ -61,7 +65,7 @@ export const TeamPerformance: React.FC = () => {
 
       return {
         user,
-        assigned: userTasks.length,
+        assigned: userTickets.length,
         done,
         blocked,
         overdue,
@@ -69,7 +73,7 @@ export const TeamPerformance: React.FC = () => {
         qualityScore,
       };
     });
-  }, [evaluations, tasks, users]);
+  }, [evaluations, tickets, users]);
 
   const globalScore = rows.length
     ? rows.reduce((sum, row) => sum + row.avgScore, 0) / rows.length
@@ -107,7 +111,7 @@ export const TeamPerformance: React.FC = () => {
           <Card>
             <CardContent className="pt-4">
               <p className="text-xs text-muted-foreground">Average Workload</p>
-              <p className="text-2xl font-semibold text-foreground mt-1">{workloadBalance.toFixed(1)} tasks</p>
+              <p className="text-2xl font-semibold text-foreground mt-1">{workloadBalance.toFixed(1)} tickets</p>
             </CardContent>
           </Card>
         </div>

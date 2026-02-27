@@ -1,14 +1,7 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { Project, Ticket, User } from '../../types/entities';
+import { isAbortError } from '../../utils/async';
 import { ManagerTicketsAPI } from './api';
-
-const isAbortError = (error: unknown): boolean =>
-  Boolean(
-    error &&
-      typeof error === 'object' &&
-      'isAbort' in error &&
-      (error as { isAbort?: boolean }).isAbort
-  );
 
 export const useManagerTicketsBootstrap = () => {
   const [projects, setProjects] = useState<Project[]>([]);

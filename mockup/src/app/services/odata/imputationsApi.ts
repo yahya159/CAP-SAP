@@ -64,6 +64,7 @@ export const ImputationsAPI = {
       method: 'POST',
       body: JSON.stringify({ validatedBy }),
     });
+    if (!data) throw new Error(`validate returned no data for Imputation '${id}'`);
     return normalizeEntityRecord(data);
   },
 
@@ -77,6 +78,7 @@ export const ImputationsAPI = {
       method: 'POST',
       body: JSON.stringify({ validatedBy }),
     });
+    if (!data) throw new Error(`reject returned no data for Imputation '${id}'`);
     return normalizeEntityRecord(data);
   },
 };

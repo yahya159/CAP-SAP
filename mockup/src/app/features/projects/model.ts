@@ -2,7 +2,6 @@ import {
   DocumentationObject,
   DocumentationObjectType,
   SAPModule,
-  Task,
   Ticket,
   TicketComplexity,
   TicketStatus,
@@ -77,8 +76,8 @@ export const filterProjectTickets = (
   });
 };
 
-export const computeProjectKpis = (tasks: Task[]): ProjectKpis => {
-  if (!tasks.length) {
+export const computeProjectKpis = (tickets: Ticket[]): ProjectKpis => {
+  if (!tickets.length) {
     return {
       onTrack: 0,
       late: 0,
@@ -90,24 +89,33 @@ export const computeProjectKpis = (tasks: Task[]): ProjectKpis => {
   }
 
   const now = new Date();
-  const late = tasks.filter((task) => task.status !== 'DONE' && new Date(task.plannedEnd) < now)
-    .length;
-  const blocked = tasks.filter((task) => task.status === 'BLOCKED').length;
-  const completed = tasks.filter((task) => task.status === 'DONE').length;
-  const critical = tasks.filter((task) => task.isCritical).length;
-  // Tasks that are both blocked AND late should not be double-subtracted
-  const blockedAndLate = tasks.filter(
-    (task) => task.status === 'BLOCKED' && new Date(task.plannedEnd) < now
-  ).length;
-  const onTrack = tasks.length - late - blocked + blockedAndLate;
-  const productivity = tasks.reduce((sum, task) => sum + task.progressPercent, 0) / tasks.length;
+  const isLate = (ticket: Ticket): boolean =>
+    Boolean(ticket.dueDate && ticket.status !== 'DONE' && ticket.status !== 'REJECTED' && new Date(ticket.dueDate) < now);
+  const progressByStatus: Record<TicketStatus, number> = {
+    NEW: 0,
+    IN_PROGRESS: 50,
+    IN_TEST: 80,
+    BLOCKED: 40,
+    DONE: 100,
+    REJECTED: 100,
+  };
+
+  const late = tickets.filter(isLate).length;
+  const blocked = tickets.filter((ticket) => ticket.status === 'BLOCKED').length;
+  const completed = tickets.filter((ticket) => ticket.status === 'DONE').length;
+  const critical = tickets.filter((ticket) => ticket.priority === 'CRITICAL').length;
+  // Tickets that are both blocked AND late should not be double-subtracted
+  const blockedAndLate = tickets.filter((ticket) => ticket.status === 'BLOCKED' && isLate(ticket)).length;
+  const onTrack = tickets.length - late - blocked + blockedAndLate;
+  const productivity =
+    tickets.reduce((sum, ticket) => sum + progressByStatus[ticket.status], 0) / tickets.length;
 
   return { onTrack, late, blocked, completed, critical, productivity };
 };
 
-export const computeEffortTotals = (tasks: Task[]): EffortTotals => {
-  const totalActualHours = tasks.reduce((sum, task) => sum + task.actualHours, 0);
-  const totalEstimatedHours = tasks.reduce((sum, task) => sum + task.estimatedHours, 0);
+export const computeEffortTotals = (tickets: Ticket[]): EffortTotals => {
+  const totalActualHours = tickets.reduce((sum, ticket) => sum + Number(ticket.effortHours ?? 0), 0);
+  const totalEstimatedHours = tickets.reduce((sum, ticket) => sum + Number(ticket.estimationHours ?? 0), 0);
   const totalActualDays = totalActualHours / 8;
 
   return {
@@ -135,7 +143,11 @@ export const computeEstimateConsumption = (
 export const normalizeWricefRef = (value: string): string =>
   value.trim().toLowerCase().replace(/[^a-z0-9_-]/g, '');
 
-export const isTicketLinkedToObject = (ticketWricefId: string, objectId: string): boolean => {
+export const isTicketLinkedToObject = (
+  ticketWricefId: string | null | undefined,
+  objectId: string
+): boolean => {
+  if (!ticketWricefId) return false;
   const ticketRef = ticketWricefId.trim().toLowerCase();
   const objectRef = objectId.trim().toLowerCase();
   if (ticketRef === objectRef || ticketRef.startsWith(`${objectRef}-tk-`)) return true;

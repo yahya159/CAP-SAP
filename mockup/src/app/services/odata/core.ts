@@ -3,7 +3,6 @@
 import type {
   User,
   Project,
-  Task,
   Timesheet,
   Evaluation,
   Deliverable,
@@ -25,7 +24,6 @@ import type {
 export type {
   User,
   Project,
-  Task,
   Timesheet,
   Evaluation,
   Deliverable,
@@ -49,6 +47,7 @@ export type {
 
 const ODATA_BASE_URL = import.meta.env.VITE_ODATA_BASE_URL || '/odata/v4/performance';
 const ODATA_OBSERVABILITY_ENABLED = import.meta.env.VITE_ODATA_OBSERVABILITY === 'true';
+const ODATA_AUTH_TOKEN_STORAGE_KEY = 'odata.auth.token';
 
 export interface ODataClientConfig {
   credentials: RequestCredentials;
@@ -81,7 +80,53 @@ let odataClientConfig: ODataClientConfig = {
   },
 };
 
+const readStoredAuthToken = (): string | null => {
+  try {
+    const token = localStorage.getItem(ODATA_AUTH_TOKEN_STORAGE_KEY);
+    return token && token.trim() ? token : null;
+  } catch {
+    return null;
+  }
+};
+
+const persistAuthToken = (token: string | null): void => {
+  try {
+    if (token) localStorage.setItem(ODATA_AUTH_TOKEN_STORAGE_KEY, token);
+    else localStorage.removeItem(ODATA_AUTH_TOKEN_STORAGE_KEY);
+  } catch {
+    // ignore storage failures
+  }
+};
+
+let odataAuthToken: string | null = readStoredAuthToken();
+
 export const getODataClientConfig = (): ODataClientConfig => odataClientConfig;
+export const getODataAuthToken = (): string | null => odataAuthToken;
+
+export const setODataAuthToken = (token: string | null): void => {
+  const normalized = token?.trim() || null;
+  odataAuthToken = normalized;
+  persistAuthToken(normalized);
+};
+
+// ---------------------------------------------------------------------------
+// Token expiry / 401 event bus
+// ---------------------------------------------------------------------------
+
+type AuthExpiredListener = () => void;
+const authExpiredListeners = new Set<AuthExpiredListener>();
+
+/** Register a callback invoked when the server returns 401 (token expired/invalid). */
+export const onAuthExpired = (listener: AuthExpiredListener): (() => void) => {
+  authExpiredListeners.add(listener);
+  return () => { authExpiredListeners.delete(listener); };
+};
+
+const notifyAuthExpired = (): void => {
+  authExpiredListeners.forEach((listener) => {
+    try { listener(); } catch { /* listener errors should not break the client */ }
+  });
+};
 
 export const configureODataClient = (config: Partial<ODataClientConfig>): void => {
   odataClientConfig = {
@@ -512,7 +557,7 @@ async function parseODataErrorResponse(
 // Core fetch
 // ---------------------------------------------------------------------------
 
-export async function odataFetch<T>(endpoint: string, options?: ODataRequestOptions): Promise<T> {
+export async function odataFetch<T>(endpoint: string, options?: ODataRequestOptions): Promise<T | undefined> {
   const {
     timeoutMs,
     ifMatch,
@@ -534,6 +579,10 @@ export async function odataFetch<T>(endpoint: string, options?: ODataRequestOpti
 
   if (ifMatch) {
     requestHeaders.set('If-Match', ifMatch);
+  }
+
+  if (!requestHeaders.has('Authorization') && odataAuthToken) {
+    requestHeaders.set('Authorization', `Bearer ${odataAuthToken}`);
   }
 
   if (odataClientConfig.observability.enabled && odataClientConfig.observability.requestIdHeader) {
@@ -560,6 +609,10 @@ export async function odataFetch<T>(endpoint: string, options?: ODataRequestOpti
 
     const durationMs = Date.now() - startedAt;
     if (!response.ok) {
+      // Detect expired/invalid token and notify listeners before throwing
+      if (response.status === 401) {
+        notifyAuthExpired();
+      }
       throw await parseODataErrorResponse(response, endpoint, requestId);
     }
 
@@ -573,11 +626,11 @@ export async function odataFetch<T>(endpoint: string, options?: ODataRequestOpti
     });
 
     if (response.status === 204 || response.status === 205) {
-      return undefined as T;
+      return undefined;
     }
 
     const raw = await response.text();
-    if (!raw) return undefined as T;
+    if (!raw) return undefined;
     return JSON.parse(raw) as T;
   } catch (error) {
     if ((error as ODataNormalizedError)?.name === 'ODataClientError') {
@@ -802,6 +855,8 @@ export async function createEntity<T>(
     method: 'POST',
     body: JSON.stringify(toODataEntityPayload(payload)),
   });
+  // POST should always return the created entity; guard against unexpected 204
+  if (data === undefined) return normalizeEntityRecord(toODataEntityPayload(payload) as T);
   return normalizeEntityRecord(data);
 }
 
@@ -816,6 +871,11 @@ export async function updateEntity<T>(
     method: 'PATCH',
     body: JSON.stringify(toODataEntityPayload(payload)),
   });
+  // PATCH may return 204 (no content) – return the payload as fallback
+  if (data === undefined) {
+    const fallback = toODataEntityPayload(payload) as Record<string, unknown>;
+    return normalizeEntityRecord({ ...fallback, ID: id } as T);
+  }
   return normalizeEntityRecord(data);
 }
 
@@ -824,6 +884,7 @@ export async function deleteEntity(
   id: string,
   requestOptions?: ODataRequestOptions
 ): Promise<void> {
+  // DELETE typically returns 204 (no content), odataFetch returns undefined which is fine for void
   await odataFetch<void>(entityPath(entitySet, id), {
     ...requestOptions,
     method: 'DELETE',

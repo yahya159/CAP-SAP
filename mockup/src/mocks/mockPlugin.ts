@@ -11,6 +11,7 @@
 
 import type { Plugin } from 'vite';
 import type { IncomingMessage, ServerResponse } from 'node:http';
+import crypto from 'node:crypto';
 import { store, newId } from './mockData';
 
 const ODATA_PREFIX = '/odata/v4/performance';
@@ -22,6 +23,9 @@ const DEMO_PASSWORD_BY_EMAIL: Record<string, string> = {
   'pierre.pm@inetum.com': 'PM#2026',
   'diana.devco@inetum.com': 'DevCo#2026',
 };
+const MOCK_JWT_SECRET = process.env.MOCK_JWT_SECRET || 'mock-odata-dev-secret';
+const MOCK_JWT_TTL_SECONDS = Number(process.env.MOCK_JWT_TTL_SECONDS || 8 * 60 * 60);
+const QUICK_ACCESS_EMAILS = new Set(Object.keys(DEMO_PASSWORD_BY_EMAIL));
 
 // Matches: /EntitySet  or  /EntitySet(filter)  or  /EntitySet(id)/action
 const ENTITY_SET_RE = /^\/([A-Za-z]+)(\(([^)]*)\))?(?:\/(\w+))?$/;
@@ -80,6 +84,63 @@ const entityId = (entity: Entity): string | undefined => {
   return typeof id === 'string' ? id : undefined;
 };
 const normalizeEmail = (value: unknown): string => String(value ?? '').trim().toLowerCase();
+const toBase64Url = (value: string): string =>
+  Buffer.from(value, 'utf8').toString('base64').replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/g, '');
+const fromBase64Url = (value: string): string => {
+  const normalized = String(value).replace(/-/g, '+').replace(/_/g, '/');
+  const padded = normalized.padEnd(normalized.length + ((4 - (normalized.length % 4)) % 4), '=');
+  return Buffer.from(padded, 'base64').toString('utf8');
+};
+const signMockJwt = (claims: Record<string, unknown>): string => {
+  const header = toBase64Url(JSON.stringify({ alg: 'HS256', typ: 'JWT' }));
+  const payload = toBase64Url(JSON.stringify(claims));
+  const signature = crypto
+    .createHmac('sha256', MOCK_JWT_SECRET)
+    .update(`${header}.${payload}`)
+    .digest('base64')
+    .replace(/\+/g, '-')
+    .replace(/\//g, '_')
+    .replace(/=+$/g, '');
+  return `${header}.${payload}.${signature}`;
+};
+const verifyMockJwt = (token: string | null): Record<string, unknown> | null => {
+  if (!token) return null;
+  const parts = token.split('.');
+  if (parts.length !== 3) return null;
+  const [header, payload, signature] = parts;
+  const expected = crypto
+    .createHmac('sha256', MOCK_JWT_SECRET)
+    .update(`${header}.${payload}`)
+    .digest('base64')
+    .replace(/\+/g, '-')
+    .replace(/\//g, '_')
+    .replace(/=+$/g, '');
+  if (signature !== expected) return null;
+  try {
+    const claims = JSON.parse(fromBase64Url(payload)) as Record<string, unknown>;
+    if (claims.exp && Number(claims.exp) <= Math.floor(Date.now() / 1000)) return null;
+    return claims;
+  } catch {
+    return null;
+  }
+};
+const readBearerToken = (req: IncomingMessage): string | null => {
+  const authHeader = String(req.headers.authorization ?? '');
+  const [scheme, token] = authHeader.split(' ');
+  if (!/^Bearer$/i.test(scheme) || !token) return null;
+  return token.trim();
+};
+const quickAccessAccounts = (): Array<{ id: string; name: string; email: string; role: string }> => {
+  const usersCollection = (store.Users ?? []) as Entity[];
+  return usersCollection
+    .filter((candidate) => candidate.active === true && QUICK_ACCESS_EMAILS.has(normalizeEmail(candidate.email)))
+    .map((candidate) => ({
+      id: String(entityId(candidate) ?? ''),
+      name: String(candidate.name ?? ''),
+      email: String(candidate.email ?? ''),
+      role: String(candidate.role ?? ''),
+    }));
+};
 
 export function mockODataPlugin(): Plugin {
   return {
@@ -95,6 +156,17 @@ export function mockODataPlugin(): Plugin {
 
         const { entitySet, id, action } = parsed;
         const method = (req.method ?? 'GET').toUpperCase();
+
+        // ---- OPTIONS (preflight) ----------------------------------------
+        if (method === 'OPTIONS') {
+          res.writeHead(204, {
+            'Access-Control-Allow-Origin': '*',
+            'Access-Control-Allow-Methods': 'GET, POST, PATCH, PUT, DELETE, OPTIONS',
+            'Access-Control-Allow-Headers': 'Content-Type, Accept, Authorization',
+          });
+          res.end();
+          return;
+        }
 
         // ---- AUTHENTICATE (unbound action) ---------------------------------
         if (method === 'POST' && entitySet === 'authenticate' && !id && !action) {
@@ -115,9 +187,42 @@ export function mockODataPlugin(): Plugin {
               return;
             }
 
-            const idValue = entityId(user);
-            jsonResponse(res, idValue ? { ...user, ID: idValue } : user);
+            const issuedAt = Math.floor(Date.now() / 1000);
+            const expiresAtEpoch = issuedAt + MOCK_JWT_TTL_SECONDS;
+            const token = signMockJwt({
+              iss: 'sap-performance-dashboard-mock',
+              aud: 'sap-performance-dashboard-ui',
+              iat: issuedAt,
+              exp: expiresAtEpoch,
+              sub: entityId(user),
+              email: user.email,
+              role: user.role,
+              name: user.name,
+            });
+            const idValue = entityId(user) ?? '';
+            jsonResponse(res, {
+              token,
+              expiresAt: new Date(expiresAtEpoch * 1000).toISOString(),
+              user: {
+                ...user,
+                id: idValue,
+                ID: idValue,
+              },
+            });
           });
+          return;
+        }
+
+        // ---- QUICK ACCESS ACCOUNTS (public action) -------------------------
+        if ((method === 'GET' || method === 'POST') && entitySet === 'quickAccessAccounts' && !id && !action) {
+          jsonResponse(res, quickAccessAccounts());
+          return;
+        }
+
+        // ---- Protect all non-public routes --------------------------------
+        const claims = verifyMockJwt(readBearerToken(req));
+        if (!claims) {
+          jsonResponse(res, { error: { code: '401', message: 'Missing or invalid Bearer token' } }, 401);
           return;
         }
 
@@ -128,17 +233,6 @@ export function mockODataPlugin(): Plugin {
             return;
           }
           jsonResponse(res, { error: { message: `Entity set '${entitySet}' not found` } }, 404);
-          return;
-        }
-
-        // ---- OPTIONS (preflight) ----------------------------------------
-        if (method === 'OPTIONS') {
-          res.writeHead(204, {
-            'Access-Control-Allow-Origin': '*',
-            'Access-Control-Allow-Methods': 'GET, POST, PATCH, PUT, DELETE, OPTIONS',
-            'Access-Control-Allow-Headers': 'Content-Type, Accept',
-          });
-          res.end();
           return;
         }
 

@@ -18,6 +18,20 @@ const { nowIso } = require('./shared/utils/timestamp');
 
 // Ticket domain handler – registered via require
 const ticketImpl = require('./ticket/ticket.impl');
+const projectImpl = require('./project/project.impl');
+const userImpl = require('./user/user.impl');
+const allocationImpl = require('./allocation/allocation.impl');
+const leaveRequestImpl = require('./leave-request/leave-request.impl');
+const deliverableImpl = require('./deliverable/deliverable.impl');
+const evaluationImpl = require('./evaluation/evaluation.impl');
+const timesheetImpl = require('./timesheet/timesheet.impl');
+const timeLogImpl = require('./time-log/time-log.impl');
+const imputationImpl = require('./imputation/imputation.impl');
+const imputationPeriodImpl = require('./imputation-period/imputation-period.impl');
+const wricefImpl = require('./wricef/wricef.impl');
+const notificationImpl = require('./notification/notification.impl');
+const documentationImpl = require('./documentation/documentation.impl');
+const referenceDataImpl = require('./reference-data/reference-data.impl');
 
 const DEMO_PASSWORD_BY_EMAIL = Object.freeze({
   'alice.admin@inetum.com': 'Admin#2026',
@@ -28,7 +42,20 @@ const DEMO_PASSWORD_BY_EMAIL = Object.freeze({
   'diana.devco@inetum.com': 'DevCo#2026',
 });
 
+const JWT_SECRET = process.env.MOCK_JWT_SECRET || crypto.randomBytes(32).toString('hex');
+if (!process.env.MOCK_JWT_SECRET) {
+  // Avoid shipping a static repo secret in shared environments.
+  // Tokens remain valid only for the current process lifetime.
+  // eslint-disable-next-line no-console
+  console.warn('[auth] MOCK_JWT_SECRET is not set; using ephemeral process-local secret.');
+}
+const JWT_TTL_SECONDS = Number(process.env.MOCK_JWT_TTL_SECONDS || 8 * 60 * 60);
+const REVIEWER_ROLES = new Set(['ADMIN', 'MANAGER', 'PROJECT_MANAGER']);
+const PUBLIC_EVENTS = new Set(['authenticate', 'quickAccessAccounts']);
+const QUICK_ACCESS_EMAILS = new Set(Object.keys(DEMO_PASSWORD_BY_EMAIL));
+
 const extractEntityId = (req) => req.params?.[0]?.ID ?? req.params?.[0];
+const normalizeEmail = (value) => String(value ?? '').trim().toLowerCase();
 
 const safeEqual = (left, right) => {
   const leftBuffer = Buffer.from(String(left ?? ''), 'utf8');
@@ -37,56 +64,112 @@ const safeEqual = (left, right) => {
   return crypto.timingSafeEqual(leftBuffer, rightBuffer);
 };
 
+const toBase64Url = (value) =>
+  Buffer.from(value, 'utf8').toString('base64').replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/g, '');
+
+const fromBase64Url = (value) => {
+  const normalized = String(value).replace(/-/g, '+').replace(/_/g, '/');
+  const padded = normalized.padEnd(normalized.length + ((4 - (normalized.length % 4)) % 4), '=');
+  return Buffer.from(padded, 'base64').toString('utf8');
+};
+
+const signMockJwt = (claims) => {
+  const header = toBase64Url(JSON.stringify({ alg: 'HS256', typ: 'JWT' }));
+  const payload = toBase64Url(JSON.stringify(claims));
+  const signature = crypto
+    .createHmac('sha256', JWT_SECRET)
+    .update(`${header}.${payload}`)
+    .digest('base64')
+    .replace(/\+/g, '-')
+    .replace(/\//g, '_')
+    .replace(/=+$/g, '');
+  return `${header}.${payload}.${signature}`;
+};
+
+const verifyMockJwt = (token) => {
+  if (!token || typeof token !== 'string') return null;
+  const parts = token.split('.');
+  if (parts.length !== 3) return null;
+  const [header, payload, signature] = parts;
+  const expected = crypto
+    .createHmac('sha256', JWT_SECRET)
+    .update(`${header}.${payload}`)
+    .digest('base64')
+    .replace(/\+/g, '-')
+    .replace(/\//g, '_')
+    .replace(/=+$/g, '');
+  if (!safeEqual(signature, expected)) return null;
+  try {
+    const decoded = JSON.parse(fromBase64Url(payload));
+    if (decoded.exp && Number(decoded.exp) <= Math.floor(Date.now() / 1000)) return null;
+    return decoded;
+  } catch {
+    return null;
+  }
+};
+
+const getAuthHeader = (req) =>
+  req?.headers?.authorization ??
+  req?.http?.req?.headers?.authorization ??
+  req?._?.req?.headers?.authorization ??
+  '';
+
+const extractBearerToken = (req) => {
+  const authHeader = String(getAuthHeader(req) || '');
+  const [scheme, token] = authHeader.split(' ');
+  if (!/^Bearer$/i.test(scheme) || !token) return null;
+  return token.trim();
+};
+
+const authenticateRequest = (req) => {
+  const token = extractBearerToken(req);
+  if (!token) req.reject(401, 'Missing Bearer token');
+  const claims = verifyMockJwt(token);
+  if (!claims?.sub || !claims?.role) req.reject(401, 'Invalid or expired token');
+  return claims;
+};
+const getRequestClaims = (req) => req._authClaims ?? authenticateRequest(req);
+
+const requireReviewerRole = (req, _current, claims) => {
+  if (!REVIEWER_ROLES.has(String(claims.role))) {
+    req.reject(403, 'Only reviewers can execute this action');
+  }
+};
+
+const requireOwnerOrReviewer = (ownerField) => (req, current, claims) => {
+  const isOwner = String(current?.[ownerField] ?? '') === String(claims.sub ?? '');
+  if (!isOwner && !REVIEWER_ROLES.has(String(claims.role))) {
+    req.reject(403, 'You are not allowed to execute this action for this record');
+  }
+};
+
 module.exports = (srv) => {
   // ---- Register Ticket domain handlers -----------------------------------
   ticketImpl(srv);
+  projectImpl(srv);
+  userImpl(srv);
+  allocationImpl(srv);
+  leaveRequestImpl(srv);
+  deliverableImpl(srv);
+  evaluationImpl(srv);
+  timesheetImpl(srv);
+  timeLogImpl(srv);
+  imputationImpl(srv);
+  imputationPeriodImpl(srv);
+  wricefImpl(srv);
+  notificationImpl(srv);
+  documentationImpl(srv);
+  referenceDataImpl(srv);
 
-  // ---- JSON deserialization for non-ticket entities ----------------------
-  const JSON_ARRAY_ENTITIES = [
-    { name: 'Users',               fields: ['skills', 'certifications'] },
-    { name: 'Projects',            fields: ['techKeywords'] },
-    { name: 'Abaques',             fields: ['entries'] },
-    { name: 'DocumentationObjects',fields: ['attachedFiles', 'relatedTicketIds'] },
-    { name: 'Evaluations',         fields: ['qualitativeGrid'] },
-  ];
-
-  JSON_ARRAY_ENTITIES.forEach(({ name, fields }) => {
-    srv.after(['READ', 'CREATE', 'UPDATE'], name, (data) => {
-      const rows = Array.isArray(data) ? data : (data ? [data] : []);
-      rows.forEach((row) => {
-        if (!row) return;
-        fields.forEach((field) => {
-          const val = row[field];
-          if (typeof val === 'string' && (val.startsWith('[') || val.startsWith('{'))) {
-            try { row[field] = JSON.parse(val); } catch { /* leave as-is */ }
-          }
-        });
-      });
-    });
+  // ---- Protect all operations except explicit public actions -------------
+  srv.before('*', (req) => {
+    if (PUBLIC_EVENTS.has(req.event)) return;
+    req._authClaims = authenticateRequest(req);
   });
 
-  // ---- Serialize JSON arrays on CREATE/UPDATE for non-ticket entities ----
-  const JSON_WRITE_ENTITIES = [
-    { name: 'Users',               fields: ['skills', 'certifications'] },
-    { name: 'Projects',            fields: ['techKeywords'] },
-    { name: 'Abaques',             fields: ['entries'] },
-    { name: 'DocumentationObjects',fields: ['attachedFiles', 'relatedTicketIds'] },
-    { name: 'Evaluations',         fields: ['qualitativeGrid'] },
-  ];
-
-  JSON_WRITE_ENTITIES.forEach(({ name, fields }) => {
-    srv.before(['CREATE', 'UPDATE'], name, (req) => {
-      fields.forEach((field) => {
-        if (Array.isArray(req.data[field]) || (req.data[field] && typeof req.data[field] === 'object')) {
-          req.data[field] = JSON.stringify(req.data[field]);
-        }
-      });
-    });
-  });
 
   // ---- Default createdAt on entities without `managed` timestamp ---------
-  const NEEDS_CREATEDAT = ['Notifications', 'Evaluations', 'Deliverables', 'LeaveRequests',
-    'Imputations', 'ImputationPeriods', 'TimeLogs', 'Timesheets'];
+  const NEEDS_CREATEDAT = [];
 
   NEEDS_CREATEDAT.forEach((name) => {
     srv.before('CREATE', name, (req) => {
@@ -100,7 +183,7 @@ module.exports = (srv) => {
 
   // POST /authenticate { email, password }
   srv.on('authenticate', async (req) => {
-    const email = String(req.data?.email ?? '').trim().toLowerCase();
+    const email = normalizeEmail(req.data?.email);
     const password = String(req.data?.password ?? '');
 
     if (!email || !password) {
@@ -115,14 +198,64 @@ module.exports = (srv) => {
     }
 
     const { Users } = srv.entities;
-    const activeUsers = await cds.db.run(SELECT.from(Users).where({ active: true }));
-    const user = activeUsers.find((candidate) => String(candidate.email ?? '').toLowerCase() === email);
+    const user = await cds.db.run(
+      SELECT.one(Users).where({
+        email,
+        active: true,
+      })
+    );
     if (!user) {
       req.reject(401, 'Invalid credentials');
       return;
     }
 
-    return user;
+    const issuedAt = Math.floor(Date.now() / 1000);
+    const expiresAtEpoch = issuedAt + JWT_TTL_SECONDS;
+    const token = signMockJwt({
+      iss: 'sap-performance-dashboard',
+      aud: 'sap-performance-dashboard-ui',
+      iat: issuedAt,
+      exp: expiresAtEpoch,
+      sub: user.ID,
+      email: user.email,
+      role: user.role,
+      name: user.name,
+    });
+
+    return {
+      token,
+      expiresAt: new Date(expiresAtEpoch * 1000).toISOString(),
+      user: {
+        id: user.ID,
+        name: user.name,
+        email: user.email,
+        role: user.role,
+        active: Boolean(user.active),
+        skills: user.skills ?? '[]',
+        certifications: user.certifications ?? '[]',
+        availabilityPercent: Number(user.availabilityPercent ?? 100),
+        teamId: user.teamId ?? null,
+        avatarUrl: user.avatarUrl ?? null,
+      },
+    };
+  });
+
+  srv.on('quickAccessAccounts', async () => {
+    const { Users } = srv.entities;
+    const users = await cds.db.run(
+      SELECT.from(Users)
+        .columns('ID', 'name', 'email', 'role')
+        .where({ active: true })
+    );
+
+    return users
+      .filter((user) => QUICK_ACCESS_EMAILS.has(normalizeEmail(user.email)))
+      .map((user) => ({
+        id: user.ID,
+        name: user.name,
+        email: user.email,
+        role: user.role,
+      }));
   });
 
   // =========================================================================
@@ -158,6 +291,7 @@ module.exports = (srv) => {
     entitySetName,
     statusField,
     transitions,
+    authorize,
     buildChanges,
   }) => {
     srv.on(action, entitySetName, async (req) => {
@@ -168,6 +302,9 @@ module.exports = (srv) => {
       // Fetch current record
       const current = await cds.db.run(SELECT.one(EntitySet).where({ ID: id }));
       if (!current) return req.error(404, `${entitySetName} '${id}' not found`);
+
+      const claims = authorize ? getRequestClaims(req) : null;
+      if (authorize) authorize(req, current, claims);
 
       // State-machine guard
       if (transitions) {
@@ -198,6 +335,7 @@ module.exports = (srv) => {
     entitySetName: 'Imputations',
     statusField: 'validationStatus',
     transitions: IMPUTATION_TRANSITIONS,
+    authorize: requireReviewerRole,
     buildChanges: (req) => ({
       validationStatus: 'VALIDATED',
       validatedBy: req.data?.validatedBy || null,
@@ -210,6 +348,7 @@ module.exports = (srv) => {
     entitySetName: 'Imputations',
     statusField: 'validationStatus',
     transitions: IMPUTATION_TRANSITIONS,
+    authorize: requireReviewerRole,
     buildChanges: (req) => ({
       validationStatus: 'REJECTED',
       validatedBy: req.data?.validatedBy || null,
@@ -226,6 +365,7 @@ module.exports = (srv) => {
     entitySetName: 'ImputationPeriods',
     statusField: 'status',
     transitions: PERIOD_TRANSITIONS,
+    authorize: requireOwnerOrReviewer('consultantId'),
     buildChanges: () => ({ status: 'SUBMITTED', submittedAt: nowIso() }),
   });
 
@@ -234,6 +374,7 @@ module.exports = (srv) => {
     entitySetName: 'ImputationPeriods',
     statusField: 'status',
     transitions: PERIOD_TRANSITIONS,
+    authorize: requireReviewerRole,
     buildChanges: (req) => ({
       status: 'VALIDATED',
       validatedBy: req.data?.validatedBy,
@@ -246,6 +387,7 @@ module.exports = (srv) => {
     entitySetName: 'ImputationPeriods',
     statusField: 'status',
     transitions: PERIOD_TRANSITIONS,
+    authorize: requireReviewerRole,
     buildChanges: (req) => ({
       status: 'REJECTED',
       validatedBy: req.data?.validatedBy,
@@ -258,6 +400,7 @@ module.exports = (srv) => {
     entitySetName: 'ImputationPeriods',
     statusField: 'status',
     transitions: null, // no state-machine guard — can send anytime
+    authorize: requireReviewerRole,
     buildChanges: (req) => ({
       sentToStraTIME: true,
       sentBy: req.data?.sentBy,
@@ -274,6 +417,8 @@ module.exports = (srv) => {
     entitySetName: 'TimeLogs',
     statusField: null,
     transitions: null,
+    authorize: requireOwnerOrReviewer('consultantId'),
     buildChanges: () => ({ sentToStraTIME: true, sentAt: nowIso() }),
   });
 };
+

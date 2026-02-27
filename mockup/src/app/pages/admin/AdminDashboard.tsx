@@ -2,7 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { Activity, Database, ServerCog, Users } from 'lucide-react';
 import { PageHeader } from '../../components/common/PageHeader';
 import { KPICard } from '../../components/common/KPICard';
-import { NotificationsAPI, ProjectsAPI, TasksAPI, UsersAPI } from '../../services/odataClient';
+import { NotificationsAPI, ProjectsAPI, TicketsAPI, UsersAPI } from '../../services/odataClient';
 import { Card, CardContent, CardHeader, CardTitle } from '../../components/ui/card';
 import { Badge } from '../../components/ui/badge';
 import { Notification } from '../../types/entities';
@@ -27,9 +27,9 @@ const kpiReferences = [
     refresh: 'On dashboard load',
   },
   {
-    name: 'Total Tasks',
-    formula: 'count(all tasks)',
-    source: 'Tasks',
+    name: 'Total Tickets',
+    formula: 'count(all tickets)',
+    source: 'Tickets',
     refresh: 'On dashboard load',
   },
 ];
@@ -38,7 +38,7 @@ export const AdminDashboard: React.FC = () => {
   const odataEndpoint = import.meta.env.VITE_ODATA_BASE_URL || '/odata/v4/performance';
   const [userCount, setUserCount] = useState(0);
   const [projectCount, setProjectCount] = useState(0);
-  const [taskCount, setTaskCount] = useState(0);
+  const [ticketCount, setTicketCount] = useState(0);
   const [activeUsers, setActiveUsers] = useState(0);
   const [auditEvents, setAuditEvents] = useState<
     Array<Notification & { userName: string }>
@@ -49,10 +49,10 @@ export const AdminDashboard: React.FC = () => {
     const loadData = async () => {
       setLoadError(null);
       try {
-        const [users, projects, tasks] = await Promise.all([
+        const [users, projects, tickets] = await Promise.all([
           UsersAPI.getAll(),
           ProjectsAPI.getAll(),
-          TasksAPI.getAll(),
+          TicketsAPI.getAll(),
         ]);
 
         const allNotifications = (
@@ -62,7 +62,7 @@ export const AdminDashboard: React.FC = () => {
 
         setUserCount(users.length);
         setProjectCount(projects.length);
-        setTaskCount(tasks.length);
+        setTicketCount(tickets.length);
         setActiveUsers(users.filter((user) => user.active).length);
         setAuditEvents(
           [...allNotifications]
@@ -105,7 +105,7 @@ export const AdminDashboard: React.FC = () => {
             icon="project-definition-triangle-2"
             color="yellow"
           />
-          <KPICard title="Tasks" value={taskCount} icon="task" color="purple" />
+          <KPICard title="Tickets" value={ticketCount} icon="task" color="purple" />
         </div>
 
         <div className="grid grid-cols-1 gap-6 xl:grid-cols-[1.4fr_1fr]">

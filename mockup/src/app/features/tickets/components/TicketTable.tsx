@@ -121,10 +121,10 @@ export const TicketTable: React.FC<TicketTableProps> = ({
                 <TableCell className="px-4 py-3 font-medium max-w-[200px] truncate">
                   {ticket.title}
                 </TableCell>
-                <TableCell className="px-4 py-3 text-xs font-mono">{ticket.wricefId}</TableCell>
+                <TableCell className="px-4 py-3 text-xs font-mono">{ticket.wricefId ?? '-'}</TableCell>
                 <TableCell className="px-4 py-3">
                   <Badge variant="outline" className="text-[10px]">
-                    {ticket.module}
+                    {ticket.module ?? '-'}
                   </Badge>
                 </TableCell>
                 <TableCell className="px-4 py-3">

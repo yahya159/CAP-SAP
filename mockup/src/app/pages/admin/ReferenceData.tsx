@@ -40,7 +40,7 @@ import {
 type ReferenceType = ReferenceData['type'] | 'ALL';
 
 const EMPTY_FORM: Omit<ReferenceData, 'id'> = {
-  type: 'TASK_STATUS',
+  type: 'TICKET_STATUS',
   code: '',
   label: '',
   active: true,
@@ -183,7 +183,7 @@ export const ReferenceDataManagement: React.FC = () => {
     <div className="min-h-screen bg-background">
       <PageHeader
         title="Reference Data Management"
-        subtitle="Manage task statuses, priorities, project types and skills"
+        subtitle="Manage ticket statuses, priorities, project types and skills"
         breadcrumbs={[
           { label: 'Home', path: '/admin/dashboard' },
           { label: 'Reference Data' },
@@ -213,7 +213,7 @@ export const ReferenceDataManagement: React.FC = () => {
                     <SelectValue placeholder="Select type" />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="TASK_STATUS">Task Status</SelectItem>
+                    <SelectItem value="TICKET_STATUS">Ticket Status</SelectItem>
                     <SelectItem value="PRIORITY">Priority</SelectItem>
                     <SelectItem value="PROJECT_TYPE">Project Type</SelectItem>
                     <SelectItem value="SKILL">Skill</SelectItem>
@@ -308,7 +308,7 @@ export const ReferenceDataManagement: React.FC = () => {
                   </SelectTrigger>
                   <SelectContent>
                     <SelectItem value="ALL">All Types</SelectItem>
-                    <SelectItem value="TASK_STATUS">Task Status</SelectItem>
+                    <SelectItem value="TICKET_STATUS">Ticket Status</SelectItem>
                     <SelectItem value="PRIORITY">Priority</SelectItem>
                     <SelectItem value="PROJECT_TYPE">Project Type</SelectItem>
                     <SelectItem value="SKILL">Skill</SelectItem>

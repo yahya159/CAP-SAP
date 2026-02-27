@@ -118,7 +118,7 @@ export const ProjectDetailsView: React.FC = () => {
   const { id } = useParams();
   const navigate = useNavigate();
   const {
-    project, setProject, abaques, tasks, allocations, users, deliverables,
+    project, setProject, abaques, allocations, users, deliverables,
     tickets, setTickets, documentationObjects, setDocumentationObjects, wricefObjects, setWricefObjects, loading,
   } = useProjectDetailsBootstrap(id);
 
@@ -157,8 +157,8 @@ export const ProjectDetailsView: React.FC = () => {
   const userName = useCallback((uid?: string) => users.find((u) => u.id === uid)?.name ?? '-', [users]);
   const selectedAbaque = useMemo(() => abaques.find((a) => a.id === project?.linkedAbaqueId) ?? null, [abaques, project?.linkedAbaqueId]);
   const abaqueTaskNatures = useMemo(() => (selectedAbaque ? [...new Set(selectedAbaque.entries.map((e) => e.taskNature))] : []), [selectedAbaque]);
-  const kpis = useMemo(() => computeProjectKpis(tasks), [tasks]);
-  const { totalActualHours, totalEstimatedHours, totalActualDays } = useMemo(() => computeEffortTotals(tasks), [tasks]);
+  const kpis = useMemo(() => computeProjectKpis(tickets), [tickets]);
+  const { totalActualHours, totalEstimatedHours, totalActualDays } = useMemo(() => computeEffortTotals(tickets), [tickets]);
   const hasAbaqueEstimate = Boolean(project?.abaqueEstimate);
   const estimatedDays = project?.abaqueEstimate?.result.estimatedConsultingDays ?? 0;
   const { estimateConsumptionPercent, estimateDeltaDays } = useMemo(() => computeEstimateConsumption(estimatedDays, totalActualDays), [estimatedDays, totalActualDays]);
@@ -229,7 +229,45 @@ export const ProjectDetailsView: React.FC = () => {
     try {
       setWricefImporting(true);
       const imported = await parseWricefExcel(file);
-      
+
+      // --- Deduplication: filter out objects that already exist in the project ---
+      const knownObjectIds = new Set(wricefObjects.map((o) => o.id.trim().toLowerCase()));
+      const knownObjectKeys = new Set(
+        wricefObjects.map((o) => `${o.type}::${o.title.trim().toLowerCase()}`)
+      );
+      const uniqueObjects = imported.objects.filter((obj) => {
+        const byIdKey = obj.id.trim().toLowerCase();
+        const byTitleKey = `${obj.type}::${obj.title.trim().toLowerCase()}`;
+        if (knownObjectIds.has(byIdKey) || knownObjectKeys.has(byTitleKey)) return false;
+        knownObjectIds.add(byIdKey);
+        knownObjectKeys.add(byTitleKey);
+        return true;
+      });
+
+      // --- Deduplication: filter out tickets that already exist or point to unknown objects ---
+      const existingTicketKeys = new Set(
+        tickets
+          .map((t) => `${(t.wricefId ?? '').trim().toLowerCase()}::${t.title.trim().toLowerCase()}`)
+      );
+      const importedTicketKeys = new Set<string>();
+      const uniqueTickets = imported.tickets.filter((t) => {
+        if (!knownObjectIds.has(t.wricefId.trim().toLowerCase())) return false;
+        const ticketKey = `${t.wricefId.trim().toLowerCase()}::${t.title.trim().toLowerCase()}`;
+        if (existingTicketKeys.has(ticketKey) || importedTicketKeys.has(ticketKey)) return false;
+        importedTicketKeys.add(ticketKey);
+        return true;
+      });
+
+      const skippedObjects = imported.objects.length - uniqueObjects.length;
+      const skippedTickets = imported.tickets.length - uniqueTickets.length;
+
+      if (uniqueObjects.length === 0 && uniqueTickets.length === 0) {
+        toast.info(
+          `Nothing to import - all ${imported.objects.length} object(s) and ${imported.tickets.length} ticket(s) already exist in this project.`
+        );
+        return;
+      }
+
       const createdWricef = await WricefsAPI.create({
         projectId: project.id,
         sourceFileName: imported.sourceFileName,
@@ -237,7 +275,7 @@ export const ProjectDetailsView: React.FC = () => {
       });
 
       const newObjects = await Promise.all(
-        imported.objects.map((obj) =>
+        uniqueObjects.map((obj) =>
           WricefObjectsAPI.create({
             ...obj,
             projectId: project.id,
@@ -247,9 +285,9 @@ export const ProjectDetailsView: React.FC = () => {
       );
       setWricefObjects((prev) => [...prev, ...newObjects]);
 
-      if (imported.tickets.length > 0) {
+      if (uniqueTickets.length > 0) {
         const newTickets = await Promise.all(
-          imported.tickets.map((t) =>
+          uniqueTickets.map((t) =>
             TicketsAPI.create({
               ...t,
               projectId: project.id,
@@ -262,8 +300,19 @@ export const ProjectDetailsView: React.FC = () => {
         setTickets((prev) => [...prev, ...newTickets]);
       }
 
-      const sync = await DocumentationAPI.syncProjectWricef(project.id, createdWricef, newObjects, currentUser?.id ?? project.managerId);
-      toast.success(`WRICEF imported: ${imported.objects.length} objects / ${imported.tickets.length} tickets. Synced objects: +${sync.created}, ~${sync.updated}, -${sync.deleted}`);
+      const sync = await DocumentationAPI.syncProjectWricef(
+        project.id,
+        createdWricef,
+        [...wricefObjects, ...newObjects],
+        currentUser?.id ?? project.managerId
+      );
+
+      const parts: string[] = [`WRICEF imported: ${uniqueObjects.length} object(s) / ${uniqueTickets.length} ticket(s).`];
+      if (skippedObjects > 0 || skippedTickets > 0) {
+        parts.push(`Skipped duplicates: ${skippedObjects} object(s), ${skippedTickets} ticket(s).`);
+      }
+      parts.push(`Synced docs: +${sync.created}, ~${sync.updated}, -${sync.deleted}`);
+      toast.success(parts.join(' '));
     } catch (error) { toast.error(error instanceof Error ? error.message : 'Unable to import WRICEF file'); }
     finally { setWricefImporting(false); event.target.value = ''; }
   };
@@ -322,9 +371,25 @@ export const ProjectDetailsView: React.FC = () => {
       const created = await DocumentationAPI.create({ title: docForm.title.trim(), description: docForm.description.trim(), type: docForm.type, content: docForm.content.trim(), attachedFiles: docFiles, relatedTicketIds: [], projectId: project.id, authorId: currentUser.id });
       setDocumentationObjects((prev) => [created, ...prev]);
       if (docForObjectId) {
-        // TODO: update natively WricefObjectsAPI.update if backend supports it
-        // Or patch the object directly
-        setWricefObjects((prev) => prev.map((o) => o.id !== docForObjectId ? o : { ...o, documentationObjectIds: [...(o.documentationObjectIds ?? []), created.id] }));
+        const targetObject = wricefObjects.find((obj) => obj.id === docForObjectId);
+        const nextDocumentationIds = [...new Set([...(targetObject?.documentationObjectIds ?? []), created.id])];
+        try {
+          const updatedObject = await WricefObjectsAPI.update(docForObjectId, {
+            documentationObjectIds: nextDocumentationIds,
+          });
+          setWricefObjects((prev) =>
+            prev.map((obj) => (obj.id === docForObjectId ? updatedObject : obj))
+          );
+        } catch {
+          setWricefObjects((prev) =>
+            prev.map((obj) =>
+              obj.id !== docForObjectId
+                ? obj
+                : { ...obj, documentationObjectIds: nextDocumentationIds }
+            )
+          );
+          toast.warning('Documentation created, but object linkage could not be persisted.');
+        }
       }
       setShowCreateDoc(false);
       toast.success('Documentation created');
@@ -361,7 +426,7 @@ export const ProjectDetailsView: React.FC = () => {
       <ProjectHeader projectName={project.name} roleBasePath={roleBasePath} />
       <div className="p-6 space-y-6">
         <ProjectTabs tabs={PROJECT_TABS} activeTab={activeTab} onTabChange={setActiveTab} onTabKeyDown={handleTabKeyDown} />
-        <OverviewPanel active={activeTab === 'overview'} vm={{ project, managerName: manager?.name ?? 'Unknown', tasksCount: tasks.length, deliverablesCount: deliverables.length, openTicketsCount: tickets.filter((t) => t.status !== 'DONE' && t.status !== 'REJECTED').length, wricefObjectCount: wricefObjects.length, blockedTasksCount: kpis.blocked, criticalTasksCount: kpis.critical, abaques, selectedAbaque, abaqueTaskNatures, abaqueSaving, onLinkedAbaqueChange: (value) => { void updateProjectAbaque(value); }, onOpenCreateTicket: () => openCreateTicketDialog() }} />
+        <OverviewPanel active={activeTab === 'overview'} vm={{ project, managerName: manager?.name ?? 'Unknown', ticketsCount: tickets.length, deliverablesCount: deliverables.length, openTicketsCount: tickets.filter((t) => t.status !== 'DONE' && t.status !== 'REJECTED').length, wricefObjectCount: wricefObjects.length, blockedTicketsCount: kpis.blocked, criticalTicketsCount: kpis.critical, abaques, selectedAbaque, abaqueTaskNatures, abaqueSaving, onLinkedAbaqueChange: (value) => { void updateProjectAbaque(value); }, onOpenCreateTicket: () => openCreateTicketDialog() }} />
         <AbaquesPanel active={activeTab === 'abaques'} vm={{ project, hasAbaqueEstimate, forceEstimatorVisible, projectEstimateSaving, estimatedDays, totalActualDays, totalActualHours, estimateConsumptionPercent, estimateDeltaDays, usageBarClass, onApplyEstimate: applyProjectEstimate, onRerunEstimate: () => setForceEstimatorVisible(true) }} />
         <TicketsPanel active={activeTab === 'tickets'} vm={{ tickets, paginatedTickets, filteredTickets, ticketsSearch, ticketsStatusFilter, ticketsPage, ticketsPageSize, ticketsTotalPages, selectedTicketId, selectedTicket, selectedTicketHistory, wricefStatusColor: WRICEF_STATUS_COLOR, wricefPriorityColor: WRICEF_PRIORITY_COLOR, onTicketsSearchChange: (value) => { setTicketsSearch(value); setTicketsPage(1); }, onTicketsStatusFilterChange: (value) => { setTicketsStatusFilter(value); setTicketsPage(1); }, onTicketsPageChange: setTicketsPage, onTicketsPageSizeChange: (value) => { setTicketsPageSize(value); setTicketsPage(1); }, onSelectTicket: setSelectedTicketId, onOpenTicketDetails: openTicketDetails, onOpenCreateTicket: () => openCreateTicketDialog(), formatTicketEventTime, renderTicketEvent, resolveUserName: userName }} />
         <TeamPanel active={activeTab === 'team'} allocations={allocations} users={users} />

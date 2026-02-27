@@ -136,7 +136,7 @@ export const CreateProjectTicketDialog: React.FC<CreateProjectTicketDialogProps>
               </div>
 
               <div className="space-y-1.5">
-                <Label>Task Nature</Label>
+                <Label>Ticket Nature</Label>
                 <Select
                   value={vm.form.nature}
                   onValueChange={(value) => {

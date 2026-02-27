@@ -1,7 +1,7 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import { PageHeader } from '../../components/common/PageHeader';
-import { ProjectsAPI, TasksAPI, UsersAPI } from '../../services/odataClient';
-import { Project, Task, User } from '../../types/entities';
+import { ProjectsAPI, TicketsAPI, UsersAPI } from '../../services/odataClient';
+import { Project, Ticket, User } from '../../types/entities';
 import { useAuth } from '../../context/AuthContext';
 import { EmptyState } from '../../components/common/EmptyState';
 import { FolderKanban } from 'lucide-react';
@@ -9,7 +9,7 @@ import { FolderKanban } from 'lucide-react';
 export const MyProjects: React.FC = () => {
   const { currentUser } = useAuth();
   const [projects, setProjects] = useState<Project[]>([]);
-  const [tasks, setTasks] = useState<Task[]>([]);
+  const [tickets, setTickets] = useState<Ticket[]>([]);
   const [users, setUsers] = useState<User[]>([]);
   const [loading, setLoading] = useState(true);
 
@@ -21,15 +21,15 @@ export const MyProjects: React.FC = () => {
   const loadData = async (userId: string) => {
     setLoading(true);
     try {
-      const [userTasks, allProjects, allUsers] = await Promise.all([
-        TasksAPI.getByUser(userId),
+      const [userTickets, allProjects, allUsers] = await Promise.all([
+        TicketsAPI.getByUser(userId),
         ProjectsAPI.getAll(),
         UsersAPI.getAll(),
       ]);
 
-      const projectIds = new Set(userTasks.map((task) => task.projectId));
+      const projectIds = new Set(userTickets.map((ticket) => ticket.projectId));
       setProjects(allProjects.filter((project) => projectIds.has(project.id)));
-      setTasks(userTasks);
+      setTickets(userTickets);
       setUsers(allUsers);
     } finally {
       setLoading(false);
@@ -37,24 +37,33 @@ export const MyProjects: React.FC = () => {
   };
 
   const projectsWithStats = useMemo(() => {
+    const progressByStatus: Record<Ticket['status'], number> = {
+      NEW: 0,
+      IN_PROGRESS: 50,
+      IN_TEST: 80,
+      BLOCKED: 40,
+      DONE: 100,
+      REJECTED: 100,
+    };
+
     return projects.map((project) => {
-      const projectTasks = tasks.filter((task) => task.projectId === project.id);
-      const done = projectTasks.filter((task) => task.status === 'DONE').length;
-      const blocked = projectTasks.filter((task) => task.status === 'BLOCKED').length;
-      const progress = projectTasks.length
-        ? projectTasks.reduce((sum, task) => sum + task.progressPercent, 0) /
-          projectTasks.length
+      const projectTickets = tickets.filter((ticket) => ticket.projectId === project.id);
+      const done = projectTickets.filter((ticket) => ticket.status === 'DONE').length;
+      const blocked = projectTickets.filter((ticket) => ticket.status === 'BLOCKED').length;
+      const progress = projectTickets.length
+        ? projectTickets.reduce((sum, ticket) => sum + progressByStatus[ticket.status], 0) /
+          projectTickets.length
         : project.progress ?? 0;
       const manager = users.find((user) => user.id === project.managerId);
-      return { project, manager, done, blocked, progress, projectTasks };
+      return { project, manager, done, blocked, progress, projectTickets };
     });
-  }, [projects, tasks, users]);
+  }, [projects, tickets, users]);
 
   return (
     <div className="min-h-screen bg-background">
       <PageHeader
         title="My Projects"
-        subtitle="Read-only overview of your assigned projects and tasks"
+        subtitle="Read-only overview of your assigned projects and tickets"
         breadcrumbs={[
           { label: 'Home', path: '/consultant-tech/dashboard' },
           { label: 'My Projects' },
@@ -73,7 +82,7 @@ export const MyProjects: React.FC = () => {
           />
         ) : (
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-            {projectsWithStats.map(({ project, manager, done, blocked, progress, projectTasks }) => (
+            {projectsWithStats.map(({ project, manager, done, blocked, progress, projectTickets }) => (
               <div key={project.id} className="bg-card border border-border rounded-lg p-5 space-y-4">
                 <div>
                   <h3 className="text-lg font-semibold text-foreground">{project.name}</h3>
@@ -109,7 +118,7 @@ export const MyProjects: React.FC = () => {
 
                 <div className="grid grid-cols-3 gap-2">
                   <div className="rounded border border-border p-2 text-center">
-                    <div className="text-xl font-semibold text-foreground">{projectTasks.length}</div>
+                    <div className="text-xl font-semibold text-foreground">{projectTickets.length}</div>
                     <div className="text-xs text-muted-foreground">Assigned</div>
                   </div>
                   <div className="rounded border border-border p-2 text-center">

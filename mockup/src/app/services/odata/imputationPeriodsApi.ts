@@ -46,6 +46,7 @@ export const ImputationPeriodsAPI = {
       ...requestOptions,
       method: 'POST',
     });
+    if (!data) throw new Error(`submit returned no data for ImputationPeriod '${id}'`);
     return normalizeEntityRecord(data);
   },
 
@@ -59,6 +60,7 @@ export const ImputationPeriodsAPI = {
       method: 'POST',
       body: JSON.stringify({ validatedBy }),
     });
+    if (!data) throw new Error(`validate returned no data for ImputationPeriod '${id}'`);
     return normalizeEntityRecord(data);
   },
 
@@ -72,6 +74,7 @@ export const ImputationPeriodsAPI = {
       method: 'POST',
       body: JSON.stringify({ sentBy }),
     });
+    if (!data) throw new Error(`sendToStraTIME returned no data for ImputationPeriod '${id}'`);
     return normalizeEntityRecord(data);
   },
 
@@ -85,6 +88,7 @@ export const ImputationPeriodsAPI = {
       method: 'POST',
       body: JSON.stringify({ validatedBy }),
     });
+    if (!data) throw new Error(`reject returned no data for ImputationPeriod '${id}'`);
     return normalizeEntityRecord(data);
   },
 };

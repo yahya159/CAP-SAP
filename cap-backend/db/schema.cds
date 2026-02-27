@@ -3,18 +3,49 @@ namespace sap.performance.dashboard.db;
 using { cuid, managed } from '@sap/cds/common';
 
 // ---------------------------------------------------------------------------
+// Enum Types
+// ---------------------------------------------------------------------------
+type TicketStatus     : String(20) enum { NEW; IN_PROGRESS; IN_TEST; BLOCKED; DONE; REJECTED; };
+type ProjectStatus    : String(20) enum { PLANNED; ACTIVE; ON_HOLD; COMPLETED; CANCELLED; };
+type Priority         : String(20) enum { LOW; MEDIUM; HIGH; CRITICAL; };
+type RiskLevel        : String(20) enum { NONE; LOW; MEDIUM; HIGH; CRITICAL; };
+type TicketComplexity : String(20) enum { SIMPLE; MOYEN; COMPLEXE; TRES_COMPLEXE; };
+type TicketNature     : String(30) enum { WORKFLOW; FORMULAIRE; PROGRAMME; ENHANCEMENT; MODULE; REPORT; };
+type SAPModule        : String(20) enum { FI; CO; MM; SD; PP; PM; QM; HR; PS; WM; BASIS; ABAP; FIORI; BW; OTHER; };
+type ValidationStatus : String(20) enum { PENDING; APPROVED; CHANGES_REQUESTED; };
+type ImputationStatus : String(20) enum { DRAFT; SUBMITTED; VALIDATED; REJECTED; };
+type LeaveStatus      : String(20) enum { PENDING; APPROVED; REJECTED; };
+type DeliverableValidation : String(30) enum { PENDING; APPROVED; CHANGES_REQUESTED; };
+type UserRole         : String(40) enum { ADMIN; MANAGER; CONSULTANT_TECHNIQUE; CONSULTANT_FONCTIONNEL; PROJECT_MANAGER; DEV_COORDINATOR; };
+type ProjectType      : String(20) enum { TMA; BUILD; };
+type DocObjectType    : String(30) enum { SFD; GUIDE; ARCHITECTURE_DOC; GENERAL; };
+type WricefType       : String(10) enum { W; R; I; C; E; F; };
+type Complexity       : String(20) enum { LOW; MEDIUM; HIGH; };
+
+// ---------------------------------------------------------------------------
 // Users
 // ---------------------------------------------------------------------------
 entity Users : cuid, managed {
   name               : String(100) not null;
   email              : String(150) not null;
-  role               : String(40)  not null;
+  role               : UserRole    not null;
   active             : Boolean     default true;
-  skills             : LargeString; // JSON array of strings
-  certifications     : LargeString; // JSON array of Certification objects
+  skills             : Composition of many UserSkills on skills.user = $self;
+  certifications     : Composition of many UserCertifications on certifications.user = $self;
   availabilityPercent: Integer     default 100;
   teamId             : String(50);
   avatarUrl          : String(500);
+}
+
+entity UserSkills : cuid {
+  user  : Association to Users;
+  skill : String(100);
+}
+
+entity UserCertifications : cuid {
+  user : Association to Users;
+  name : String(200);
+  date : Date;
 }
 
 // ---------------------------------------------------------------------------
@@ -22,19 +53,30 @@ entity Users : cuid, managed {
 // ---------------------------------------------------------------------------
 entity Projects : cuid, managed {
   name            : String(200) not null;
-  projectType     : String(20);
+  projectType     : ProjectType;
   managerId       : String(50)  not null;
+  manager         : Association to Users on manager.ID = managerId;
   startDate       : Date;
   endDate         : Date;
-  status          : String(20)  default 'PLANNED';
-  priority        : String(20)  default 'MEDIUM';
+  status          : ProjectStatus default 'PLANNED';
+  priority        : Priority      default 'MEDIUM';
   description     : LargeString;
-  progress        : Integer     default 0;
-  complexity      : String(20);
-  techKeywords    : LargeString; // JSON array
+  progress        : Integer       default 0;
+  complexity      : Complexity;
+  techKeywords    : Composition of many ProjectTechKeywords on techKeywords.project = $self;
   documentation   : LargeString;
   linkedAbaqueId  : String(50);
-  abaqueEstimate  : LargeString; // JSON object
+  abaqueEstimate  : Composition of many ProjectAbaqueEstimates on abaqueEstimate.project = $self;
+}
+
+entity ProjectTechKeywords : cuid {
+  project : Association to Projects;
+  keyword : String(100);
+}
+
+entity ProjectAbaqueEstimates : cuid {
+  project : Association to Projects;
+  details : LargeString;
 }
 
 // ---------------------------------------------------------------------------
@@ -47,48 +89,39 @@ entity Wricefs : cuid, managed {
 }
 
 entity WricefObjects : cuid, managed {
-  wricefId        : String(50) not null;
-  projectId       : String(50) not null;
-  type            : String(10) not null;
-  title           : String(200) not null;
-  description     : LargeString;
-  complexity      : String(20) default 'SIMPLE';
-  module          : String(20);
-  documentationObjectIds : LargeString; // JSON array
+  wricefId                : String(50) not null;
+  wricef                  : Association to Wricefs on wricef.ID = wricefId;
+  projectId               : String(50) not null;
+  project                 : Association to Projects on project.ID = projectId;
+  type                    : WricefType       not null;
+  title                   : String(200)      not null;
+  description             : LargeString;
+  complexity              : TicketComplexity default 'SIMPLE';
+  module                  : SAPModule;
+  documentationObjectIds  : Composition of many WricefDocumentationObjects on documentationObjectIds.wricefObject = $self;
 }
 
-// ---------------------------------------------------------------------------
-// Tasks
-// ---------------------------------------------------------------------------
-entity Tasks : cuid, managed {
-  projectId      : String(50)  not null;
-  title          : String(200) not null;
-  description    : LargeString;
-  status         : String(20)  default 'TO_DO';
-  priority       : String(20)  default 'MEDIUM';
-  assigneeId     : String(50);
-  plannedStart   : Date;
-  plannedEnd     : Date;
-  realStart      : Date;
-  realEnd        : Date;
-  progressPercent: Integer     default 0;
-  estimatedHours : Decimal(6,2) default 0;
-  actualHours    : Decimal(6,2) default 0;
-  effortHours    : Decimal(6,2) default 0;
-  isCritical     : Boolean     default false;
-  riskLevel      : String(20)  default 'NONE';
-  comments       : LargeString;
+entity WricefDocumentationObjects : cuid {
+  wricefObject  : Association to WricefObjects;
+  docObjectId   : String(50);
 }
 
 // ---------------------------------------------------------------------------
 // Timesheets
 // ---------------------------------------------------------------------------
+/**
+ * Legacy/simple daily hours per project.
+ * No validation workflow.
+ */
 entity Timesheets : cuid, managed {
   userId    : String(50) not null;
+  user      : Association to Users on user.ID = userId;
   date      : Date       not null;
   hours     : Decimal(4,2) default 0;
   projectId : String(50) not null;
-  taskId    : String(50);
+  project   : Association to Projects on project.ID = projectId;
+  ticketId  : String(50);
+  ticket    : Association to Tickets on ticket.ID = ticketId;
   comment   : String(500);
 }
 
@@ -97,13 +130,21 @@ entity Timesheets : cuid, managed {
 // ---------------------------------------------------------------------------
 entity Evaluations : cuid, managed {
   userId          : String(50) not null;
+  user            : Association to Users on user.ID = userId;
   evaluatorId     : String(50) not null;
+  evaluator       : Association to Users on evaluator.ID = evaluatorId;
   projectId       : String(50) not null;
+  project         : Association to Projects on project.ID = projectId;
   period          : String(20);
   score           : Decimal(4,2) default 0;
-  qualitativeGrid : LargeString; // JSON object
+  qualitativeGrid : Composition of many EvaluationQualitativeGrids on qualitativeGrid.evaluation = $self;
   feedback        : LargeString;
-  createdAt       : DateTime;
+}
+
+entity EvaluationQualitativeGrids : cuid {
+  evaluation : Association to Evaluations;
+  criteria   : String(100);
+  rating     : String(50);
 }
 
 // ---------------------------------------------------------------------------
@@ -111,42 +152,64 @@ entity Evaluations : cuid, managed {
 // ---------------------------------------------------------------------------
 entity Deliverables : cuid, managed {
   projectId          : String(50) not null;
-  taskId             : String(50);
+  project            : Association to Projects on project.ID = projectId;
+  ticketId           : String(50);
+  ticket             : Association to Tickets on ticket.ID = ticketId;
   type               : String(50);
   name               : String(200) not null;
   url                : String(500);
   fileRef            : String(500);
-  validationStatus   : String(30)  default 'PENDING';
+  validationStatus   : DeliverableValidation default 'PENDING';
   functionalComment  : LargeString;
-  createdAt          : DateTime;
 }
 
 // ---------------------------------------------------------------------------
-// Tickets  ← PRIMARY DOMAIN
+// Tickets - PRIMARY DOMAIN
 // ---------------------------------------------------------------------------
 entity Tickets : cuid, managed {
-  ticketCode           : String(30);
-  projectId            : String(50)  not null;
-  createdBy            : String(50)  not null;
-  assignedTo           : String(50);
-  assignedToRole       : String(40);
-  status               : String(20)  default 'NEW';
-  priority             : String(20)  default 'MEDIUM';
-  nature               : String(30)  not null;
-  title                : String(200) not null;
-  description          : LargeString;
-  dueDate              : Date;
-  effortHours          : Decimal(6,2) default 0;
-  effortComment        : String(500);
-  functionalTesterId   : String(50);
-  tags                 : LargeString; // JSON array of strings
-  wricefId             : String(100);
-  module               : String(20);
-  estimationHours      : Decimal(6,2) default 0;
-  complexity           : String(20)  default 'SIMPLE';
-  estimatedViaAbaque   : Boolean     default false;
-  documentationObjectIds : LargeString; // JSON array of strings
-  history              : LargeString; // JSON array of TicketEvent objects
+  ticketCode              : String(30);
+  projectId               : String(50)  not null;
+  project                 : Association to Projects on project.ID = projectId;
+  createdBy               : String(50)  not null;
+  createdByUser           : Association to Users on createdByUser.ID = createdBy;
+  assignedTo              : String(50);
+  assignee                : Association to Users on assignee.ID = assignedTo;
+  assignedToRole          : UserRole;
+  status                  : TicketStatus     default 'NEW';
+  priority                : Priority         default 'MEDIUM';
+  nature                  : TicketNature     not null;
+  title                   : String(200)      not null;
+  description             : LargeString;
+  dueDate                 : Date;
+  effortHours             : Decimal(6,2)     default 0;
+  effortComment           : String(500);
+  functionalTesterId      : String(50);
+  functionalTester        : Association to Users on functionalTester.ID = functionalTesterId;
+  tags                    : Composition of many TicketTags on tags.ticket = $self;
+  wricefId                : String(100);
+  module                  : SAPModule;
+  estimationHours         : Decimal(6,2)     default 0;
+  complexity              : TicketComplexity default 'SIMPLE';
+  estimatedViaAbaque      : Boolean          default false;
+  documentationObjectIds  : Composition of many TicketDocumentationObjects on documentationObjectIds.ticket = $self;
+  history                 : Composition of many TicketHistory on history.ticket = $self;
+  updatedAt               : DateTime;
+}
+
+entity TicketTags : cuid {
+  ticket : Association to Tickets;
+  tag    : String(100);
+}
+
+entity TicketDocumentationObjects : cuid {
+  ticket      : Association to Tickets;
+  docObjectId : String(50);
+}
+
+entity TicketHistory : cuid, managed {
+  ticket : Association to Tickets;
+  event  : String(100);
+  details: LargeString;
 }
 
 // ---------------------------------------------------------------------------
@@ -154,11 +217,11 @@ entity Tickets : cuid, managed {
 // ---------------------------------------------------------------------------
 entity Notifications : cuid, managed {
   userId    : String(50) not null;
+  user      : Association to Users on user.ID = userId;
   type      : String(50);
   title     : String(200);
   message   : LargeString;
   read      : Boolean   default false;
-  createdAt : DateTime;
 }
 
 // ---------------------------------------------------------------------------
@@ -166,7 +229,9 @@ entity Notifications : cuid, managed {
 // ---------------------------------------------------------------------------
 entity Allocations : cuid, managed {
   userId            : String(50) not null;
+  user              : Association to Users on user.ID = userId;
   projectId         : String(50) not null;
+  project           : Association to Projects on project.ID = projectId;
   allocationPercent : Integer   default 0;
   startDate         : Date;
   endDate           : Date;
@@ -177,22 +242,30 @@ entity Allocations : cuid, managed {
 // ---------------------------------------------------------------------------
 entity LeaveRequests : cuid, managed {
   consultantId : String(50) not null;
+  consultant   : Association to Users on consultant.ID = consultantId;
   startDate    : Date       not null;
   endDate      : Date       not null;
   reason       : String(500);
-  status       : String(20) default 'PENDING';
+  status       : LeaveStatus default 'PENDING';
   managerId    : String(50) not null;
-  createdAt    : DateTime;
+  manager      : Association to Users on manager.ID = managerId;
   reviewedAt   : DateTime;
 }
 
 // ---------------------------------------------------------------------------
 // TimeLogs
 // ---------------------------------------------------------------------------
+/**
+ * Granular per-ticket time entries.
+ * Exportable to StraTIME.
+ */
 entity TimeLogs : cuid, managed {
   consultantId    : String(50) not null;
+  consultant      : Association to Users on consultant.ID = consultantId;
   ticketId        : String(50) not null;
+  ticket          : Association to Tickets on ticket.ID = ticketId;
   projectId       : String(50) not null;
+  project         : Association to Projects on project.ID = projectId;
   date            : Date       not null;
   durationMinutes : Integer    default 0;
   description     : LargeString;
@@ -203,19 +276,25 @@ entity TimeLogs : cuid, managed {
 // ---------------------------------------------------------------------------
 // Imputations
 // ---------------------------------------------------------------------------
+/**
+ * Formal time declarations with validation workflow.
+ * DRAFT -> SUBMITTED -> VALIDATED, grouped by ImputationPeriods.
+ */
 entity Imputations : cuid, managed {
   consultantId      : String(50) not null;
+  consultant        : Association to Users on consultant.ID = consultantId;
   ticketId          : String(50) not null;
+  ticket            : Association to Tickets on ticket.ID = ticketId;
   projectId         : String(50) not null;
-  module            : String(20);
+  project           : Association to Projects on project.ID = projectId;
+  module            : SAPModule;
   date              : Date       not null;
   hours             : Decimal(4,2) default 0;
   description       : LargeString;
-  validationStatus  : String(20) default 'DRAFT';
+  validationStatus  : ImputationStatus default 'DRAFT';
   periodKey         : String(20) not null;
   validatedBy       : String(50);
   validatedAt       : DateTime;
-  createdAt         : DateTime;
 }
 
 // ---------------------------------------------------------------------------
@@ -224,9 +303,10 @@ entity Imputations : cuid, managed {
 entity ImputationPeriods : cuid, managed {
   periodKey      : String(20) not null;
   consultantId   : String(50) not null;
+  consultant     : Association to Users on consultant.ID = consultantId;
   startDate      : Date       not null;
   endDate        : Date       not null;
-  status         : String(20) default 'DRAFT';
+  status         : ImputationStatus default 'DRAFT';
   totalHours     : Decimal(6,2) default 0;
   submittedAt    : DateTime;
   validatedBy    : String(50);
@@ -241,25 +321,45 @@ entity ImputationPeriods : cuid, managed {
 // ---------------------------------------------------------------------------
 entity Abaques : cuid, managed {
   name    : String(200) not null;
-  entries : LargeString; // JSON array of AbaqueEntry objects
+  entries : Composition of many AbaqueEntries on entries.abaque = $self;
+}
+
+entity AbaqueEntries : cuid {
+  abaque : Association to Abaques;
+  type   : String(50);
+  field  : String(100);
+  value  : Decimal(6,2);
 }
 
 // ---------------------------------------------------------------------------
 // DocumentationObjects
 // ---------------------------------------------------------------------------
 entity DocumentationObjects : cuid, managed {
-  title           : String(200) not null;
-  description     : LargeString;
-  type            : String(30)  default 'GENERAL';
-  content         : LargeString;
-  attachedFiles   : LargeString; // JSON array
-  relatedTicketIds: LargeString; // JSON array of ticket IDs
-  projectId       : String(50)  not null;
-  authorId        : String(50)  not null;
-  createdAt       : DateTime;
-  updatedAt       : DateTime;
-  sourceSystem    : String(20);
-  sourceRefId     : String(200);
+  title            : String(200) not null;
+  description      : LargeString;
+  type             : DocObjectType default 'GENERAL';
+  content          : LargeString;
+  attachedFiles    : Composition of many DocAttachedFiles on attachedFiles.docObject = $self;
+  relatedTicketIds : Composition of many DocRelatedTickets on relatedTicketIds.docObject = $self;
+  projectId        : String(50)  not null;
+  project          : Association to Projects on project.ID = projectId;
+  authorId         : String(50)  not null;
+  author           : Association to Users on author.ID = authorId;
+  createdAt        : DateTime;
+  updatedAt        : DateTime;
+  sourceSystem     : String(20);
+  sourceRefId      : String(200);
+}
+
+entity DocAttachedFiles : cuid {
+  docObject : Association to DocumentationObjects;
+  fileName  : String(200);
+  fileUrl   : String(500);
+}
+
+entity DocRelatedTickets : cuid {
+  docObject : Association to DocumentationObjects;
+  ticketId  : String(50);
 }
 
 // ---------------------------------------------------------------------------
