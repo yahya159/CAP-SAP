@@ -1,18 +1,18 @@
 import React from 'react';
 import { Eye, Paperclip } from 'lucide-react';
-import { Badge } from '../../../../components/ui/badge';
-import { Button } from '../../../../components/ui/button';
+import { Badge } from '@/app/components/ui/badge';
+import { Button } from '@/app/components/ui/button';
 import {
   Dialog,
   DialogContent,
   DialogFooter,
   DialogHeader,
   DialogTitle,
-} from '../../../../components/ui/dialog';
+} from '@/app/components/ui/dialog';
 import {
   DOCUMENTATION_OBJECT_TYPE_LABELS,
   DocumentationObject,
-} from '../../../../types/entities';
+} from '@/app/types/entities';
 
 interface ViewDocumentationDialogProps {
   open: boolean;

@@ -17,8 +17,7 @@ import {
 import { toast } from 'sonner';
 import { useAuth } from '../../context/AuthContext';
 import { useTheme } from '../../context/ThemeContext';
-import { useDensity } from '../../context/DensityContext';
-import { NotificationsAPI } from '../../services/odataClient';
+import { useDensity } from '../../context/DensityContext';import { NotificationsAPI } from '../../services/odata/notificationsApi';
 import { Notification } from '../../types/entities';
 import { Avatar, AvatarFallback } from '../ui/avatar';
 import { Badge } from '../ui/badge';

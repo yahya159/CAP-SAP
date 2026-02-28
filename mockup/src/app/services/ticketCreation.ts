@@ -1,4 +1,5 @@
-import { ProjectsAPI, TicketsAPI } from './odataClient';
+import { ProjectsAPI } from './odata/projectsApi';
+import { TicketsAPI } from './odata/ticketsApi';
 import {
   Project,
   SAPModule,

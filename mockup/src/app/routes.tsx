@@ -9,7 +9,7 @@ import {
   type RouteObject,
 } from 'react-router';
 import { MainLayout } from './components/layout/MainLayout';
-import { Login } from './pages/Login';
+import { Login } from './pages/Login.page';
 import { getDefaultRouteForRole, useAuth } from './context/AuthContext';
 import { UserRole } from './types/entities';
 import {

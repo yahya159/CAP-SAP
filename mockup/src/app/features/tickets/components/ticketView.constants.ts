@@ -1,4 +1,4 @@
-import { Ticket, TicketStatus } from '../../../types/entities';
+import { Ticket, TicketStatus } from '@/app/types/entities';
 
 export const STATUS_ORDER: TicketStatus[] = [
   'NEW',

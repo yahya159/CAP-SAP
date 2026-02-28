@@ -4,6 +4,7 @@ const TicketDomainService = require('./ticket.domain.service');
 
 module.exports = (srv) => {
   const domain = new TicketDomainService(srv);
+  srv.before('READ', 'Tickets', (req) => domain.beforeRead(req));
   srv.before('CREATE', 'Tickets', (req) => domain.beforeCreate(req));
   srv.before('UPDATE', 'Tickets', (req) => domain.beforeUpdate(req));
   srv.before('DELETE', 'Tickets', (req) => {

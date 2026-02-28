@@ -1,0 +1,53 @@
+import React from 'react';
+import { Label } from '@/app/components/ui/label';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/app/components/ui/select';
+import type { CreateProjectTicketDialogViewModel } from '../CreateProjectTicketDialog';
+
+interface CreateProjectTicketContextBlockProps {
+  vm: CreateProjectTicketDialogViewModel;
+}
+
+export const CreateProjectTicketContextBlock: React.FC<CreateProjectTicketContextBlockProps> = ({
+  vm,
+}) => {
+  return (
+    <>
+      <div className="rounded border border-border/70 bg-muted/30 p-3 text-sm">
+        <p>
+          <span className="text-muted-foreground">Project:</span> {vm.projectName}
+        </p>
+        <p>
+          <span className="text-muted-foreground">Abaque:</span> {vm.selectedAbaque?.name ?? 'No linked abaque'}
+        </p>
+      </div>
+
+      {vm.wricefObjects.length > 0 && (
+        <div className="space-y-1.5">
+          <Label>Link to WRICEF Object</Label>
+          <Select
+            value={vm.form.wricefObjectId || '_none'}
+            onValueChange={(value) => vm.onFormChange({ ...vm.form, wricefObjectId: value === '_none' ? '' : value })}
+          >
+            <SelectTrigger>
+              <SelectValue placeholder="No WRICEF object" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="_none">No WRICEF object</SelectItem>
+              {vm.wricefObjects.map((object) => (
+                <SelectItem key={object.id} value={object.id}>
+                  {object.id} - {object.title}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </div>
+      )}
+    </>
+  );
+};

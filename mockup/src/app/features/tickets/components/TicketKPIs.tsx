@@ -1,5 +1,5 @@
 import React from 'react';
-import { Ticket } from '../../../types/entities';
+import { Ticket } from '@/app/types/entities';
 
 interface TicketKPIsProps {
   tickets: Ticket[];

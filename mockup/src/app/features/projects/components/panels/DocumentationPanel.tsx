@@ -1,13 +1,13 @@
 import React from 'react';
 import { FilePlus2 } from 'lucide-react';
-import { Badge } from '../../../../components/ui/badge';
-import { Button } from '../../../../components/ui/button';
-import { Textarea } from '../../../../components/ui/textarea';
+import { Badge } from '@/app/components/ui/badge';
+import { Button } from '@/app/components/ui/button';
+import { Textarea } from '@/app/components/ui/textarea';
 import {
   DOCUMENTATION_OBJECT_TYPE_LABELS,
   DocumentationObject,
   DocumentationObjectType,
-} from '../../../../types/entities';
+} from '@/app/types/entities';
 import { DocumentationTable } from '../tables/DocumentationTable';
 
 export interface DocumentationPanelViewModel {

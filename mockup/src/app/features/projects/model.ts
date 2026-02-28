@@ -1,13 +1,121 @@
 import {
+  Abaque,
+  AbaqueComplexity,
+  AbaqueTaskNature,
   DocumentationObject,
   DocumentationObjectType,
+  DocumentationAttachment,
   SAPModule,
   Ticket,
   TicketComplexity,
+  TicketNature,
   TicketStatus,
   WricefObject,
   WricefType,
 } from '../../types/entities';
+import { ParsedWricefResult } from '../../utils/wricefExcel';
+import { ProjectTabDefinition } from './components/ProjectTabs';
+import { ReactNode } from 'react';
+
+export type ProjectTabKey =
+  | 'overview'
+  | 'objects'
+  | 'tickets'
+  | 'team'
+  | 'kpi'
+  | 'docs'
+  | 'abaques';
+
+export interface ProjectTicketFormState {
+  title: string;
+  description: string;
+  nature: TicketNature;
+  priority: Ticket['priority'];
+  complexity: AbaqueComplexity;
+  effortHours: number;
+  dueDate: string;
+  wricefObjectId: string;
+}
+
+export interface ProjectDocumentationFormState {
+  title: string;
+  description: string;
+  type: DocumentationObjectType;
+  content: string;
+}
+
+export interface WricefImportPlan {
+  uniqueObjects: ParsedWricefResult['objects'];
+  uniqueTickets: ParsedWricefResult['tickets'];
+  skippedObjects: number;
+  skippedTickets: number;
+}
+
+export const EMPTY_PROJECT_TICKET_FORM: ProjectTicketFormState = {
+  title: '',
+  description: '',
+  nature: 'PROGRAMME',
+  priority: 'MEDIUM',
+  complexity: 'MEDIUM',
+  effortHours: 0,
+  dueDate: '',
+  wricefObjectId: '',
+};
+
+export const EMPTY_PROJECT_DOCUMENTATION_FORM: ProjectDocumentationFormState = {
+  title: '',
+  description: '',
+  type: 'SFD',
+  content: '',
+};
+
+export const TICKET_COMPLEXITY_BY_ABAQUE: Record<AbaqueComplexity, Ticket['complexity']> = {
+  LOW: 'SIMPLE',
+  MEDIUM: 'MOYEN',
+  HIGH: 'COMPLEXE',
+};
+
+export const PROJECT_TABS: ProjectTabDefinition<ProjectTabKey>[] = [
+  { key: 'overview', label: 'Overview' },
+  { key: 'objects', label: 'Objects' },
+  { key: 'tickets', label: 'Tickets' },
+  { key: 'team', label: 'Team & Allocation' },
+  { key: 'kpi', label: 'KPI Report' },
+  { key: 'docs', label: 'Documentation' },
+  { key: 'abaques', label: 'Abaques' },
+];
+
+export const WRICEF_TYPE_BADGE_CLASS: Record<WricefType, string> = {
+  W: 'bg-violet-100 text-violet-800 dark:bg-violet-900/30 dark:text-violet-300',
+  R: 'bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-300',
+  I: 'bg-teal-100 text-teal-800 dark:bg-teal-900/30 dark:text-teal-300',
+  C: 'bg-amber-100 text-amber-800 dark:bg-amber-900/30 dark:text-amber-300',
+  E: 'bg-emerald-100 text-emerald-800 dark:bg-emerald-900/30 dark:text-emerald-300',
+  F: 'bg-rose-100 text-rose-800 dark:bg-rose-900/30 dark:text-rose-300',
+};
+
+export const COMPLEXITY_BADGE_CLASS: Record<TicketComplexity, string> = {
+  SIMPLE: 'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-300',
+  MOYEN: 'bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-300',
+  COMPLEXE: 'bg-orange-100 text-orange-800 dark:bg-orange-900/30 dark:text-orange-300',
+  TRES_COMPLEXE: 'bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-300',
+};
+
+export const WRICEF_STATUS_COLOR: Record<TicketStatus, string> = {
+  NEW: 'bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-300',
+  IN_PROGRESS: 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900/30 dark:text-yellow-300',
+  IN_TEST: 'bg-purple-100 text-purple-800 dark:bg-purple-900/30 dark:text-purple-300',
+  BLOCKED: 'bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-300',
+  DONE: 'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-300',
+  REJECTED: 'bg-gray-100 text-gray-800 dark:bg-gray-700/40 dark:text-gray-300',
+};
+
+export const WRICEF_PRIORITY_COLOR: Record<string, string> = {
+  LOW: 'bg-muted text-muted-foreground',
+  MEDIUM: 'bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-300',
+  HIGH: 'bg-orange-100 text-orange-800 dark:bg-orange-900/30 dark:text-orange-300',
+  CRITICAL: 'bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-300',
+};
 
 export interface ProjectKpis {
   onTrack: number;
@@ -207,3 +315,139 @@ export const countDocumentationByType = (
   documentationObjects: DocumentationObject[],
   type: DocumentationObjectType
 ): number => documentationObjects.filter((doc) => doc.type === type).length;
+
+export const withProjectTabIcons = (
+  icons: Record<Exclude<ProjectTabKey, 'team'>, ReactNode>
+): ProjectTabDefinition<ProjectTabKey>[] => {
+  return PROJECT_TABS.map((tab) => {
+    if (tab.key === 'team') return tab;
+    return {
+      ...tab,
+      icon: icons[tab.key],
+    };
+  });
+};
+
+export const buildAbaqueTaskNatures = (selectedAbaque: Abaque | null): AbaqueTaskNature[] => {
+  if (!selectedAbaque) return [];
+  const entries = Array.isArray(selectedAbaque.entries) ? selectedAbaque.entries : [];
+  return [...new Set(entries.map((entry) => entry?.taskNature).filter(Boolean))] as AbaqueTaskNature[];
+};
+
+export const getUsageBarClass = (estimateConsumptionPercent: number): string => {
+  if (estimateConsumptionPercent > 100) return 'bg-destructive';
+  if (estimateConsumptionPercent > 80) return 'bg-amber-500';
+  return 'bg-emerald-600';
+};
+
+export const sortTicketHistoryByLatest = (history: Ticket['history'] = []): Ticket['history'] => {
+  return [...history].sort(
+    (a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime()
+  );
+};
+
+export const getAbaqueEstimateForNature = (
+  abaque: Abaque,
+  taskNature: TicketNature,
+  complexity: AbaqueComplexity
+): number | null => {
+  const entries = Array.isArray(abaque.entries) ? abaque.entries : [];
+  const direct = entries.find(
+    (entry) => entry.taskNature === taskNature && entry.complexity === complexity
+  );
+  if (direct) return direct.standardHours;
+
+  const fallbackByNature: Record<TicketNature, 'FEATURE' | 'DOCUMENTATION' | 'SUPPORT'> = {
+    PROGRAMME: 'FEATURE',
+    MODULE: 'FEATURE',
+    ENHANCEMENT: 'FEATURE',
+    FORMULAIRE: 'DOCUMENTATION',
+    REPORT: 'DOCUMENTATION',
+    WORKFLOW: 'SUPPORT',
+  };
+  return (
+    entries.find(
+      (entry) =>
+        entry.taskNature === fallbackByNature[taskNature] && entry.complexity === complexity
+    )?.standardHours ?? null
+  );
+};
+
+export const buildWricefImportPlan = (
+  imported: ParsedWricefResult,
+  existingObjects: WricefObject[],
+  existingTickets: Ticket[]
+): WricefImportPlan => {
+  const knownObjectIds = new Set(existingObjects.map((object) => object.id.trim().toLowerCase()));
+  const knownObjectKeys = new Set(
+    existingObjects.map((object) => `${object.type}::${object.title.trim().toLowerCase()}`)
+  );
+
+  const uniqueObjects = imported.objects.filter((object) => {
+    const idKey = object.id.trim().toLowerCase();
+    const titleKey = `${object.type}::${object.title.trim().toLowerCase()}`;
+    if (knownObjectIds.has(idKey) || knownObjectKeys.has(titleKey)) return false;
+    knownObjectIds.add(idKey);
+    knownObjectKeys.add(titleKey);
+    return true;
+  });
+
+  const existingTicketKeys = new Set(
+    existingTickets.map(
+      (ticket) => `${(ticket.wricefId ?? '').trim().toLowerCase()}::${ticket.title.trim().toLowerCase()}`
+    )
+  );
+  const importedTicketKeys = new Set<string>();
+  const uniqueTickets = imported.tickets.filter((ticket) => {
+    if (!knownObjectIds.has(ticket.wricefId.trim().toLowerCase())) return false;
+    const ticketKey = `${ticket.wricefId.trim().toLowerCase()}::${ticket.title.trim().toLowerCase()}`;
+    if (existingTicketKeys.has(ticketKey) || importedTicketKeys.has(ticketKey)) return false;
+    importedTicketKeys.add(ticketKey);
+    return true;
+  });
+
+  return {
+    uniqueObjects,
+    uniqueTickets,
+    skippedObjects: imported.objects.length - uniqueObjects.length,
+    skippedTickets: imported.tickets.length - uniqueTickets.length,
+  };
+};
+
+export const buildDocumentationDraft = (
+  object: WricefObject | undefined
+): ProjectDocumentationFormState => {
+  if (!object) {
+    return {
+      title: '',
+      description: '',
+      type: 'SFD',
+      content: '# Documentation\n\n## Context\n\n## Details\n- \n',
+    };
+  }
+
+  return {
+    title: `SFD - ${object.title}`,
+    description: `Documentation for WRICEF object ${object.id}`,
+    type: 'SFD',
+    content: `# ${object.title}\n\n## Context\n${object.description}\n\n## Functional Details\n- \n\n## Technical Notes\n- \n`,
+  };
+};
+
+export const appendFilesAsDocumentationAttachments = (
+  files: FileList,
+  previous: DocumentationAttachment[]
+): DocumentationAttachment[] => {
+  const next = Array.from(files).map((file) => ({
+    filename: file.name,
+    size: file.size,
+    url: URL.createObjectURL(file),
+  }));
+  return [...previous, ...next];
+};
+
+export const formatBytes = (bytes: number): string => {
+  if (bytes < 1024) return `${bytes} B`;
+  if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(1)} KB`;
+  return `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
+};

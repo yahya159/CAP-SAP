@@ -1,6 +1,6 @@
 import React from 'react';
-import { Button } from '../../../components/ui/button';
-import { Ticket, TicketStatus, TICKET_STATUS_LABELS } from '../../../types/entities';
+import { Button } from '@/app/components/ui/button';
+import { Ticket, TicketStatus, TICKET_STATUS_LABELS } from '@/app/types/entities';
 import { STATUS_ORDER } from './ticketView.constants';
 
 type TicketActionsMode = 'quick-complete' | 'status-transitions';

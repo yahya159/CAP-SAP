@@ -96,6 +96,23 @@ describe('Authentication', () => {
 });
 
 describe('Ticket CRUD', () => {
+  test('Consultant sees only tickets assigned to self', async () => {
+    await ensureConsultantAuth();
+    const { status, data } = await GET('/odata/v4/performance/Tickets', withConsultantAuth());
+    expect(status).toBe(200);
+    expect(data.value.length).toBeGreaterThan(0);
+    data.value.forEach((ticket) => {
+      expect(ticket.assignedTo).toBe('u-tech');
+    });
+  });
+
+  test('Manager can still read tickets beyond own assignment', async () => {
+    const { status, data } = await GET('/odata/v4/performance/Tickets?$filter=ID eq \x27tk-002\x27', withAuth());
+    expect(status).toBe(200);
+    expect(data.value.length).toBe(1);
+    expect(data.value[0].assignedTo).toBe('u-fonc');
+  });
+
   test('GET /Tickets returns seed tickets', async () => {
     const { status, data } = await GET('/odata/v4/performance/Tickets?$top=5', withAuth());
     expect(status).toBe(200);

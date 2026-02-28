@@ -18,8 +18,7 @@ import {
   SelectValue,
 } from '../ui/select';
 import { Textarea } from '../ui/textarea';
-import { Badge } from '../ui/badge';
-import { DocumentationAPI } from '../../services/odataClient';
+import { Badge } from '../ui/badge';import { DocumentationAPI } from '../../services/odata/documentationApi';
 import {
   DocumentationAttachment,
   DocumentationObject,

@@ -1,5 +1,5 @@
 import React from 'react';
-import { Allocation, User } from '../../../../types/entities';
+import { Allocation, User } from '@/app/types/entities';
 import { TeamAllocationTable } from '../tables/TeamAllocationTable';
 
 interface TeamPanelProps {

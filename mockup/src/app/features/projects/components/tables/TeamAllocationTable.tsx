@@ -1,5 +1,5 @@
 import React from 'react';
-import { Allocation, User } from '../../../../types/entities';
+import { Allocation, User } from '@/app/types/entities';
 import {
   Table,
   TableBody,
@@ -7,7 +7,7 @@ import {
   TableHead,
   TableHeader,
   TableRow,
-} from '../../../../components/ui/table';
+} from '@/app/components/ui/table';
 
 interface TeamAllocationTableProps {
   allocations: Allocation[];

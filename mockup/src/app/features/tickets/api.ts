@@ -1,11 +1,9 @@
-import {
-  AbaquesAPI as ODataAbaquesAPI,
-  NotificationsAPI as ODataNotificationsAPI,
-  ProjectsAPI as ODataProjectsAPI,
-  TicketsAPI as ODataTicketsAPI,
-  UsersAPI as ODataUsersAPI,
-  type ODataRequestOptions,
-} from '../../services/odataClient';
+import { AbaquesAPI as ODataAbaquesAPI } from '../../services/odata/abaquesApi';
+import type { ODataRequestOptions } from '../../services/odata/core';
+import { NotificationsAPI as ODataNotificationsAPI } from '../../services/odata/notificationsApi';
+import { ProjectsAPI as ODataProjectsAPI } from '../../services/odata/projectsApi';
+import { TicketsAPI as ODataTicketsAPI } from '../../services/odata/ticketsApi';
+import { UsersAPI as ODataUsersAPI } from '../../services/odata/usersApi';
 import { Abaque, Notification, Project, Ticket, User } from '../../types/entities';
 
 export interface ManagerTicketsBootstrapData {

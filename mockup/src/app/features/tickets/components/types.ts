@@ -1,4 +1,4 @@
-import { SAPModule, Ticket, TicketComplexity, TicketNature } from '../../../types/entities';
+import { SAPModule, Ticket, TicketComplexity, TicketNature } from '@/app/types/entities';
 
 export type ViewMode = 'list' | 'calendar' | 'kanban';
 

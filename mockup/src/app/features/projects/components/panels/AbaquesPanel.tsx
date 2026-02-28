@@ -1,12 +1,12 @@
 import React from 'react';
-import { AbaqueEstimatorCard } from '../../../../components/business/AbaqueEstimatorCard';
-import { Badge } from '../../../../components/ui/badge';
-import { Button } from '../../../../components/ui/button';
+import { AbaqueEstimatorCard } from '@/app/components/business/AbaqueEstimatorCard';
+import { Badge } from '@/app/components/ui/badge';
+import { Button } from '@/app/components/ui/button';
 import {
   AbaqueEstimateResult,
   Project,
   ProjectAbaqueCriteria,
-} from '../../../../types/entities';
+} from '@/app/types/entities';
 
 export interface AbaquesPanelViewModel {
   project: Project;

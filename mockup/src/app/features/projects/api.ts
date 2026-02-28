@@ -1,14 +1,12 @@
-import {
-  AllocationsAPI as ODataAllocationsAPI,
-  AbaquesAPI as ODataAbaquesAPI,
-  DocumentationAPI as ODataDocumentationAPI,
-  DeliverablesAPI as ODataDeliverablesAPI,
-  ProjectsAPI as ODataProjectsAPI,
-  TicketsAPI as ODataTicketsAPI,
-  UsersAPI as ODataUsersAPI,
-  WricefObjectsAPI as ODataWricefObjectsAPI,
-  type ODataRequestOptions,
-} from '../../services/odataClient';
+import { AbaquesAPI as ODataAbaquesAPI } from '../../services/odata/abaquesApi';
+import { AllocationsAPI as ODataAllocationsAPI } from '../../services/odata/allocationsApi';
+import type { ODataRequestOptions } from '../../services/odata/core';
+import { DeliverablesAPI as ODataDeliverablesAPI } from '../../services/odata/deliverablesApi';
+import { DocumentationAPI as ODataDocumentationAPI } from '../../services/odata/documentationApi';
+import { ProjectsAPI as ODataProjectsAPI } from '../../services/odata/projectsApi';
+import { TicketsAPI as ODataTicketsAPI } from '../../services/odata/ticketsApi';
+import { UsersAPI as ODataUsersAPI } from '../../services/odata/usersApi';
+import { WricefObjectsAPI as ODataWricefObjectsAPI } from '../../services/odata/wricefObjectsApi';
 import {
   Abaque,
   Allocation,

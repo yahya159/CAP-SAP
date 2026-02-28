@@ -1,8 +1,9 @@
 // Authentication and user context
 
 import React, { createContext, useCallback, useContext, useEffect, useMemo, useState } from 'react';
-import { User, UserRole } from '../types/entities';
-import { AuthAPI, UsersAPI, getODataAuthToken, setODataAuthToken, onAuthExpired } from '../services/odataClient';
+import { User, UserRole } from '../types/entities';import { AuthAPI } from '../services/odata/authApi';
+import { getODataAuthToken, setODataAuthToken, onAuthExpired } from '../services/odata/core';
+import { UsersAPI } from '../services/odata/usersApi';
 import { getDefaultRouteForRole } from './roleRouting';
 
 interface AuthContextType {

@@ -9,6 +9,8 @@ const { generateTicketCode } = require('../shared/utils/id');
 const { nowIso } = require('../shared/utils/timestamp');
 const { assertEntityExists, ENTITIES, MANAGER_ROLES, requireRole } = require('../shared/services/validation');
 
+const CONSULTANT_ROLES = new Set(['CONSULTANT_TECHNIQUE', 'CONSULTANT_FONCTIONNEL']);
+
 const TICKET_STATUS_TRANSITIONS = {
   NEW: new Set(['IN_PROGRESS', 'BLOCKED', 'REJECTED']),
   IN_PROGRESS: new Set(['IN_TEST', 'BLOCKED', 'DONE', 'REJECTED']),
@@ -21,6 +23,28 @@ const TICKET_STATUS_TRANSITIONS = {
 class TicketDomainService {
   constructor(_srv) {
     this.repo = new TicketRepo();
+  }
+
+  /**
+   * beforeRead – enforce data visibility.
+   * Consultants only see tickets assigned to themselves.
+   */
+  beforeRead(req) {
+    const claims = req._authClaims;
+    const role = String(claims?.role ?? '');
+    const userId = String(claims?.sub ?? '').trim();
+    if (!CONSULTANT_ROLES.has(role) || !userId) return;
+
+    const select = req.query?.SELECT;
+    if (!select) return;
+
+    const assignedToSelf = [{ ref: ['assignedTo'] }, '=', { val: userId }];
+    if (Array.isArray(select.where) && select.where.length > 0) {
+      select.where = ['(', ...select.where, ')', 'and', ...assignedToSelf];
+      return;
+    }
+
+    select.where = assignedToSelf;
   }
 
   /**

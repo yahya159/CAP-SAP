@@ -19,8 +19,7 @@ import {
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from '../ui/select';
-import { DocumentationAPI } from '../../services/odataClient';
+} from '../ui/select';import { DocumentationAPI } from '../../services/odata/documentationApi';
 import {
   DocumentationObject,
   DOCUMENTATION_OBJECT_TYPE_LABELS,

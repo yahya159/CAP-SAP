@@ -1,7 +1,7 @@
 import React from 'react';
 import { Eye, FileText, Paperclip } from 'lucide-react';
-import { Badge } from '../../../../components/ui/badge';
-import { Button } from '../../../../components/ui/button';
+import { Badge } from '@/app/components/ui/badge';
+import { Button } from '@/app/components/ui/button';
 import {
   Table,
   TableBody,
@@ -9,11 +9,11 @@ import {
   TableHead,
   TableHeader,
   TableRow,
-} from '../../../../components/ui/table';
+} from '@/app/components/ui/table';
 import {
   DOCUMENTATION_OBJECT_TYPE_LABELS,
   DocumentationObject,
-} from '../../../../types/entities';
+} from '@/app/types/entities';
 
 interface DocumentationTableProps {
   documentationObjects: DocumentationObject[];

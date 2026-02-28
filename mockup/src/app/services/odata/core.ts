@@ -100,9 +100,30 @@ const persistAuthToken = (token: string | null): void => {
 
 let odataAuthToken: string | null = readStoredAuthToken();
 
+/**
+ * @description Returns the current effective OData client runtime configuration.
+ * @param {void} _unused - This function does not accept arguments.
+ * @returns {ODataClientConfig} The active configuration object used for outgoing OData requests.
+ * @throws {never} This accessor does not throw.
+ * @example const config = getODataClientConfig();
+ */
 export const getODataClientConfig = (): ODataClientConfig => odataClientConfig;
+/**
+ * @description Returns the currently cached OData bearer token, if one is set.
+ * @param {void} _unused - This function does not accept arguments.
+ * @returns {string | null} The current authentication token or `null` when no token is configured.
+ * @throws {never} This accessor does not throw.
+ * @example const token = getODataAuthToken();
+ */
 export const getODataAuthToken = (): string | null => odataAuthToken;
 
+/**
+ * @description Updates the in-memory and persisted OData bearer token used for authorization headers.
+ * @param {string | null} token - The bearer token to store, or `null` to clear authentication state.
+ * @returns {void} No return value.
+ * @throws {never} Storage errors are internally swallowed.
+ * @example setODataAuthToken(session.token);
+ */
 export const setODataAuthToken = (token: string | null): void => {
   const normalized = token?.trim() || null;
   odataAuthToken = normalized;
@@ -117,6 +138,13 @@ type AuthExpiredListener = () => void;
 const authExpiredListeners = new Set<AuthExpiredListener>();
 
 /** Register a callback invoked when the server returns 401 (token expired/invalid). */
+/**
+ * @description Registers a callback executed whenever the client detects a 401 authentication failure.
+ * @param {AuthExpiredListener} listener - Callback to run when authentication expires.
+ * @returns {() => void} An unsubscribe function that removes the registered listener.
+ * @throws {never} This registration helper does not throw.
+ * @example const off = onAuthExpired(() => setODataAuthToken(null));
+ */
 export const onAuthExpired = (listener: AuthExpiredListener): (() => void) => {
   authExpiredListeners.add(listener);
   return () => { authExpiredListeners.delete(listener); };
@@ -128,6 +156,13 @@ const notifyAuthExpired = (): void => {
   });
 };
 
+/**
+ * @description Merges partial runtime options into the current OData client configuration.
+ * @param {Partial<ODataClientConfig>} config - Partial configuration values to apply.
+ * @returns {void} No return value.
+ * @throws {never} This mutator does not throw.
+ * @example configureODataClient({ observability: { enabled: true } });
+ */
 export const configureODataClient = (config: Partial<ODataClientConfig>): void => {
   odataClientConfig = {
     ...odataClientConfig,
@@ -257,6 +292,13 @@ export interface ODataRequestLogEvent {
 // Internal helpers
 // ---------------------------------------------------------------------------
 
+/**
+ * @description Builds a URL-encoded OData query string from optional query options.
+ * @param {ODataQueryOptions | undefined} options - OData query options such as `$filter`, `$top`, and `$orderby`.
+ * @returns {string} A query string beginning with `?`, or an empty string when no options are provided.
+ * @throws {never} This formatter does not throw.
+ * @example const qs = buildQueryString({ $top: 20, $count: true });
+ */
 export function buildQueryString(options?: ODataQueryOptions): string {
   if (!options) return '';
 
@@ -281,6 +323,13 @@ const asRecord = (value: unknown): Record<string, unknown> | null => {
   return value as Record<string, unknown>;
 };
 
+/**
+ * @description Normalizes a CAP/OData entity record by mapping common backend field aliases to frontend names.
+ * @param {T} value - The entity record to normalize.
+ * @returns {T} The normalized entity record with compatibility fields (`ID` -> `id`, `modifiedAt` -> `updatedAt`).
+ * @throws {never} This normalization utility does not throw.
+ * @example const normalized = normalizeEntityRecord(rawTicket);
+ */
 export const normalizeEntityRecord = <T>(value: T): T => {
   const record = asRecord(value);
   if (!record) return value;
@@ -559,6 +608,14 @@ async function parseODataErrorResponse(
 // Core fetch
 // ---------------------------------------------------------------------------
 
+/**
+ * @description Executes an HTTP request against the configured OData endpoint and normalizes transport/protocol errors.
+ * @param {string} endpoint - Relative OData endpoint path (for example `/Tickets` or `/Projects('p1')`).
+ * @param {ODataRequestOptions | undefined} options - Request init options including timeout, headers, and credentials.
+ * @returns {Promise<T | undefined>} Parsed JSON payload when present, otherwise `undefined` for empty responses (204/205).
+ * @throws {ODataNormalizedError} Throws normalized client errors for HTTP failures, aborted requests, and network errors.
+ * @example const data = await odataFetch<ODataResponse<Ticket>>('/Tickets?$top=10');
+ */
 export async function odataFetch<T>(endpoint: string, options?: ODataRequestOptions): Promise<T | undefined> {
   const {
     timeoutMs,
@@ -705,9 +762,31 @@ const isNotFoundError = (error: unknown): boolean => {
   return /\b404\b/i.test(error.message) || /not found/i.test(error.message);
 };
 
+/**
+ * @description Escapes and wraps a string value as an OData single-quoted literal.
+ * @param {string} value - Raw literal value to escape for OData keys and filters.
+ * @returns {string} An escaped OData string literal.
+ * @throws {never} This utility does not throw.
+ * @example const literal = quoteLiteral(\"A'B\");
+ */
 export const quoteLiteral = (value: string): string => `'${value.replace(/'/g, "''")}'`;
+/**
+ * @description Builds an OData entity path for a given entity set and identifier.
+ * @param {string} entitySet - OData entity set name.
+ * @param {string} id - Entity identifier to include in the path.
+ * @returns {string} A formatted OData path (for example `/Tickets('TK-001')`).
+ * @throws {never} This utility does not throw.
+ * @example const path = entityPath('Tickets', 'TK-001');
+ */
 export const entityPath = (entitySet: string, id: string): string => `/${entitySet}(${quoteLiteral(id)})`;
 
+/**
+ * @description Unwraps a plain entity or single-response wrapper and normalizes common CAP field aliases.
+ * @param {T | ODataSingleResponse<T> | undefined} data - Raw entity payload or wrapper returned by OData fetch helpers.
+ * @returns {T | null} A normalized entity record, or `null` when no payload is present.
+ * @throws {never} This utility does not throw.
+ * @example const project = unwrapSingle<Project>(payload);
+ */
 export function unwrapSingle<T>(data: T | ODataSingleResponse<T> | undefined): T | null {
   if (!data) return null;
   if (typeof data === 'object' && data !== null && 'value' in data) {
@@ -727,6 +806,15 @@ function toPagedResult<T>(data: ODataResponse<T> | T[] | undefined): ODataPagedR
   };
 }
 
+/**
+ * @description Fetches one OData page for an entity set with optional query options.
+ * @param {string} entitySet - OData entity set name to query.
+ * @param {ODataQueryOptions | undefined} options - OData query parameters for filtering, sorting, and paging.
+ * @param {ODataRequestOptions | undefined} requestOptions - Low-level request options for timeout, headers, and abort signal.
+ * @returns {Promise<ODataPagedResult<T>>} A normalized page with items, optional count, and optional nextLink.
+ * @throws {ODataNormalizedError} Throws when the request fails or returns a non-success HTTP status.
+ * @example const page = await listEntitiesPage<Ticket>('Tickets', { $top: 20, $count: true });
+ */
 export async function listEntitiesPage<T>(
   entitySet: string,
   options?: ODataQueryOptions,
@@ -763,6 +851,14 @@ const resolveNextLinkEndpoint = (nextLink: string): string => {
   return ensureLeadingSlash(nextLink);
 };
 
+/**
+ * @description Fetches a continuation page from a previously returned `@odata.nextLink` value.
+ * @param {string} nextLink - Next-link URL or relative path returned by OData pagination.
+ * @param {ODataRequestOptions | undefined} requestOptions - Low-level request options for timeout, headers, and abort signal.
+ * @returns {Promise<ODataPagedResult<T>>} A normalized continuation page.
+ * @throws {ODataNormalizedError} Throws when the continuation request fails.
+ * @example const next = await fetchNextPage<Ticket>(page.nextLink!, { timeoutMs: 8000 });
+ */
 export async function fetchNextPage<T>(
   nextLink: string,
   requestOptions?: ODataRequestOptions
@@ -772,6 +868,16 @@ export async function fetchNextPage<T>(
   return toPagedResult(data);
 }
 
+/**
+ * @description Iterates through paginated OData results and aggregates pages up to exhaustion or `maxPages`.
+ * @param {string} entitySet - OData entity set name to query.
+ * @param {ODataQueryOptions | undefined} options - OData query options applied to the first page request.
+ * @param {ODataRequestOptions | undefined} requestOptions - Low-level request options for timeout, headers, and abort signal.
+ * @param {ODataListAllOptions | undefined} listAllOptions - Pagination guard options such as `maxPages`.
+ * @returns {Promise<ODataPagedResult<T>>} Aggregated normalized items with final count and nextLink metadata.
+ * @throws {ODataNormalizedError} Throws when any page request fails.
+ * @example const allProjects = await listAllPages<Project>('Projects', { $orderby: 'name asc' });
+ */
 export async function listAllPages<T>(
   entitySet: string,
   options?: ODataQueryOptions,
@@ -805,6 +911,16 @@ export async function listAllPages<T>(
   };
 }
 
+/**
+ * @description Lists entities from an OData set, optionally aggregating all pages.
+ * @param {string} entitySet - OData entity set name to query.
+ * @param {ODataQueryOptions | undefined} options - OData query options for filtering, sorting, and paging.
+ * @param {ODataRequestOptions | undefined} requestOptions - Low-level request options for timeout, headers, and abort signal.
+ * @param {boolean} fetchAllPages - Whether to fetch every paginated page before returning.
+ * @returns {Promise<T[]>} A normalized array of entities.
+ * @throws {ODataNormalizedError} Throws when page retrieval fails.
+ * @example const tickets = await listEntities<Ticket>('Tickets', { $filter: \"status eq 'NEW'\" }, undefined, true);
+ */
 export async function listEntities<T>(
   entitySet: string,
   options?: ODataQueryOptions,
@@ -820,6 +936,14 @@ export async function listEntities<T>(
   return page.items;
 }
 
+/**
+ * @description Returns the count of entities in a set, optionally filtered by an OData expression.
+ * @param {string} entitySet - OData entity set name to count.
+ * @param {string | undefined} filter - Optional OData `$filter` expression to limit counted records.
+ * @returns {Promise<number>} The matching entity count.
+ * @throws {ODataNormalizedError} Throws when the count request fails.
+ * @example const blocked = await countEntities('Tickets', \"status eq 'BLOCKED'\");
+ */
 export async function countEntities(entitySet: string, filter?: string): Promise<number> {
   const page = await listEntitiesPage<unknown>(entitySet, {
     $count: true,
@@ -830,6 +954,15 @@ export async function countEntities(entitySet: string, filter?: string): Promise
   return page.count ?? 0;
 }
 
+/**
+ * @description Retrieves one entity by id, returning `null` when the entity does not exist.
+ * @param {string} entitySet - OData entity set name to query.
+ * @param {string} id - Identifier of the target entity.
+ * @param {ODataRequestOptions | undefined} requestOptions - Low-level request options for timeout, headers, and abort signal.
+ * @returns {Promise<T | null>} A normalized entity when found, otherwise `null` on not-found.
+ * @throws {ODataNormalizedError} Throws for transport/server errors other than not-found.
+ * @example const ticket = await getEntityById<Ticket>('Tickets', 'TK-001');
+ */
 export async function getEntityById<T>(
   entitySet: string,
   id: string,
@@ -847,6 +980,15 @@ export async function getEntityById<T>(
   }
 }
 
+/**
+ * @description Creates a new entity in the target OData entity set.
+ * @param {string} entitySet - OData entity set name to create into.
+ * @param {unknown} payload - Entity payload to send (converted to OData field conventions).
+ * @param {ODataRequestOptions | undefined} requestOptions - Low-level request options for timeout, headers, and abort signal.
+ * @returns {Promise<T>} The normalized created entity, or payload-derived fallback when response body is empty.
+ * @throws {ODataNormalizedError} Throws when the create request fails.
+ * @example const created = await createEntity<Ticket>('Tickets', draftTicket);
+ */
 export async function createEntity<T>(
   entitySet: string,
   payload: unknown,
@@ -862,6 +1004,16 @@ export async function createEntity<T>(
   return normalizeEntityRecord(data);
 }
 
+/**
+ * @description Updates an existing entity by id using PATCH semantics.
+ * @param {string} entitySet - OData entity set name containing the entity.
+ * @param {string} id - Identifier of the entity to update.
+ * @param {unknown} payload - Partial update payload converted to OData field conventions.
+ * @param {ODataRequestOptions | undefined} requestOptions - Low-level request options for timeout, headers, and abort signal.
+ * @returns {Promise<T>} The normalized updated entity, or payload-derived fallback when response body is empty.
+ * @throws {ODataNormalizedError} Throws when the update request fails.
+ * @example const updated = await updateEntity<Ticket>('Tickets', ticketId, { status: 'DONE' });
+ */
 export async function updateEntity<T>(
   entitySet: string,
   id: string,
@@ -881,6 +1033,15 @@ export async function updateEntity<T>(
   return normalizeEntityRecord(data);
 }
 
+/**
+ * @description Deletes an entity by id from the specified OData entity set.
+ * @param {string} entitySet - OData entity set name containing the entity.
+ * @param {string} id - Identifier of the entity to delete.
+ * @param {ODataRequestOptions | undefined} requestOptions - Low-level request options for timeout, headers, and abort signal.
+ * @returns {Promise<void>} Resolves when deletion completes successfully.
+ * @throws {ODataNormalizedError} Throws when the delete request fails.
+ * @example await deleteEntity('Tickets', ticketId);
+ */
 export async function deleteEntity(
   entitySet: string,
   id: string,

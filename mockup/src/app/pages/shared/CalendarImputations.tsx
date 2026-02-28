@@ -1,12 +1,9 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import { useNavigate } from 'react-router';
-import { PageHeader } from '../../components/common/PageHeader';
-import {
-  ImputationsAPI,
-  ImputationPeriodsAPI,
-  TicketsAPI,
-  UsersAPI,
-} from '../../services/odataClient';
+import { PageHeader } from '../../components/common/PageHeader';import { ImputationPeriodsAPI } from '../../services/odata/imputationPeriodsApi';
+import { ImputationsAPI } from '../../services/odata/imputationsApi';
+import { TicketsAPI } from '../../services/odata/ticketsApi';
+import { UsersAPI } from '../../services/odata/usersApi';
 import {
   Imputation,
   ImputationPeriod,

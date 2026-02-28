@@ -1,5 +1,5 @@
 import React from 'react';
-import { PageHeader } from '../../../components/common/PageHeader';
+import { PageHeader } from '@/app/components/common/PageHeader';
 
 interface ProjectHeaderProps {
   projectName: string;
