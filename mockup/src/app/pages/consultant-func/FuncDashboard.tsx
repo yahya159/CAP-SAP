@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router';
 import { CheckCircle2, ClipboardList, FileText, TicketCheck, Timer } from 'lucide-react';
+import { toast } from 'sonner';
 import { PageHeader } from '../../components/common/PageHeader';
 import { KPICard } from '../../components/common/KPICard';
 import { useAuth } from '../../context/AuthContext';
@@ -16,12 +17,14 @@ export const FuncDashboard: React.FC = () => {
   const [deliverables, setDeliverables] = useState<Deliverable[]>([]);
   const [tickets, setTickets] = useState<Ticket[]>([]);
   const [loading, setLoading] = useState(true);
+  const [loadError, setLoadError] = useState<string | null>(null);
 
   useEffect(() => {
     if (!currentUser) return;
 
     const loadData = async () => {
       setLoading(true);
+      setLoadError(null);
 
       try {
         const [deliverableData, ticketData] = await Promise.all([
@@ -31,6 +34,12 @@ export const FuncDashboard: React.FC = () => {
 
         setDeliverables(deliverableData);
         setTickets(ticketData.filter((ticket) => ticket.createdBy === currentUser.id || ticket.assignedTo === currentUser.id));
+      } catch (error) {
+        setDeliverables([]);
+        setTickets([]);
+        const message = error instanceof Error ? error.message : 'Failed to load dashboard data.';
+        setLoadError(message);
+        toast.error(message);
       } finally {
         setLoading(false);
       }
@@ -59,6 +68,11 @@ export const FuncDashboard: React.FC = () => {
       />
 
       <div className="space-y-6 p-6 lg:p-8">
+        {loadError && (
+          <Card className="border-destructive/50">
+            <CardContent className="pt-4 text-sm text-destructive">{loadError}</CardContent>
+          </Card>
+        )}
         <div className="grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-4">
           <KPICard title="Pending Deliverables" value={pendingDeliverables} icon="document" color="yellow" />
           <KPICard title="Approved Deliverables" value={approvedDeliverables} icon="accept" color="green" />

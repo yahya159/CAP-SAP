@@ -14,9 +14,19 @@ const { GET, POST, PATCH, DELETE, expect: _expect } = cds.test(__dirname + '/..'
 // Since these are integration tests hitting the service directly via cds.test,
 // we authenticate via the service's own /authenticate action.
 let authToken = null;
+let adminAuthToken = null;
+let consultantAuthToken = null;
 
 const withAuth = () => ({
   headers: authToken ? { Authorization: `Bearer ${authToken}` } : {},
+});
+
+const withAdminAuth = () => ({
+  headers: adminAuthToken ? { Authorization: `Bearer ${adminAuthToken}` } : {},
+});
+
+const withConsultantAuth = () => ({
+  headers: consultantAuthToken ? { Authorization: `Bearer ${consultantAuthToken}` } : {},
 });
 
 const ensureAuth = async () => {
@@ -26,6 +36,24 @@ const ensureAuth = async () => {
     password: 'Manager#2026',
   });
   authToken = data.token;
+};
+
+const ensureAdminAuth = async () => {
+  if (adminAuthToken) return;
+  const { data } = await POST('/odata/v4/performance/authenticate', {
+    email: 'alice.admin@inetum.com',
+    password: 'Admin#2026',
+  });
+  adminAuthToken = data.token;
+};
+
+const ensureConsultantAuth = async () => {
+  if (consultantAuthToken) return;
+  const { data } = await POST('/odata/v4/performance/authenticate', {
+    email: 'theo.tech@inetum.com',
+    password: 'Tech#2026',
+  });
+  consultantAuthToken = data.token;
 };
 
 describe('Authentication', () => {
@@ -285,8 +313,9 @@ describe('Validation and state-machine guards', () => {
   });
 
   test('Project delete with children returns 409', async () => {
+    await ensureAdminAuth();
     try {
-      await DELETE("/odata/v4/performance/Projects('proj-1')", withAuth());
+      await DELETE("/odata/v4/performance/Projects('proj-1')", withAdminAuth());
       fail('Should have thrown');
     } catch (err) {
       expect(err.response?.status ?? err.status).toBe(409);
@@ -294,8 +323,9 @@ describe('Validation and state-machine guards', () => {
   });
 
   test('User delete with references returns 409', async () => {
+    await ensureAdminAuth();
     try {
-      await DELETE("/odata/v4/performance/Users('u-manager')", withAuth());
+      await DELETE("/odata/v4/performance/Users('u-manager')", withAdminAuth());
       fail('Should have thrown');
     } catch (err) {
       expect(err.response?.status ?? err.status).toBe(409);
@@ -433,15 +463,26 @@ describe('Validation and state-machine guards', () => {
   });
 
   test('ReferenceData duplicate type+code returns 409', async () => {
+    await ensureAdminAuth();
     try {
       await POST(
         '/odata/v4/performance/ReferenceData',
         { type: 'PRIORITY', code: 'LOW', label: 'Duplicate low' },
-        withAuth()
+        withAdminAuth()
       );
       fail('Should have thrown');
     } catch (err) {
       expect(err.response?.status ?? err.status).toBe(409);
+    }
+  });
+
+  test('Consultant cannot read Evaluations', async () => {
+    await ensureConsultantAuth();
+    try {
+      await GET('/odata/v4/performance/Evaluations?$top=1', withConsultantAuth());
+      fail('Should have thrown');
+    } catch (err) {
+      expect(err.response?.status ?? err.status).toBe(403);
     }
   });
 

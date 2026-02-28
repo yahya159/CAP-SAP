@@ -1,13 +1,159 @@
 import type { Project } from './core';
 import type { ODataQueryOptions, ODataRequestOptions } from './core';
-import { listEntities, getEntityById, createEntity, updateEntity, deleteEntity } from './core';
+import { listEntities, createEntity, updateEntity, deleteEntity, quoteLiteral } from './core';
+
+interface ProjectRaw extends Omit<Project, 'techKeywords' | 'abaqueEstimate'> {
+  techKeywords?: unknown;
+  abaqueEstimate?: unknown;
+}
+
+const PROJECT_BASE_SELECT =
+  'ID,name,projectType,managerId,startDate,endDate,status,priority,description,progress,complexity,documentation,linkedAbaqueId,createdAt,modifiedAt';
+
+const parseJsonIfString = (value: unknown): unknown => {
+  if (typeof value !== 'string') return value;
+  const trimmed = value.trim();
+  if (!trimmed) return value;
+  if (!(trimmed.startsWith('{') || trimmed.startsWith('['))) return value;
+  try {
+    return JSON.parse(trimmed);
+  } catch {
+    return value;
+  }
+};
+
+const asRecord = (value: unknown): Record<string, unknown> | null => {
+  if (!value || typeof value !== 'object' || Array.isArray(value)) return null;
+  return value as Record<string, unknown>;
+};
+
+const asRows = (value: unknown): unknown[] => {
+  const parsed = parseJsonIfString(value);
+  return Array.isArray(parsed) ? parsed : [];
+};
+
+const normalizeTechKeywords = (value: unknown): string[] =>
+  asRows(value)
+    .map((entry) => {
+      if (typeof entry === 'string') return entry.trim();
+      const candidate = asRecord(entry);
+      if (!candidate) return '';
+      return String(candidate.keyword ?? candidate.value ?? '').trim();
+    })
+    .filter((keyword) => keyword.length > 0);
+
+const normalizeAbaqueEstimate = (value: unknown): Project['abaqueEstimate'] | undefined => {
+  const parsed = parseJsonIfString(value);
+
+  const directRecord = asRecord(parsed);
+  if (directRecord?.criteria && directRecord?.result) {
+    return directRecord as unknown as Project['abaqueEstimate'];
+  }
+
+  const rows = asRows(parsed);
+  if (!rows.length) return undefined;
+
+  const candidates: Array<Project['abaqueEstimate']> = rows
+    .map((row) => {
+      const record = asRecord(row);
+      if (!record) return null;
+
+      const details = parseJsonIfString(record.details ?? record.value ?? record);
+      const detailsRecord = asRecord(details);
+      if (!detailsRecord?.criteria || !detailsRecord?.result) return null;
+      return detailsRecord as unknown as Project['abaqueEstimate'];
+    })
+    .filter((entry): entry is Project['abaqueEstimate'] => Boolean(entry));
+
+  if (!candidates.length) return undefined;
+  return candidates[candidates.length - 1];
+};
+
+const toKeywordRows = (value: unknown): Array<{ keyword: string }> =>
+  normalizeTechKeywords(value).map((keyword) => ({ keyword }));
+
+const toAbaqueEstimateRows = (value: unknown): Array<{ details: string }> => {
+  const estimate = normalizeAbaqueEstimate(value);
+  if (!estimate) return [];
+  return [{ details: JSON.stringify(estimate) }];
+};
+
+const toProjectPayload = (project: Partial<Project>): Record<string, unknown> => {
+  const payload: Record<string, unknown> = { ...project };
+
+  if ('techKeywords' in project && project.techKeywords !== undefined) {
+    payload.techKeywords = toKeywordRows(project.techKeywords);
+  }
+  if ('abaqueEstimate' in project && project.abaqueEstimate !== undefined) {
+    payload.abaqueEstimate = toAbaqueEstimateRows(project.abaqueEstimate);
+  }
+
+  return payload;
+};
+
+const normalizeProject = (raw: ProjectRaw): Project => {
+  const { techKeywords: _rawTechKeywords, abaqueEstimate: _rawAbaqueEstimate, ...base } = raw;
+  const techKeywords = normalizeTechKeywords(raw.techKeywords);
+  const abaqueEstimate = normalizeAbaqueEstimate(raw.abaqueEstimate);
+  return {
+    ...base,
+    ...(techKeywords.length ? { techKeywords } : {}),
+    ...(abaqueEstimate ? { abaqueEstimate } : {}),
+  };
+};
+
+const withMappedPayloadFallback = (project: Project, input: Partial<Project>): Project => {
+  const withKeywords =
+    input.techKeywords !== undefined && project.techKeywords === undefined
+      ? { ...project, techKeywords: normalizeTechKeywords(input.techKeywords) }
+      : project;
+  if (input.abaqueEstimate !== undefined && withKeywords.abaqueEstimate === undefined) {
+    return {
+      ...withKeywords,
+      abaqueEstimate: normalizeAbaqueEstimate(input.abaqueEstimate),
+    };
+  }
+  return withKeywords;
+};
+
+const isMissingProjectCompositionTable = (error: unknown): boolean => {
+  if (!(error instanceof Error)) return false;
+  return /no such table: .*Project(TechKeywords|AbaqueEstimates)/i.test(error.message);
+};
+
+const listWithCompositionFallback = async (
+  options?: ODataQueryOptions,
+  requestOptions?: ODataRequestOptions
+): Promise<Project[]> => {
+  const mergedOptions: ODataQueryOptions = {
+    ...options,
+    $select: options?.$select ?? PROJECT_BASE_SELECT,
+    $expand: options?.$expand ?? 'techKeywords,abaqueEstimate',
+  };
+  try {
+    const rows = await listEntities<ProjectRaw>('Projects', mergedOptions, requestOptions, true);
+    return rows.map(normalizeProject);
+  } catch (error) {
+    if (!isMissingProjectCompositionTable(error)) throw error;
+    const legacyRows = await listEntities<ProjectRaw>(
+      'Projects',
+      {
+        ...options,
+        $select: options?.$select ?? `${PROJECT_BASE_SELECT},techKeywords,abaqueEstimate`,
+      },
+      requestOptions,
+      true
+    );
+    return legacyRows.map(normalizeProject);
+  }
+};
 
 export const ProjectsAPI = {
   async list(
     options?: ODataQueryOptions,
     requestOptions?: ODataRequestOptions
   ): Promise<Project[]> {
-    return await listEntities<Project>('Projects', options, requestOptions, true);
+    return await listWithCompositionFallback(options, requestOptions);
   },
 
   async getAll(requestOptions?: ODataRequestOptions): Promise<Project[]> {
@@ -15,14 +161,26 @@ export const ProjectsAPI = {
   },
 
   async getById(id: string, requestOptions?: ODataRequestOptions): Promise<Project | null> {
-    return await getEntityById<Project>('Projects', id, requestOptions);
+    const rows = await ProjectsAPI.list(
+      {
+        $filter: `ID eq ${quoteLiteral(id)}`,
+        $top: 1,
+      },
+      requestOptions
+    );
+    return rows[0] ?? null;
   },
 
   async create(
     project: Omit<Project, 'id'>,
     requestOptions?: ODataRequestOptions
   ): Promise<Project> {
-    return await createEntity<Project>('Projects', project, requestOptions);
+    const created = await createEntity<ProjectRaw>(
+      'Projects',
+      toProjectPayload(project),
+      requestOptions
+    );
+    return withMappedPayloadFallback(normalizeProject(created), project);
   },
 
   async update(
@@ -30,7 +188,13 @@ export const ProjectsAPI = {
     project: Partial<Project>,
     requestOptions?: ODataRequestOptions
   ): Promise<Project> {
-    return await updateEntity<Project>('Projects', id, project, requestOptions);
+    const updated = await updateEntity<ProjectRaw>(
+      'Projects',
+      id,
+      toProjectPayload(project),
+      requestOptions
+    );
+    return withMappedPayloadFallback(normalizeProject(updated), project);
   },
 
   async delete(id: string, requestOptions?: ODataRequestOptions): Promise<void> {

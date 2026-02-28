@@ -223,12 +223,6 @@ export const ROLE_ROUTE_REGISTRY: Record<UserRole, RoleRouteGroup> = {
         lazy: lazyNamed(() => import('../pages/shared/TicketDetailsPage'), 'TicketDetailsPage'),
       },
       {
-        id: 'tech-performance',
-        path: 'performance',
-        lazy: lazyNamed(() => import('../pages/consultant-tech/MyPerformance'), 'MyPerformance'),
-        nav: { label: 'Performance', iconKey: 'bar-chart-3' },
-      },
-      {
         id: 'tech-certifications',
         path: 'certifications',
         lazy: lazyNamed(() => import('../pages/consultant-tech/MyCertifications'), 'MyCertifications'),

@@ -1,13 +1,176 @@
 import type { User } from './core';
 import type { ODataQueryOptions, ODataRequestOptions } from './core';
-import { listEntities, getEntityById, createEntity, updateEntity, deleteEntity, quoteLiteral } from './core';
+import { listEntities, createEntity, updateEntity, deleteEntity, quoteLiteral } from './core';
+
+interface UserRaw extends Omit<User, 'skills' | 'certifications' | 'availabilityPercent'> {
+  skills?: unknown;
+  certifications?: unknown;
+  availabilityPercent?: unknown;
+}
+
+const parseJsonIfString = (value: unknown): unknown => {
+  if (typeof value !== 'string') return value;
+  const trimmed = value.trim();
+  if (!trimmed) return value;
+  if (!(trimmed.startsWith('[') || trimmed.startsWith('{'))) return value;
+  try {
+    return JSON.parse(trimmed);
+  } catch {
+    return value;
+  }
+};
+
+const unwrapCollection = (value: unknown): unknown[] => {
+  const parsed = parseJsonIfString(value);
+  if (Array.isArray(parsed)) return parsed;
+  if (parsed && typeof parsed === 'object') {
+    const collection = (parsed as { value?: unknown }).value;
+    if (Array.isArray(collection)) return collection;
+  }
+  return [];
+};
+
+const normalizeSkills = (value: unknown): string[] => {
+  const source = unwrapCollection(value);
+  return source
+    .map((entry) => {
+      if (typeof entry === 'string') return entry.trim();
+      if (entry && typeof entry === 'object') {
+        const candidate = entry as Record<string, unknown>;
+        return String(candidate.skill ?? candidate.name ?? candidate.label ?? '').trim();
+      }
+      return '';
+    })
+    .filter((skill) => skill.length > 0);
+};
+
+const normalizeCertifications = (
+  value: unknown
+): User['certifications'] => {
+  const source = unwrapCollection(value);
+  return source
+    .map((entry, index) => {
+      if (typeof entry === 'string') {
+        const name = entry.trim();
+        if (!name) return null;
+        return {
+          id: `cert-${index}-${name.toLowerCase().replace(/[^a-z0-9]+/g, '-')}`,
+          name,
+          issuingBody: 'N/A',
+          dateObtained: new Date().toISOString().slice(0, 10),
+          status: 'VALID' as const,
+        };
+      }
+      if (entry && typeof entry === 'object') {
+        const candidate = entry as Record<string, unknown>;
+        const name = String(candidate.name ?? '').trim();
+        if (!name) return null;
+        const id = String(candidate.id ?? candidate.ID ?? `cert-${index}-${name.toLowerCase().replace(/[^a-z0-9]+/g, '-')}`);
+        const dateObtained = String(candidate.dateObtained ?? candidate.date ?? new Date().toISOString().slice(0, 10));
+        const statusRaw = String(candidate.status ?? 'VALID').trim().toUpperCase();
+        const status =
+          statusRaw === 'VALID' || statusRaw === 'EXPIRING_SOON' || statusRaw === 'EXPIRED'
+            ? statusRaw
+            : 'VALID';
+        return {
+          id,
+          name,
+          issuingBody: String(candidate.issuingBody ?? 'N/A'),
+          dateObtained,
+          expiryDate: typeof candidate.expiryDate === 'string' ? candidate.expiryDate : undefined,
+          status,
+        };
+      }
+      return null;
+    })
+    .filter((cert): cert is User['certifications'][number] => Boolean(cert));
+};
+
+const ensureExpand = (expand: string | undefined, required: string[]): string => {
+  const current = (expand ?? '')
+    .split(',')
+    .map((item) => item.trim())
+    .filter(Boolean);
+  const merged = [...new Set([...current, ...required])];
+  return merged.join(',');
+};
+
+const USER_BASE_SELECT =
+  'ID,name,email,role,active,availabilityPercent,teamId,avatarUrl';
+
+const isMissingUserCompositionTable = (error: unknown): boolean => {
+  if (!(error instanceof Error)) return false;
+  return /no such table: .*User(Skills|Certifications)/i.test(error.message);
+};
+
+const normalizeUser = (entry: UserRaw): User => ({
+  ...entry,
+  id: String(entry.id ?? ''),
+  name: String(entry.name ?? ''),
+  email: String(entry.email ?? ''),
+  role: entry.role,
+  active: Boolean(entry.active),
+  skills: normalizeSkills(entry.skills),
+  certifications: normalizeCertifications(entry.certifications),
+  availabilityPercent: Number(entry.availabilityPercent ?? 100) || 100,
+  teamId: typeof entry.teamId === 'string' ? entry.teamId : undefined,
+  avatarUrl: typeof entry.avatarUrl === 'string' ? entry.avatarUrl : undefined,
+});
+
+const toUserPayload = (user: Partial<User>): Record<string, unknown> => {
+  const payload: Record<string, unknown> = { ...user };
+
+  if ('skills' in user) {
+    payload.skills = Array.isArray(user.skills)
+      ? user.skills.map((skill) => ({ skill }))
+      : [];
+  }
+
+  if ('certifications' in user) {
+    payload.certifications = Array.isArray(user.certifications)
+      ? user.certifications.map((cert) => ({
+          name: typeof cert === 'string' ? cert : cert.name,
+          date:
+            typeof cert === 'string'
+              ? undefined
+              : cert.dateObtained || cert.expiryDate,
+        }))
+      : [];
+  }
+
+  return payload;
+};
 
 export const UsersAPI = {
   async list(
     options?: ODataQueryOptions,
     requestOptions?: ODataRequestOptions
   ): Promise<User[]> {
-    return await listEntities<User>('Users', options, requestOptions, true);
+    try {
+      const rows = await listEntities<UserRaw>(
+        'Users',
+        {
+          ...options,
+          $select: options?.$select ?? USER_BASE_SELECT,
+          $expand: ensureExpand(options?.$expand, ['skills', 'certifications']),
+        },
+        requestOptions,
+        true
+      );
+      return rows.map(normalizeUser);
+    } catch (error) {
+      if (!isMissingUserCompositionTable(error)) throw error;
+      const legacyRows = await listEntities<UserRaw>(
+        'Users',
+        {
+          ...options,
+          $select: options?.$select ?? `${USER_BASE_SELECT},skills,certifications`,
+        },
+        requestOptions,
+        true
+      );
+      return legacyRows.map(normalizeUser);
+    }
   },
 
   async getAll(requestOptions?: ODataRequestOptions): Promise<User[]> {
@@ -31,8 +194,7 @@ export const UsersAPI = {
     if (!trimmedEmail) return null;
     const normalizedEmail = trimmedEmail.toLowerCase();
 
-    const exactMatch = await listEntities<User>(
-      'Users',
+    const exactMatch = await UsersAPI.list(
       {
         $filter: `active eq true and email eq ${quoteLiteral(trimmedEmail)}`,
         $top: 1,
@@ -42,8 +204,7 @@ export const UsersAPI = {
     if (exactMatch[0]) return exactMatch[0];
 
     if (normalizedEmail !== trimmedEmail) {
-      const normalizedMatch = await listEntities<User>(
-        'Users',
+      const normalizedMatch = await UsersAPI.list(
         {
           $filter: `active eq true and email eq ${quoteLiteral(normalizedEmail)}`,
           $top: 1,
@@ -54,8 +215,7 @@ export const UsersAPI = {
     }
 
     try {
-      const caseInsensitiveMatch = await listEntities<User>(
-        'Users',
+      const caseInsensitiveMatch = await UsersAPI.list(
         {
           $filter: `active eq true and tolower(email) eq ${quoteLiteral(normalizedEmail)}`,
           $top: 1,
@@ -69,11 +229,23 @@ export const UsersAPI = {
   },
 
   async getById(id: string, requestOptions?: ODataRequestOptions): Promise<User | null> {
-    return await getEntityById<User>('Users', id, requestOptions);
+    const rows = await UsersAPI.list(
+      {
+        $filter: `ID eq ${quoteLiteral(id)}`,
+        $top: 1,
+      },
+      requestOptions
+    );
+    return rows[0] ?? null;
   },
 
   async create(user: Omit<User, 'id'>, requestOptions?: ODataRequestOptions): Promise<User> {
-    return await createEntity<User>('Users', user, requestOptions);
+    const created = await createEntity<UserRaw>(
+      'Users',
+      toUserPayload(user),
+      requestOptions
+    );
+    return normalizeUser(created);
   },
 
   async update(
@@ -81,7 +253,8 @@ export const UsersAPI = {
     user: Partial<User>,
     requestOptions?: ODataRequestOptions
   ): Promise<User> {
-    return await updateEntity<User>('Users', id, user, requestOptions);
+    const updated = await updateEntity<UserRaw>('Users', id, toUserPayload(user), requestOptions);
+    return normalizeUser(updated);
   },
 
   async delete(id: string, requestOptions?: ODataRequestOptions): Promise<void> {

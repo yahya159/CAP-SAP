@@ -260,17 +260,19 @@ export interface ODataRequestLogEvent {
 export function buildQueryString(options?: ODataQueryOptions): string {
   if (!options) return '';
 
-  const params = new URLSearchParams();
-  if (options.$filter) params.append('$filter', options.$filter);
-  if (options.$select) params.append('$select', options.$select);
-  if (options.$expand) params.append('$expand', options.$expand);
-  if (options.$orderby) params.append('$orderby', options.$orderby);
-  if (options.$top !== undefined) params.append('$top', options.$top.toString());
-  if (options.$skip !== undefined) params.append('$skip', options.$skip.toString());
-  if (options.$count) params.append('$count', 'true');
-  if (options.$search) params.append('$search', options.$search);
+  const params: Array<[string, string]> = [];
+  if (options.$filter) params.push(['$filter', options.$filter]);
+  if (options.$select) params.push(['$select', options.$select]);
+  if (options.$expand) params.push(['$expand', options.$expand]);
+  if (options.$orderby) params.push(['$orderby', options.$orderby]);
+  if (options.$top !== undefined) params.push(['$top', options.$top.toString()]);
+  if (options.$skip !== undefined) params.push(['$skip', options.$skip.toString()]);
+  if (options.$count) params.push(['$count', 'true']);
+  if (options.$search) params.push(['$search', options.$search]);
 
-  const queryString = params.toString();
+  const queryString = params
+    .map(([key, value]) => `${encodeURIComponent(key)}=${encodeURIComponent(value)}`)
+    .join('&');
   return queryString ? `?${queryString}` : '';
 }
 

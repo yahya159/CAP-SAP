@@ -1,0 +1,17 @@
+ID,user_ID,skill
+uskill-1,u-admin,Administration
+uskill-2,u-admin,SAP BASIS
+uskill-3,u-manager,Management
+uskill-4,u-manager,SAP SD
+uskill-5,u-manager,SAP MM
+uskill-6,u-tech,ABAP
+uskill-7,u-tech,SAP FI
+uskill-8,u-tech,Fiori
+uskill-9,u-fonc,SAP FI
+uskill-10,u-fonc,SAP CO
+uskill-11,u-fonc,Project Management
+uskill-12,u-pm,Project Management
+uskill-13,u-pm,SAP PS
+uskill-14,u-devco,ABAP
+uskill-15,u-devco,Fiori
+uskill-16,u-devco,SAP BW

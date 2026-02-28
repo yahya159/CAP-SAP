@@ -7,6 +7,18 @@ class AuthRepo {
     return cds.db.run(
       SELECT.one
         .from('sap.performance.dashboard.db.Users')
+        .columns(
+          'ID',
+          'name',
+          'email',
+          'role',
+          'active',
+          'availabilityPercent',
+          'teamId',
+          'avatarUrl',
+          { skills: ['skill'] },
+          { certifications: ['name', 'date'] }
+        )
         .where({ email, active: true })
     );
   }

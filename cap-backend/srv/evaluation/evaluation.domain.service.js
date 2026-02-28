@@ -1,9 +1,20 @@
 'use strict';
 
-const { assertEntityExists, assertPositiveNumber, ENTITIES, MANAGER_ROLES, requireRole } = require('../shared/services/validation');
+const {
+  assertEntityExists,
+  assertPositiveNumber,
+  ENTITIES,
+  MANAGER_ROLES,
+  ALL_NON_CONSULTANT_ROLES,
+  requireRole,
+} = require('../shared/services/validation');
 
 class EvaluationDomainService {
   constructor(_srv) {
+  }
+
+  async beforeRead(req) {
+    requireRole(req, ALL_NON_CONSULTANT_ROLES, 'Consultants cannot access evaluations');
   }
 
   async beforeCreate(req) {

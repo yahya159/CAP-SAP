@@ -1,4 +1,5 @@
 import React, { useEffect, useMemo, useState } from 'react';
+import { toast } from 'sonner';
 import { PageHeader } from '../../components/common/PageHeader';
 import { EvaluationsAPI, TicketsAPI, UsersAPI } from '../../services/odataClient';
 import { Evaluation, Ticket, User } from '../../types/entities';
@@ -17,6 +18,7 @@ export const TeamPerformance: React.FC = () => {
   const [tickets, setTickets] = useState<Ticket[]>([]);
   const [evaluations, setEvaluations] = useState<Evaluation[]>([]);
   const [loading, setLoading] = useState(true);
+  const [loadError, setLoadError] = useState<string | null>(null);
   const [selectedConsultant, setSelectedConsultant] = useState<string>('NONE');
 
   useEffect(() => {
@@ -25,6 +27,7 @@ export const TeamPerformance: React.FC = () => {
 
   const loadData = async () => {
     setLoading(true);
+    setLoadError(null);
     try {
       const [userData, ticketData, evalData] = await Promise.all([
         UsersAPI.getAll(),
@@ -34,9 +37,22 @@ export const TeamPerformance: React.FC = () => {
       setUsers(userData.filter((user) => user.role !== 'ADMIN' && user.role !== 'MANAGER'));
       setTickets(ticketData);
       setEvaluations(evalData);
+    } catch (error) {
+      setUsers([]);
+      setTickets([]);
+      setEvaluations([]);
+      const message = error instanceof Error ? error.message : 'Failed to load team performance data.';
+      setLoadError(message);
+      toast.error(message);
     } finally {
       setLoading(false);
     }
+  };
+
+  const getGridValue = (evaluation: Evaluation, key: keyof Evaluation['qualitativeGrid']): number => {
+    const rawValue = evaluation.qualitativeGrid?.[key];
+    const normalized = Number(rawValue);
+    return Number.isFinite(normalized) ? normalized : 0;
   };
 
   const rows = useMemo(() => {
@@ -59,7 +75,7 @@ export const TeamPerformance: React.FC = () => {
         : 0;
 
       const qualityScore = userEvals.length
-        ? userEvals.reduce((sum, evaluation) => sum + evaluation.qualitativeGrid.quality, 0) /
+        ? userEvals.reduce((sum, evaluation) => sum + getGridValue(evaluation, 'quality'), 0) /
           userEvals.length
         : 0;
 
@@ -95,6 +111,11 @@ export const TeamPerformance: React.FC = () => {
       />
 
       <div className="p-6 space-y-6">
+        {loadError && (
+          <Card className="border-destructive/50">
+            <CardContent className="pt-4 text-sm text-destructive">{loadError}</CardContent>
+          </Card>
+        )}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
           <Card>
             <CardContent className="pt-4">
@@ -138,7 +159,7 @@ export const TeamPerformance: React.FC = () => {
               return <p className="text-sm text-muted-foreground">No evaluations available for this consultant.</p>;
             }
             const avg = (field: keyof Evaluation['qualitativeGrid']) =>
-              userEvals.reduce((s, ev) => s + ev.qualitativeGrid[field], 0) / userEvals.length;
+              userEvals.reduce((s, ev) => s + getGridValue(ev, field), 0) / userEvals.length;
             const radarData = [
               { axis: 'Productivity', value: avg('productivity'), fullMark: 5 },
               { axis: 'Quality', value: avg('quality'), fullMark: 5 },

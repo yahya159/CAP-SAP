@@ -29,6 +29,7 @@ export const FuncProjects: React.FC = () => {
   const [tickets, setTickets] = useState<Ticket[]>([]);
   const [users, setUsers] = useState<User[]>([]);
   const [loading, setLoading] = useState(true);
+  const [loadError, setLoadError] = useState<string | null>(null);
   const [feedbackDrafts, setFeedbackDrafts] = useState<Record<string, string>>({});
   const [feedbackHistory, setFeedbackHistory] = useState<Record<string, ProjectFeedback[]>>({});
 
@@ -38,6 +39,7 @@ export const FuncProjects: React.FC = () => {
 
   const loadData = async () => {
     setLoading(true);
+    setLoadError(null);
     try {
       const [projectData, deliverableData, ticketData, userData] = await Promise.all([
         ProjectsAPI.getAll(),
@@ -49,6 +51,14 @@ export const FuncProjects: React.FC = () => {
       setDeliverables(deliverableData);
       setTickets(ticketData);
       setUsers(userData);
+    } catch (error) {
+      setProjects([]);
+      setDeliverables([]);
+      setTickets([]);
+      setUsers([]);
+      const message = error instanceof Error ? error.message : 'Failed to load project data.';
+      setLoadError(message);
+      toast.error(message);
     } finally {
       setLoading(false);
     }
@@ -132,6 +142,11 @@ export const FuncProjects: React.FC = () => {
       />
 
       <div className="p-6">
+        {loadError && (
+          <Card className="mb-6 border-destructive/50">
+            <CardContent className="pt-4 text-sm text-destructive">{loadError}</CardContent>
+          </Card>
+        )}
         {loading ? (
           <div className="text-muted-foreground">Loading projects...</div>
         ) : (

@@ -112,6 +112,7 @@ export const DocumentationObjectsPage: React.FC = () => {
   const navigate = useNavigate();
   const { currentUser } = useAuth();
   const [loading, setLoading] = useState(true);
+  const [loadError, setLoadError] = useState<string | null>(null);
   const [isCreateOpen, setIsCreateOpen] = useState(false);
   const [isCreating, setIsCreating] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
@@ -126,6 +127,7 @@ export const DocumentationObjectsPage: React.FC = () => {
   useEffect(() => {
     const loadData = async () => {
       setLoading(true);
+      setLoadError(null);
       try {
         const [docData, projectData, ticketData, userData] = await Promise.all([
           DocumentationAPI.getAll(),
@@ -140,6 +142,14 @@ export const DocumentationObjectsPage: React.FC = () => {
         setProjects(projectData);
         setTickets(ticketData);
         setUsers(userData);
+      } catch (error) {
+        setDocumentationObjects([]);
+        setProjects([]);
+        setTickets([]);
+        setUsers([]);
+        const message = error instanceof Error ? error.message : 'Failed to load documentation objects.';
+        setLoadError(message);
+        toast.error(message);
       } finally {
         setLoading(false);
       }
@@ -303,6 +313,11 @@ export const DocumentationObjectsPage: React.FC = () => {
       />
 
       <div className="space-y-6 p-6 lg:p-8">
+        {loadError && (
+          <Card className="border-destructive/50">
+            <CardContent className="pt-4 text-sm text-destructive">{loadError}</CardContent>
+          </Card>
+        )}
         <div className="grid grid-cols-1 gap-4 md:grid-cols-5">
           <Card className="md:col-span-2">
             <CardContent className="pt-6">
@@ -431,12 +446,14 @@ export const DocumentationObjectsPage: React.FC = () => {
                         {projectName(doc.projectId)}
                       </TableCell>
                       <TableCell className="px-4 py-3">
-                        <Badge variant="secondary">{doc.relatedTicketIds.length}</Badge>
+                        <Badge variant="secondary">
+                          {Array.isArray(doc.relatedTicketIds) ? doc.relatedTicketIds.length : 0}
+                        </Badge>
                       </TableCell>
                       <TableCell className="px-4 py-3">
                         <span className="inline-flex items-center gap-1 text-sm text-muted-foreground">
                           <Paperclip className="h-3.5 w-3.5" />
-                          {doc.attachedFiles.length}
+                          {Array.isArray(doc.attachedFiles) ? doc.attachedFiles.length : 0}
                         </span>
                       </TableCell>
                       <TableCell className="px-4 py-3 text-sm">{userName(doc.authorId)}</TableCell>

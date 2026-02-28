@@ -1,11 +1,12 @@
 import React, { useEffect, useState } from 'react';
 import { CalendarClock, CheckCircle2, Clock3, FolderKanban } from 'lucide-react';
 import { useNavigate } from 'react-router';
+import { toast } from 'sonner';
 import { PageHeader } from '../../components/common/PageHeader';
 import { KPICard } from '../../components/common/KPICard';
 import { useAuth } from '../../context/AuthContext';
-import { EvaluationsAPI, ProjectsAPI, TicketsAPI, TimesheetsAPI } from '../../services/odataClient';
-import { Evaluation, Project, Ticket, Timesheet } from '../../types/entities';
+import { ProjectsAPI, TicketsAPI, TimesheetsAPI } from '../../services/odataClient';
+import { Project, Ticket, Timesheet } from '../../types/entities';
 import { Card, CardContent, CardHeader, CardTitle } from '../../components/ui/card';
 import { Button } from '../../components/ui/button';
 import { Progress } from '../../components/ui/progress';
@@ -17,29 +18,35 @@ export const TechDashboard: React.FC = () => {
 
   const [tickets, setTickets] = useState<Ticket[]>([]);
   const [projects, setProjects] = useState<Project[]>([]);
-  const [evaluations, setEvaluations] = useState<Evaluation[]>([]);
   const [timesheets, setTimesheets] = useState<Timesheet[]>([]);
   const [loading, setLoading] = useState(true);
+  const [loadError, setLoadError] = useState<string | null>(null);
 
   useEffect(() => {
     if (!currentUser) return;
 
     const loadDashboardData = async () => {
       setLoading(true);
+      setLoadError(null);
 
       try {
-        const [ticketData, allProjects, evals, timesheetData] = await Promise.all([
+        const [ticketData, allProjects, timesheetData] = await Promise.all([
           TicketsAPI.getByUser(currentUser.id),
           ProjectsAPI.getAll(),
-          EvaluationsAPI.getByUser(currentUser.id),
           TimesheetsAPI.getByUser(currentUser.id),
         ]);
 
         const myProjectIds = new Set(ticketData.map((ticket) => ticket.projectId));
         setTickets(ticketData);
         setProjects(allProjects.filter((project) => myProjectIds.has(project.id)));
-        setEvaluations(evals);
         setTimesheets(timesheetData);
+      } catch (error) {
+        setTickets([]);
+        setProjects([]);
+        setTimesheets([]);
+        const message = error instanceof Error ? error.message : 'Failed to load dashboard data.';
+        setLoadError(message);
+        toast.error(message);
       } finally {
         setLoading(false);
       }
@@ -64,10 +71,8 @@ export const TechDashboard: React.FC = () => {
     .reduce((sum, entry) => sum + entry.hours, 0);
 
   const activeProjects = projects.filter((project) => project.status === 'ACTIVE').length;
-  const averageScore =
-    evaluations.length > 0
-      ? evaluations.reduce((sum, evaluation) => sum + evaluation.score, 0) / evaluations.length
-      : 0;
+  const doneTickets = tickets.filter((ticket) => ticket.status === 'DONE').length;
+  const completionRate = tickets.length ? (doneTickets / tickets.length) * 100 : 0;
 
   const progressByStatus: Record<Ticket['status'], number> = {
     NEW: 0,
@@ -89,12 +94,17 @@ export const TechDashboard: React.FC = () => {
     <div className="min-h-screen bg-transparent">
       <PageHeader
         title={`Welcome back, ${currentUser?.name.split(' ')[0] ?? 'Consultant'}`}
-        subtitle="Execution cockpit for your deliveries, workload, and quality score"
+        subtitle="Execution cockpit for your deliveries and workload"
         breadcrumbs={[{ label: 'My Dashboard' }]}
       />
 
       <div className="space-y-6 p-6 lg:p-8">
-        <div className="grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-5">
+        {loadError && (
+          <Card className="border-destructive/50">
+            <CardContent className="pt-4 text-sm text-destructive">{loadError}</CardContent>
+          </Card>
+        )}
+        <div className="grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-4">
           <KPICard title="My Tickets" value={myTicketsCount} icon="task" color="blue" />
           <KPICard title="Overdue Tickets" value={overdueTickets} icon="alert" color="red" />
           <KPICard title="Hours This Week" value={hoursThisWeek} icon="timesheet" color="green" />
@@ -103,14 +113,6 @@ export const TechDashboard: React.FC = () => {
             value={activeProjects}
             icon="project-definition-triangle-2"
             color="yellow"
-          />
-          <KPICard
-            title="Performance Score"
-            value={averageScore.toFixed(1)}
-            unit="/5"
-            icon="trend-up"
-            color="blue"
-            progress={(averageScore / 5) * 100}
           />
         </div>
 
@@ -217,12 +219,12 @@ export const TechDashboard: React.FC = () => {
               <p className="text-xs uppercase tracking-[0.1em] text-muted-foreground">Tickets Completed</p>
               <p className="mt-2 inline-flex items-center gap-2 text-2xl font-semibold text-foreground">
                 <CheckCircle2 className="h-5 w-5 text-primary" />
-                {tickets.filter((ticket) => ticket.status === 'DONE').length}
+                {doneTickets}
               </p>
             </div>
             <div className="rounded-xl border border-border/70 bg-surface-1 p-4">
-              <p className="text-xs uppercase tracking-[0.1em] text-muted-foreground">Quality Score</p>
-              <p className="mt-2 text-2xl font-semibold text-foreground">{averageScore.toFixed(2)} / 5</p>
+              <p className="text-xs uppercase tracking-[0.1em] text-muted-foreground">Completion Rate</p>
+              <p className="mt-2 text-2xl font-semibold text-foreground">{completionRate.toFixed(0)}%</p>
             </div>
           </CardContent>
         </Card>

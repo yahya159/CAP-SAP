@@ -1,7 +1,7 @@
-ID,wricefId,projectId,type,title,description,complexity,module,documentationObjectIds
-WRICEF-FI-001,wricef-1,proj-1,E,FI Posting Period Validation Fix,Enhancement to fix BKPF 001 error when posting to prior period in FI module.,MOYEN,FI,"[""doc-1""]"
-WRICEF-MM-001,wricef-1,proj-1,W,PO Approval Workflow,Multi-level purchase order approval workflow in SAP MM.,COMPLEXE,MM,"[]"
-WRICEF-FI-002,wricef-1,proj-1,R,Aged AR Balance Report,Custom ABAP report showing aged accounts receivable buckets.,SIMPLE,FI,"[]"
-WRICEF-MM-002,wricef-1,proj-1,I,Real-time Inventory Sync Interface,Push inventory changes in real-time from MM/WM to external dashboard.,TRES_COMPLEXE,WM,"[]"
-WRICEF-HR-001,wricef-2,proj-2,F,Fiori Leave Request Form,New Fiori application for employee leave requests with manager approval.,SIMPLE,HR,"[]"
-WRICEF-SD-001,wricef-1,proj-1,C,SD Pricing Conversion Program,Data conversion program for SD pricing conditions during S/4HANA migration.,MOYEN,SD,"[""doc-2""]"
+ID,wricefId,projectId,type,title,description,complexity,module
+WRICEF-FI-001,wricef-1,proj-1,E,FI Posting Period Validation Fix,Enhancement to fix BKPF 001 error when posting to prior period in FI module.,MOYEN,FI
+WRICEF-MM-001,wricef-1,proj-1,W,PO Approval Workflow,Multi-level purchase order approval workflow in SAP MM.,COMPLEXE,MM
+WRICEF-FI-002,wricef-1,proj-1,R,Aged AR Balance Report,Custom ABAP report showing aged accounts receivable buckets.,SIMPLE,FI
+WRICEF-MM-002,wricef-1,proj-1,I,Real-time Inventory Sync Interface,Push inventory changes in real-time from MM/WM to external dashboard.,TRES_COMPLEXE,WM
+WRICEF-HR-001,wricef-2,proj-2,F,Fiori Leave Request Form,New Fiori application for employee leave requests with manager approval.,SIMPLE,HR
+WRICEF-SD-001,wricef-1,proj-1,C,SD Pricing Conversion Program,Data conversion program for SD pricing conditions during S/4HANA migration.,MOYEN,SD

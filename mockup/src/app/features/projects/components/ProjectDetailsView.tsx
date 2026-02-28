@@ -119,7 +119,7 @@ export const ProjectDetailsView: React.FC = () => {
   const navigate = useNavigate();
   const {
     project, setProject, abaques, allocations, users, deliverables,
-    tickets, setTickets, documentationObjects, setDocumentationObjects, wricefObjects, setWricefObjects, loading,
+    tickets, setTickets, documentationObjects, setDocumentationObjects, wricefObjects, setWricefObjects, loading, error,
   } = useProjectDetailsBootstrap(id);
 
   const [activeTab, setActiveTab] = useState<TabKey>('overview');
@@ -156,7 +156,11 @@ export const ProjectDetailsView: React.FC = () => {
   const manager = useMemo(() => (project ? users.find((u) => u.id === project.managerId) ?? null : null), [project, users]);
   const userName = useCallback((uid?: string) => users.find((u) => u.id === uid)?.name ?? '-', [users]);
   const selectedAbaque = useMemo(() => abaques.find((a) => a.id === project?.linkedAbaqueId) ?? null, [abaques, project?.linkedAbaqueId]);
-  const abaqueTaskNatures = useMemo(() => (selectedAbaque ? [...new Set(selectedAbaque.entries.map((e) => e.taskNature))] : []), [selectedAbaque]);
+  const abaqueTaskNatures = useMemo(() => {
+    if (!selectedAbaque) return [];
+    const entries = Array.isArray(selectedAbaque.entries) ? selectedAbaque.entries : [];
+    return [...new Set(entries.map((entry) => entry?.taskNature).filter(Boolean))] as TicketNature[];
+  }, [selectedAbaque]);
   const kpis = useMemo(() => computeProjectKpis(tickets), [tickets]);
   const { totalActualHours, totalEstimatedHours, totalActualDays } = useMemo(() => computeEffortTotals(tickets), [tickets]);
   const hasAbaqueEstimate = Boolean(project?.abaqueEstimate);
@@ -318,10 +322,11 @@ export const ProjectDetailsView: React.FC = () => {
   };
 
   const getAbaqueEstimate = (abaque: Abaque, taskNature: TicketNature, complexity: AbaqueComplexity): number | null => {
-    const direct = abaque.entries.find((entry) => entry.taskNature === taskNature && entry.complexity === complexity);
+    const entries = Array.isArray(abaque.entries) ? abaque.entries : [];
+    const direct = entries.find((entry) => entry.taskNature === taskNature && entry.complexity === complexity);
     if (direct) return direct.standardHours;
     const fallbackByNature: Record<TicketNature, 'FEATURE' | 'DOCUMENTATION' | 'SUPPORT'> = { PROGRAMME: 'FEATURE', MODULE: 'FEATURE', ENHANCEMENT: 'FEATURE', FORMULAIRE: 'DOCUMENTATION', REPORT: 'DOCUMENTATION', WORKFLOW: 'SUPPORT' };
-    return abaque.entries.find((entry) => entry.taskNature === fallbackByNature[taskNature] && entry.complexity === complexity)?.standardHours ?? null;
+    return entries.find((entry) => entry.taskNature === fallbackByNature[taskNature] && entry.complexity === complexity)?.standardHours ?? null;
   };
   const applyAbaqueEstimate = () => {
     if (!selectedAbaque) return void toast.error('No abaque linked to this project');
@@ -425,6 +430,11 @@ export const ProjectDetailsView: React.FC = () => {
     <div className="min-h-screen bg-background">
       <ProjectHeader projectName={project.name} roleBasePath={roleBasePath} />
       <div className="p-6 space-y-6">
+        {error && (
+          <div className="rounded border border-destructive/40 bg-destructive/10 px-4 py-3 text-sm text-destructive">
+            {error}
+          </div>
+        )}
         <ProjectTabs tabs={PROJECT_TABS} activeTab={activeTab} onTabChange={setActiveTab} onTabKeyDown={handleTabKeyDown} />
         <OverviewPanel active={activeTab === 'overview'} vm={{ project, managerName: manager?.name ?? 'Unknown', ticketsCount: tickets.length, deliverablesCount: deliverables.length, openTicketsCount: tickets.filter((t) => t.status !== 'DONE' && t.status !== 'REJECTED').length, wricefObjectCount: wricefObjects.length, blockedTicketsCount: kpis.blocked, criticalTicketsCount: kpis.critical, abaques, selectedAbaque, abaqueTaskNatures, abaqueSaving, onLinkedAbaqueChange: (value) => { void updateProjectAbaque(value); }, onOpenCreateTicket: () => openCreateTicketDialog() }} />
         <AbaquesPanel active={activeTab === 'abaques'} vm={{ project, hasAbaqueEstimate, forceEstimatorVisible, projectEstimateSaving, estimatedDays, totalActualDays, totalActualHours, estimateConsumptionPercent, estimateDeltaDays, usageBarClass, onApplyEstimate: applyProjectEstimate, onRerunEstimate: () => setForceEstimatorVisible(true) }} />

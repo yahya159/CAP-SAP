@@ -1,0 +1,12 @@
+ID,ticket_ID,tag
+ttag-1,tk-001,FI
+ttag-2,tk-001,Posting
+ttag-3,tk-001,Bug
+ttag-4,tk-002,MM
+ttag-5,tk-002,Workflow
+ttag-6,tk-003,Fiori
+ttag-7,tk-003,HR
+ttag-8,tk-003,Form
+ttag-9,tk-005,WM
+ttag-10,tk-005,MM
+ttag-11,tk-005,Real-time

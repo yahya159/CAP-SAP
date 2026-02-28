@@ -16,6 +16,15 @@ import {
 import { Switch } from '../../components/ui/switch';
 import { Textarea } from '../../components/ui/textarea';
 
+const TICKET_STATUS_TRANSITIONS: Record<TicketStatus, TicketStatus[]> = {
+  NEW: ['IN_PROGRESS', 'BLOCKED', 'REJECTED'],
+  IN_PROGRESS: ['IN_TEST', 'BLOCKED', 'DONE', 'REJECTED'],
+  IN_TEST: ['IN_PROGRESS', 'DONE', 'REJECTED'],
+  BLOCKED: ['IN_PROGRESS', 'REJECTED'],
+  DONE: [],
+  REJECTED: ['NEW'],
+};
+
 const riskFromPriority = (priority: Ticket['priority']): 'LOW' | 'MEDIUM' | 'HIGH' | 'CRITICAL' => {
   if (priority === 'CRITICAL') return 'CRITICAL';
   if (priority === 'HIGH') return 'HIGH';
@@ -28,6 +37,40 @@ const priorityFromRisk = (risk: 'LOW' | 'MEDIUM' | 'HIGH' | 'CRITICAL'): Ticket[
   if (risk === 'HIGH') return 'HIGH';
   if (risk === 'MEDIUM') return 'MEDIUM';
   return 'LOW';
+};
+
+const canTransitionStatus = (from: TicketStatus, to: TicketStatus): boolean =>
+  from === to || TICKET_STATUS_TRANSITIONS[from].includes(to);
+
+const getStatusOptions = (current: TicketStatus): TicketStatus[] => [
+  current,
+  ...TICKET_STATUS_TRANSITIONS[current],
+];
+
+const getErrorMessage = (error: unknown): string => {
+  if (error && typeof error === 'object') {
+    const maybeError = error as {
+      message?: unknown;
+      details?: Array<{ message?: unknown }>;
+      status?: unknown;
+    };
+    if (typeof maybeError.message === 'string' && maybeError.message.trim()) {
+      return maybeError.message;
+    }
+    if (Array.isArray(maybeError.details)) {
+      const firstDetail = maybeError.details.find(
+        (detail) => typeof detail?.message === 'string' && detail.message.trim()
+      );
+      if (firstDetail && typeof firstDetail.message === 'string') {
+        return firstDetail.message;
+      }
+    }
+    if (typeof maybeError.status === 'number') {
+      return `Request failed (${maybeError.status})`;
+    }
+  }
+  if (error instanceof Error && error.message.trim()) return error.message;
+  return 'Failed to update ticket';
 };
 
 export const RisksAndCriticalTasks: React.FC = () => {
@@ -118,8 +161,14 @@ export const RisksAndCriticalTasks: React.FC = () => {
       const updated = await TicketsAPI.update(ticketId, patch);
       setTickets((prev) => prev.map((ticket) => (ticket.id === ticketId ? updated : ticket)));
       return updated;
-    } catch {
-      toast.error('Failed to update ticket');
+    } catch (error) {
+      toast.error(getErrorMessage(error));
+      const status = typeof error === 'object' && error !== null
+        ? (error as { status?: unknown }).status
+        : undefined;
+      if (status === 409) {
+        await loadData();
+      }
       return null;
     }
   };
@@ -139,6 +188,24 @@ export const RisksAndCriticalTasks: React.FC = () => {
   };
 
   const setStatus = async (ticket: Ticket, status: TicketStatus) => {
+    if (status === ticket.status) return;
+
+    const latestTicket = await TicketsAPI.getById(ticket.id);
+    if (!latestTicket) {
+      toast.error('Ticket no longer exists');
+      await loadData();
+      return;
+    }
+
+    if (latestTicket.status !== ticket.status) {
+      setTickets((prev) => prev.map((item) => (item.id === latestTicket.id ? latestTicket : item)));
+    }
+
+    if (!canTransitionStatus(latestTicket.status, status)) {
+      toast.error(`Invalid status transition: ${latestTicket.status} -> ${status}`);
+      return;
+    }
+
     const updated = await updateTicket(ticket.id, { status });
     if (updated) {
       await notifyAssignee(
@@ -183,8 +250,6 @@ export const RisksAndCriticalTasks: React.FC = () => {
       );
     }
   };
-
-  const statusOptions: TicketStatus[] = ['NEW', 'IN_PROGRESS', 'IN_TEST', 'BLOCKED', 'DONE', 'REJECTED'];
 
   return (
     <div className="min-h-screen bg-background">
@@ -306,7 +371,7 @@ export const RisksAndCriticalTasks: React.FC = () => {
                           <SelectValue />
                         </SelectTrigger>
                         <SelectContent>
-                          {statusOptions.map((status) => (
+                          {getStatusOptions(ticket.status).map((status) => (
                             <SelectItem key={status} value={status}>
                               {status}
                             </SelectItem>

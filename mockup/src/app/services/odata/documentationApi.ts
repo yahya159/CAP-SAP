@@ -13,6 +13,138 @@ const normalizeText = (value?: string | null): string => (value ?? '').trim().to
 const normalizeRef = (value?: string | null): string =>
   normalizeText(value).replace(/[^a-z0-9_-]/g, '');
 
+interface DocumentationObjectRaw
+  extends Omit<DocumentationObject, 'attachedFiles' | 'relatedTicketIds' | 'description' | 'content'> {
+  attachedFiles?: unknown;
+  relatedTicketIds?: unknown;
+  description?: unknown;
+  content?: unknown;
+}
+
+const parseJsonIfString = (value: unknown): unknown => {
+  if (typeof value !== 'string') return value;
+  const trimmed = value.trim();
+  if (!trimmed) return value;
+  if (!(trimmed.startsWith('[') || trimmed.startsWith('{'))) return value;
+  try {
+    return JSON.parse(trimmed);
+  } catch {
+    return value;
+  }
+};
+
+const normalizeAttachments = (value: unknown): DocumentationObject['attachedFiles'] => {
+  const parsed = parseJsonIfString(value);
+  if (!Array.isArray(parsed)) return [];
+
+  return parsed
+    .map((entry) => {
+      if (!entry || typeof entry !== 'object') return null;
+      const candidate = entry as Record<string, unknown>;
+      const filename = String(
+        candidate.filename ??
+          candidate.fileName ??
+          candidate.name ??
+          ''
+      ).trim();
+      const url = String(candidate.url ?? candidate.fileUrl ?? '').trim();
+      const size = Number(candidate.size ?? 0);
+      return {
+        filename: filename || 'Attachment',
+        url: url || '#',
+        size: Number.isFinite(size) && size >= 0 ? size : 0,
+      };
+    })
+    .filter((entry): entry is DocumentationObject['attachedFiles'][number] => Boolean(entry));
+};
+
+const normalizeRelatedTicketIds = (value: unknown): string[] => {
+  const parsed = parseJsonIfString(value);
+  if (!Array.isArray(parsed)) return [];
+
+  return parsed
+    .map((entry) => {
+      if (typeof entry === 'string') return entry.trim();
+      if (entry && typeof entry === 'object') {
+        const candidate = entry as Record<string, unknown>;
+        return String(candidate.ticketId ?? candidate.id ?? candidate.ID ?? '').trim();
+      }
+      return '';
+    })
+    .filter((id) => id.length > 0);
+};
+
+const normalizeDocumentationObject = (doc: DocumentationObjectRaw): DocumentationObject => ({
+  ...doc,
+  description: typeof doc.description === 'string' ? doc.description : '',
+  content: typeof doc.content === 'string' ? doc.content : '',
+  attachedFiles: normalizeAttachments(doc.attachedFiles),
+  relatedTicketIds: normalizeRelatedTicketIds(doc.relatedTicketIds),
+});
+
+const toAttachmentRows = (value: unknown): Array<{ fileName: string; fileUrl: string }> => {
+  const parsed = parseJsonIfString(value);
+  if (!Array.isArray(parsed)) return [];
+
+  return parsed
+    .map((entry) => {
+      if (!entry || typeof entry !== 'object') return null;
+      const candidate = entry as Record<string, unknown>;
+      const fileName = String(candidate.fileName ?? candidate.filename ?? candidate.name ?? '').trim();
+      const fileUrl = String(candidate.fileUrl ?? candidate.url ?? '').trim();
+      if (!fileName && !fileUrl) return null;
+      return {
+        fileName: fileName || 'Attachment',
+        fileUrl: fileUrl || '#',
+      };
+    })
+    .filter((entry): entry is { fileName: string; fileUrl: string } => Boolean(entry));
+};
+
+const toRelatedTicketRows = (value: unknown): Array<{ ticketId: string }> => {
+  const parsed = parseJsonIfString(value);
+  if (!Array.isArray(parsed)) return [];
+
+  return parsed
+    .map((entry) => {
+      if (typeof entry === 'string') {
+        const ticketId = entry.trim();
+        return ticketId ? { ticketId } : null;
+      }
+      if (entry && typeof entry === 'object') {
+        const candidate = entry as Record<string, unknown>;
+        const ticketId = String(candidate.ticketId ?? candidate.id ?? candidate.ID ?? '').trim();
+        return ticketId ? { ticketId } : null;
+      }
+      return null;
+    })
+    .filter((entry): entry is { ticketId: string } => Boolean(entry));
+};
+
+const toDocumentationPayload = (
+  value: Omit<DocumentationObject, 'id' | 'createdAt' | 'updatedAt'> | Partial<DocumentationObject>
+): Record<string, unknown> => {
+  const payload: Record<string, unknown> = { ...value };
+
+  if ('attachedFiles' in value && value.attachedFiles !== undefined) {
+    payload.attachedFiles = toAttachmentRows(value.attachedFiles);
+  }
+
+  if ('relatedTicketIds' in value && value.relatedTicketIds !== undefined) {
+    payload.relatedTicketIds = toRelatedTicketRows(value.relatedTicketIds);
+  }
+
+  return payload;
+};
+
+const DOCUMENTATION_BASE_SELECT =
+  'ID,title,description,type,content,projectId,authorId,createdAt,updatedAt,sourceSystem,sourceRefId';
+
+const isMissingDocumentationCompositionTable = (error: unknown): boolean => {
+  if (!(error instanceof Error)) return false;
+  return /no such table: .*Doc(AttachedFiles|RelatedTickets)/i.test(error.message);
+};
+
 const isTicketLinkedToWricefObject = (ticketRef?: string | null, objectRef?: string | null): boolean => {
   const normalizedTicket = normalizeRef(ticketRef);
   const normalizedObject = normalizeRef(objectRef);
@@ -63,12 +195,34 @@ export const DocumentationAPI = {
     options?: ODataQueryOptions,
     requestOptions?: ODataRequestOptions
   ): Promise<DocumentationObject[]> {
-    return await listEntities<DocumentationObject>(
-      'DocumentationObjects',
-      options,
-      requestOptions,
-      true
-    );
+    const mergedOptions: ODataQueryOptions = {
+      ...options,
+      $select: options?.$select ?? DOCUMENTATION_BASE_SELECT,
+      $expand: options?.$expand ?? 'relatedTicketIds,attachedFiles',
+    };
+    try {
+      const docs = await listEntities<DocumentationObjectRaw>(
+        'DocumentationObjects',
+        mergedOptions,
+        requestOptions,
+        true
+      );
+      return docs.map(normalizeDocumentationObject);
+    } catch (error) {
+      if (!isMissingDocumentationCompositionTable(error)) throw error;
+      const legacyDocs = await listEntities<DocumentationObjectRaw>(
+        'DocumentationObjects',
+        {
+          ...options,
+          $select:
+            options?.$select ??
+            `${DOCUMENTATION_BASE_SELECT},attachedFiles,relatedTicketIds`,
+        },
+        requestOptions,
+        true
+      );
+      return legacyDocs.map(normalizeDocumentationObject);
+    }
   },
 
   async getAll(requestOptions?: ODataRequestOptions): Promise<DocumentationObject[]> {
@@ -91,7 +245,9 @@ export const DocumentationAPI = {
     id: string,
     requestOptions?: ODataRequestOptions
   ): Promise<DocumentationObject | null> {
-    return await getEntityById<DocumentationObject>('DocumentationObjects', id, requestOptions);
+    const doc = await getEntityById<DocumentationObjectRaw>('DocumentationObjects', id, requestOptions);
+    if (!doc) return null;
+    return normalizeDocumentationObject(doc);
   },
 
   async getByTicketId(
@@ -100,7 +256,7 @@ export const DocumentationAPI = {
   ): Promise<DocumentationObject[]> {
     return await DocumentationAPI.list(
       {
-        $filter: `contains(relatedTicketIds,${quoteLiteral(ticketId)})`,
+        $filter: `relatedTicketIds/any(r:r/ticketId eq ${quoteLiteral(ticketId)})`,
       },
       requestOptions
     );
@@ -110,11 +266,12 @@ export const DocumentationAPI = {
     documentation: Omit<DocumentationObject, 'id' | 'createdAt' | 'updatedAt'>,
     requestOptions?: ODataRequestOptions
   ): Promise<DocumentationObject> {
-    return await createEntity<DocumentationObject>(
+    const created = await createEntity<DocumentationObjectRaw>(
       'DocumentationObjects',
-      documentation,
+      toDocumentationPayload(documentation),
       requestOptions
     );
+    return normalizeDocumentationObject(created);
   },
 
   async update(
@@ -122,7 +279,13 @@ export const DocumentationAPI = {
     data: Partial<DocumentationObject>,
     requestOptions?: ODataRequestOptions
   ): Promise<DocumentationObject> {
-    return await updateEntity<DocumentationObject>('DocumentationObjects', id, data, requestOptions);
+    const updated = await updateEntity<DocumentationObjectRaw>(
+      'DocumentationObjects',
+      id,
+      toDocumentationPayload(data),
+      requestOptions
+    );
+    return normalizeDocumentationObject(updated);
   },
 
   async delete(id: string, requestOptions?: ODataRequestOptions): Promise<void> {

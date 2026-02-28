@@ -25,7 +25,7 @@ import {
 import { Textarea } from '../../components/ui/textarea';
 import { useAuth } from '../../context/AuthContext';
 import { DeliverablesAPI, NotificationsAPI, ProjectsAPI } from '../../services/odataClient';
-import { Deliverable, Project, ValidationStatus } from '../../types/entities';
+import { Deliverable, Project, UserRole, ValidationStatus } from '../../types/entities';
 
 interface UploadForm {
   projectId: string;
@@ -66,9 +66,14 @@ const getStatusBadge = (status: ValidationStatus) => {
 
 export const Deliverables: React.FC = () => {
   const { currentUser } = useAuth();
+  const canReview = useMemo(() => {
+    const role = currentUser?.role as UserRole | undefined;
+    return role === 'ADMIN' || role === 'MANAGER' || role === 'PROJECT_MANAGER';
+  }, [currentUser?.role]);
   const [deliverables, setDeliverables] = useState<Deliverable[]>([]);
   const [projects, setProjects] = useState<Project[]>([]);
   const [loading, setLoading] = useState(true);
+  const [loadError, setLoadError] = useState<string | null>(null);
   
   // Filters
   const [searchQuery, setSearchQuery] = useState('');
@@ -88,6 +93,7 @@ export const Deliverables: React.FC = () => {
 
   const loadDeliverables = async () => {
     setLoading(true);
+    setLoadError(null);
     try {
       const [data, projectData] = await Promise.all([
         DeliverablesAPI.getAll(),
@@ -95,6 +101,12 @@ export const Deliverables: React.FC = () => {
       ]);
       setDeliverables(data.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()));
       setProjects(projectData);
+    } catch (error) {
+      setDeliverables([]);
+      setProjects([]);
+      const message = error instanceof Error ? error.message : 'Failed to load deliverables.';
+      setLoadError(message);
+      toast.error(message);
     } finally {
       setLoading(false);
     }
@@ -121,6 +133,11 @@ export const Deliverables: React.FC = () => {
     status: ValidationStatus,
     functionalComment?: string
   ) => {
+    if (!canReview) {
+      toast.error('You are not allowed to review deliverables');
+      return;
+    }
+
     try {
       setIsReviewSubmitting(true);
       const updated = await DeliverablesAPI.update(id, {
@@ -205,6 +222,11 @@ export const Deliverables: React.FC = () => {
       />
 
       <div className="p-6 lg:p-8 max-w-7xl mx-auto space-y-6">
+        {loadError && (
+          <Card className="border-destructive/50">
+            <CardContent className="pt-4 text-sm text-destructive">{loadError}</CardContent>
+          </Card>
+        )}
         
         {/* Toolbar */}
         <div className="flex flex-col sm:flex-row gap-4 items-center justify-between bg-card p-4 rounded-xl border border-border shadow-sm">
@@ -322,7 +344,7 @@ export const Deliverables: React.FC = () => {
                       </div>
                     </CardContent>
                     
-                    {deliverable.validationStatus === 'PENDING' && (
+                    {canReview && deliverable.validationStatus === 'PENDING' && (
                       <CardFooter className="pt-3 border-t border-border/50 bg-muted/10">
                         <Button
                           variant="default"
@@ -424,7 +446,7 @@ export const Deliverables: React.FC = () => {
       </Dialog>
 
       {/* Review Dialog */}
-      <Dialog open={selectedDeliverable !== null} onOpenChange={(open) => !open && closeReviewDialog()}>
+      <Dialog open={canReview && selectedDeliverable !== null} onOpenChange={(open) => !open && closeReviewDialog()}>
         <DialogContent className="sm:max-w-xl">
           <DialogHeader>
             <DialogTitle>Review Deliverable</DialogTitle>

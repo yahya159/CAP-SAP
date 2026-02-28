@@ -1,0 +1,11 @@
+ID,project_ID,keyword
+ptk-1,proj-1,SAP S/4HANA
+ptk-2,proj-1,FI
+ptk-3,proj-1,CO
+ptk-4,proj-1,SD
+ptk-5,proj-1,MM
+ptk-6,proj-2,Fiori
+ptk-7,proj-2,UI5
+ptk-8,proj-2,ABAP
+ptk-9,proj-3,BW
+ptk-10,proj-3,Analytics

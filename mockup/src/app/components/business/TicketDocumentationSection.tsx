@@ -8,6 +8,7 @@ import { Button } from '../ui/button';
 import {
   Dialog,
   DialogContent,
+  DialogDescription,
   DialogHeader,
   DialogTitle,
 } from '../ui/dialog';
@@ -199,6 +200,9 @@ export const TicketDocumentationSection: React.FC<TicketDocumentationSectionProp
         <DialogContent className="max-w-lg">
           <DialogHeader>
             <DialogTitle>Attach Existing Documentation</DialogTitle>
+            <DialogDescription>
+              Select a project documentation object to link it to this ticket.
+            </DialogDescription>
           </DialogHeader>
 
           <div className="space-y-3">

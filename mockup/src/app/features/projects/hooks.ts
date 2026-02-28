@@ -34,6 +34,8 @@ const EMPTY_BOOTSTRAP_STATE: ProjectDetailsBootstrapState = {
   wricefObjects: [],
 };
 
+const asArray = <T>(value: T[] | null | undefined): T[] => (Array.isArray(value) ? value : []);
+
 export const loadProjectDetailsBootstrap = async (
   projectId?: string,
   signal?: AbortSignal
@@ -42,14 +44,14 @@ export const loadProjectDetailsBootstrap = async (
 
   const data = await ProjectDetailsAPI.getBootstrapData(projectId, { signal });
   return {
-    project: data.project,
-    allocations: data.allocations,
-    users: data.users,
-    deliverables: data.deliverables,
-    tickets: data.tickets,
-    abaques: data.abaques,
-    documentationObjects: data.documentationObjects,
-    wricefObjects: data.wricefObjects,
+    project: data.project ?? null,
+    allocations: asArray(data.allocations),
+    users: asArray(data.users),
+    deliverables: asArray(data.deliverables),
+    tickets: asArray(data.tickets),
+    abaques: asArray(data.abaques),
+    documentationObjects: asArray(data.documentationObjects),
+    wricefObjects: asArray(data.wricefObjects),
   };
 };
 
