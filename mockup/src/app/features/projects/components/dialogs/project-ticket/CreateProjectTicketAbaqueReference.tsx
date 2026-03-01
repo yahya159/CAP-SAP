@@ -7,11 +7,10 @@ import {
   TableHeader,
   TableRow,
 } from '@/app/components/ui/table';
-import { ABAQUE_TASK_NATURE_LABELS } from '@/app/types/entities';
-import type { CreateProjectTicketDialogViewModel } from '../CreateProjectTicketDialog';
+import { ABAQUE_TASK_NATURE_LABELS, AbaqueTaskNature } from '@/app/types/entities';
 
 interface CreateProjectTicketAbaqueReferenceProps {
-  vm: CreateProjectTicketDialogViewModel;
+  vm: any;
 }
 
 export const CreateProjectTicketAbaqueReference: React.FC<CreateProjectTicketAbaqueReferenceProps> = ({
@@ -37,21 +36,21 @@ export const CreateProjectTicketAbaqueReference: React.FC<CreateProjectTicketAba
           </TableRow>
         </TableHeader>
         <TableBody>
-          {vm.abaqueTaskNatures.map((taskNature) => {
+          {vm.abaqueTaskNatures.map((taskNature: any) => {
             const low = vm.selectedAbaque?.entries.find(
-              (entry) => entry.taskNature === taskNature && entry.complexity === 'LOW'
+              (entry: any) => entry.taskNature === taskNature && entry.complexity === 'LOW'
             )?.standardHours;
             const medium = vm.selectedAbaque?.entries.find(
-              (entry) => entry.taskNature === taskNature && entry.complexity === 'MEDIUM'
+              (entry: any) => entry.taskNature === taskNature && entry.complexity === 'MEDIUM'
             )?.standardHours;
             const high = vm.selectedAbaque?.entries.find(
-              (entry) => entry.taskNature === taskNature && entry.complexity === 'HIGH'
+              (entry: any) => entry.taskNature === taskNature && entry.complexity === 'HIGH'
             )?.standardHours;
-            const activeRow = taskNature === vm.form.nature;
+            const activeRow = taskNature === vm.formValues?.nature;
             return (
               <TableRow key={taskNature} className={activeRow ? 'bg-primary/10' : undefined}>
                 <TableCell className="px-3 py-2 text-xs font-medium">
-                  {ABAQUE_TASK_NATURE_LABELS[taskNature]}
+                  {ABAQUE_TASK_NATURE_LABELS[taskNature as AbaqueTaskNature]}
                 </TableCell>
                 <TableCell className="px-3 py-2 text-center text-xs">{low ?? '-'}</TableCell>
                 <TableCell className="px-3 py-2 text-center text-xs">{medium ?? '-'}</TableCell>

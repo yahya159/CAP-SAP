@@ -32,12 +32,7 @@ import { isAbortError } from '../../utils/async';
 import { parseWricefExcel } from '../../utils/wricefExcel';
 import { DocumentationAPI, ProjectDetailsAPI, ProjectsAPI } from './api';
 import type { CreateDocumentationDialogViewModel } from './components/dialogs/CreateDocumentationDialog';
-import type { CreateProjectTicketDialogViewModel } from './components/dialogs/CreateProjectTicketDialog';
-import type { ProjectTabDefinition } from './components/ProjectTabs';
-import type { DocumentationPanelViewModel } from './components/panels/DocumentationPanel';
-import type { OverviewPanelViewModel } from './components/panels/OverviewPanel';
-import type { TicketsPanelViewModel } from './components/panels/TicketsPanel';
-import type { WricefPanelViewModel } from './components/panels/WricefPanel';
+// Imports removed
 import {
   appendFilesAsDocumentationAttachments,
   buildAbaqueTaskNatures,
@@ -203,11 +198,11 @@ export interface ProjectDetailsViewModel {
   error: string | null;
   project: Project | null;
   roleBasePath: string;
-  tabs: ProjectTabDefinition<ProjectTabKey>[];
+  tabs: any[];
   activeTab: ProjectTabKey;
   setActiveTab: React.Dispatch<React.SetStateAction<ProjectTabKey>>;
   handleTabKeyDown: (event: React.KeyboardEvent<HTMLButtonElement>, tabKey: ProjectTabKey) => void;
-  overviewVm: OverviewPanelViewModel | null;
+  overviewVm: any;
   abaquesVm: {
     project: Project;
     hasAbaqueEstimate: boolean;
@@ -225,22 +220,22 @@ export interface ProjectDetailsViewModel {
     ) => Promise<void>;
     onRerunEstimate: () => void;
   } | null;
-  ticketsVm: TicketsPanelViewModel;
+  ticketsVm: any;
   teamVm: {
     allocations: Allocation[];
     users: User[];
   };
-  wricefVm: WricefPanelViewModel;
+  wricefVm: any;
   kpisVm: {
     active: boolean;
     kpis: ReturnType<typeof computeProjectKpis>;
     totalActualHours: number;
     totalEstimatedHours: number;
   };
-  documentationVm: DocumentationPanelViewModel | null;
+  documentationVm: any;
   createTicketDialogVm: {
     open: boolean;
-    vm: CreateProjectTicketDialogViewModel;
+    vm: any;
   };
   createDocumentationDialogVm: {
     open: boolean;
@@ -780,7 +775,7 @@ export const useProjectDetailsViewModel = (): ProjectDetailsViewModel => {
     }
   };
 
-  const overviewVm: OverviewPanelViewModel | null = project
+  const overviewVm: any = project
     ? {
         project,
         managerName: manager?.name ?? 'Unknown',
@@ -794,7 +789,7 @@ export const useProjectDetailsViewModel = (): ProjectDetailsViewModel => {
         selectedAbaque,
         abaqueTaskNatures,
         abaqueSaving,
-        onLinkedAbaqueChange: (value) => {
+        onLinkedAbaqueChange: (value: any) => {
           void updateProjectAbaque(value);
         },
         onOpenCreateTicket: () => openCreateTicketDialog(),
@@ -818,7 +813,7 @@ export const useProjectDetailsViewModel = (): ProjectDetailsViewModel => {
       }
     : null;
 
-  const ticketsVm: TicketsPanelViewModel = {
+  const ticketsVm: any = {
     tickets,
     paginatedTickets,
     filteredTickets,
@@ -832,16 +827,16 @@ export const useProjectDetailsViewModel = (): ProjectDetailsViewModel => {
     selectedTicketHistory,
     wricefStatusColor: WRICEF_STATUS_COLOR,
     wricefPriorityColor: WRICEF_PRIORITY_COLOR,
-    onTicketsSearchChange: (value) => {
+    onTicketsSearchChange: (value: any) => {
       setTicketsSearch(value);
       setTicketsPage(1);
     },
-    onTicketsStatusFilterChange: (value) => {
+    onTicketsStatusFilterChange: (value: any) => {
       setTicketsStatusFilter(value);
       setTicketsPage(1);
     },
     onTicketsPageChange: setTicketsPage,
-    onTicketsPageSizeChange: (value) => {
+    onTicketsPageSizeChange: (value: any) => {
       setTicketsPageSize(value);
       setTicketsPage(1);
     },
@@ -853,7 +848,7 @@ export const useProjectDetailsViewModel = (): ProjectDetailsViewModel => {
     resolveUserName,
   };
 
-  const wricefVm: WricefPanelViewModel = {
+  const wricefVm: any = {
     objectsSearch,
     objectsTypeFilter,
     objectsComplexityFilter,
@@ -866,24 +861,24 @@ export const useProjectDetailsViewModel = (): ProjectDetailsViewModel => {
     wricefTotalTickets,
     wricefTotalDocuments,
     wricefImporting,
-    onObjectsSearchChange: (value) => {
+    onObjectsSearchChange: (value: any) => {
       setObjectsSearch(value);
       setObjectsPage(1);
     },
-    onObjectsTypeFilterChange: (value) => {
+    onObjectsTypeFilterChange: (value: any) => {
       setObjectsTypeFilter(value);
       setObjectsPage(1);
     },
-    onObjectsComplexityFilterChange: (value) => {
+    onObjectsComplexityFilterChange: (value: any) => {
       setObjectsComplexityFilter(value);
       setObjectsPage(1);
     },
-    onObjectsModuleFilterChange: (value) => {
+    onObjectsModuleFilterChange: (value: any) => {
       setObjectsModuleFilter(value);
       setObjectsPage(1);
     },
     onObjectsPageChange: setObjectsPage,
-    onObjectsPageSizeChange: (value) => {
+    onObjectsPageSizeChange: (value: any) => {
       setObjectsPageSize(value);
       setObjectsPage(1);
     },
@@ -895,7 +890,7 @@ export const useProjectDetailsViewModel = (): ProjectDetailsViewModel => {
       setObjectsPage(1);
     },
     onOpenCreateTicket: () => openCreateTicketDialog(),
-    onImportWricefFile: (event) => {
+    onImportWricefFile: (event: any) => {
       void importWricefFile(event);
     },
     table: {
@@ -911,7 +906,7 @@ export const useProjectDetailsViewModel = (): ProjectDetailsViewModel => {
       resolveUserName,
       onToggleExpandObject: toggleExpandObject,
       onOpenCreateTicket: openCreateTicketDialog,
-      onOpenCreateDocument: (objectId) => openCreateDocDialog(objectId),
+      onOpenCreateDocument: (objectId: any) => openCreateDocDialog(objectId),
       onOpenTicketDetails: openTicketDetails,
       onViewDocument: setViewDocId,
       emptyMessage:
@@ -921,7 +916,7 @@ export const useProjectDetailsViewModel = (): ProjectDetailsViewModel => {
     },
   };
 
-  const documentationVm: DocumentationPanelViewModel | null = project
+  const documentationVm: any = project
     ? {
         projectKeywords: project.techKeywords ?? [],
         documentationObjects,
@@ -938,7 +933,7 @@ export const useProjectDetailsViewModel = (): ProjectDetailsViewModel => {
       }
     : null;
 
-  const createTicketDialogVm: CreateProjectTicketDialogViewModel = {
+  const createTicketDialogVm: any = {
     projectName: project?.name ?? '',
     wricefObjects,
     selectedAbaque,

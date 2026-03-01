@@ -7,10 +7,9 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/app/components/ui/select';
-import type { CreateProjectTicketDialogViewModel } from '../CreateProjectTicketDialog';
 
 interface CreateProjectTicketContextBlockProps {
-  vm: CreateProjectTicketDialogViewModel;
+  vm: any;
 }
 
 export const CreateProjectTicketContextBlock: React.FC<CreateProjectTicketContextBlockProps> = ({
@@ -31,15 +30,15 @@ export const CreateProjectTicketContextBlock: React.FC<CreateProjectTicketContex
         <div className="space-y-1.5">
           <Label>Link to WRICEF Object</Label>
           <Select
-            value={vm.form.wricefObjectId || '_none'}
-            onValueChange={(value) => vm.onFormChange({ ...vm.form, wricefObjectId: value === '_none' ? '' : value })}
+            value={vm.formValues.wricefObjectId || '_none'}
+            onValueChange={(value) => vm.setValue('wricefObjectId', value === '_none' ? '' : value)}
           >
             <SelectTrigger>
               <SelectValue placeholder="No WRICEF object" />
             </SelectTrigger>
             <SelectContent>
               <SelectItem value="_none">No WRICEF object</SelectItem>
-              {vm.wricefObjects.map((object) => (
+              {vm.wricefObjects.map((object: any) => (
                 <SelectItem key={object.id} value={object.id}>
                   {object.id} - {object.title}
                 </SelectItem>

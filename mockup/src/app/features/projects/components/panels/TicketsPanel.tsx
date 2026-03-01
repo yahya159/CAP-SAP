@@ -1,41 +1,24 @@
 import React from 'react';
-import { Ticket, TicketStatus } from '@/app/types/entities';
 import { TicketsPanelActivity } from './tickets/TicketsPanelActivity';
 import { TicketsPanelTable } from './tickets/TicketsPanelTable';
 import { TicketsPanelToolbar } from './tickets/TicketsPanelToolbar';
-
-export interface TicketsPanelViewModel {
-  tickets: Ticket[];
-  paginatedTickets: Ticket[];
-  filteredTickets: Ticket[];
-  ticketsSearch: string;
-  ticketsStatusFilter: TicketStatus | '';
-  ticketsPage: number;
-  ticketsPageSize: number;
-  ticketsTotalPages: number;
-  selectedTicketId: string;
-  selectedTicket: Ticket | null;
-  selectedTicketHistory: Ticket['history'];
-  wricefStatusColor: Record<TicketStatus, string>;
-  wricefPriorityColor: Record<string, string>;
-  onTicketsSearchChange: (value: string) => void;
-  onTicketsStatusFilterChange: (value: TicketStatus | '') => void;
-  onTicketsPageChange: (value: number) => void;
-  onTicketsPageSizeChange: (value: number) => void;
-  onSelectTicket: (ticketId: string) => void;
-  onOpenTicketDetails: (ticketId: string) => void;
-  onOpenCreateTicket: () => void;
-  formatTicketEventTime: (value: string) => string;
-  renderTicketEvent: (event: Ticket['history'][number]) => React.ReactNode;
-  resolveUserName: (userId?: string) => string;
-}
+import { useTicketsPanel } from '../../hooks/useTicketsPanel';
 
 interface TicketsPanelProps {
+  projectId: string;
   active: boolean;
-  vm: TicketsPanelViewModel;
+  onOpenCreateTicket: () => void;
+  onOpenTicketDetails: (ticketId: string) => void;
 }
 
-export const TicketsPanel: React.FC<TicketsPanelProps> = ({ active, vm }) => {
+export const TicketsPanel: React.FC<TicketsPanelProps> = ({ 
+  projectId,
+  active, 
+  onOpenCreateTicket,
+  onOpenTicketDetails 
+}) => {
+  const vm = useTicketsPanel(projectId);
+
   if (!active) return null;
 
   return (
@@ -49,10 +32,10 @@ export const TicketsPanel: React.FC<TicketsPanelProps> = ({ active, vm }) => {
       <TicketsPanelToolbar
         ticketsSearch={vm.ticketsSearch}
         ticketsStatusFilter={vm.ticketsStatusFilter}
-        onTicketsSearchChange={vm.onTicketsSearchChange}
-        onTicketsStatusFilterChange={vm.onTicketsStatusFilterChange}
-        onTicketsPageChange={vm.onTicketsPageChange}
-        onOpenCreateTicket={vm.onOpenCreateTicket}
+        onTicketsSearchChange={vm.setTicketsSearch}
+        onTicketsStatusFilterChange={vm.setTicketsStatusFilter}
+        onTicketsPageChange={vm.setTicketsPage}
+        onOpenCreateTicket={onOpenCreateTicket}
       />
       <TicketsPanelTable
         tickets={vm.tickets}
@@ -64,10 +47,10 @@ export const TicketsPanel: React.FC<TicketsPanelProps> = ({ active, vm }) => {
         ticketsTotalPages={vm.ticketsTotalPages}
         wricefStatusColor={vm.wricefStatusColor}
         wricefPriorityColor={vm.wricefPriorityColor}
-        onSelectTicket={vm.onSelectTicket}
-        onOpenTicketDetails={vm.onOpenTicketDetails}
-        onTicketsPageChange={vm.onTicketsPageChange}
-        onTicketsPageSizeChange={vm.onTicketsPageSizeChange}
+        onSelectTicket={vm.setSelectedTicketId}
+        onOpenTicketDetails={onOpenTicketDetails}
+        onTicketsPageChange={vm.setTicketsPage}
+        onTicketsPageSizeChange={vm.setTicketsPageSize}
       />
       <TicketsPanelActivity
         selectedTicket={vm.selectedTicket}

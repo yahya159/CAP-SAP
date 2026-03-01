@@ -13,16 +13,12 @@ import {
 } from '@/app/components/ui/select';
 import { Textarea } from '@/app/components/ui/textarea';
 import {
-  AbaqueComplexity,
-  Ticket,
-  TicketNature,
   TICKET_NATURE_LABELS,
 } from '@/app/types/entities';
-import type { CreateProjectTicketDialogViewModel } from '../CreateProjectTicketDialog';
 import { CreateProjectTicketContextBlock } from './CreateProjectTicketContextBlock';
 
 interface CreateProjectTicketFormProps {
-  vm: CreateProjectTicketDialogViewModel;
+  vm: any;
 }
 
 export const CreateProjectTicketForm: React.FC<CreateProjectTicketFormProps> = ({ vm }) => {
@@ -33,14 +29,15 @@ export const CreateProjectTicketForm: React.FC<CreateProjectTicketFormProps> = (
       <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
         <div className="space-y-1.5 sm:col-span-2">
           <Label htmlFor="project-ticket-title">Title *</Label>
-          <Input id="project-ticket-title" value={vm.form.title} onChange={(event) => vm.onFormChange({ ...vm.form, title: event.target.value })} placeholder="Ticket title" />
+          <Input id="project-ticket-title" {...vm.register('title')} placeholder="Ticket title" />
+          {vm.errors.title && <span className="text-xs text-destructive">{vm.errors.title.message}</span>}
         </div>
         <div className="space-y-1.5">
           <Label>Ticket Nature</Label>
           <Select
-            value={vm.form.nature}
+            value={vm.formValues.nature}
             onValueChange={(value) => {
-              vm.onFormChange({ ...vm.form, nature: value as TicketNature });
+              vm.setValue('nature', value);
               vm.onEstimatedByAbaqueChange(false);
             }}
           >
@@ -48,7 +45,7 @@ export const CreateProjectTicketForm: React.FC<CreateProjectTicketFormProps> = (
               <SelectValue />
             </SelectTrigger>
             <SelectContent>
-              {(Object.entries(TICKET_NATURE_LABELS) as [TicketNature, string][]).map(([value, label]) => (
+              {Object.entries(TICKET_NATURE_LABELS).map(([value, label]) => (
                 <SelectItem key={value} value={value}>
                   {label}
                 </SelectItem>
@@ -59,9 +56,9 @@ export const CreateProjectTicketForm: React.FC<CreateProjectTicketFormProps> = (
         <div className="space-y-1.5">
           <Label>Complexity</Label>
           <Select
-            value={vm.form.complexity}
+            value={vm.formValues.complexity}
             onValueChange={(value) => {
-              vm.onFormChange({ ...vm.form, complexity: value as AbaqueComplexity });
+              vm.setValue('complexity', value);
               vm.onEstimatedByAbaqueChange(false);
             }}
           >
@@ -77,7 +74,7 @@ export const CreateProjectTicketForm: React.FC<CreateProjectTicketFormProps> = (
         </div>
         <div className="space-y-1.5">
           <Label>Priority</Label>
-          <Select value={vm.form.priority} onValueChange={(value) => vm.onFormChange({ ...vm.form, priority: value as Ticket['priority'] })}>
+          <Select value={vm.formValues.priority} onValueChange={(value) => vm.setValue('priority', value)}>
             <SelectTrigger>
               <SelectValue />
             </SelectTrigger>
@@ -91,7 +88,7 @@ export const CreateProjectTicketForm: React.FC<CreateProjectTicketFormProps> = (
         </div>
         <div className="space-y-1.5">
           <Label htmlFor="project-ticket-due-date">Due Date</Label>
-          <Input id="project-ticket-due-date" type="date" value={vm.form.dueDate} onChange={(event) => vm.onFormChange({ ...vm.form, dueDate: event.target.value })} />
+          <Input id="project-ticket-due-date" type="date" {...vm.register('dueDate')} />
         </div>
         <div className="space-y-1.5 sm:col-span-2">
           <div className="flex items-center justify-between gap-2">
@@ -106,12 +103,13 @@ export const CreateProjectTicketForm: React.FC<CreateProjectTicketFormProps> = (
             type="number"
             min={0}
             step={0.5}
-            value={vm.form.effortHours}
-            onChange={(event) => {
-              vm.onFormChange({ ...vm.form, effortHours: Number(event.target.value || 0) });
+            {...vm.register('effortHours', { valueAsNumber: true })}
+            onChange={(e) => {
+              vm.setValue('effortHours', parseFloat(e.target.value) || 0);
               vm.onEstimatedByAbaqueChange(false);
             }}
           />
+          {vm.errors.effortHours && <span className="text-xs text-destructive">{vm.errors.effortHours.message}</span>}
           {vm.isEstimatedByAbaque && (
             <Badge variant="secondary" className="inline-flex items-center gap-1">
               <Scale className="h-3 w-3" />
@@ -121,7 +119,7 @@ export const CreateProjectTicketForm: React.FC<CreateProjectTicketFormProps> = (
         </div>
         <div className="space-y-1.5 sm:col-span-2">
           <Label htmlFor="project-ticket-description">Description</Label>
-          <Textarea id="project-ticket-description" value={vm.form.description} onChange={(event) => vm.onFormChange({ ...vm.form, description: event.target.value })} rows={4} />
+          <Textarea id="project-ticket-description" {...vm.register('description')} rows={4} />
         </div>
       </div>
     </div>

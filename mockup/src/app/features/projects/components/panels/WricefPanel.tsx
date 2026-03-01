@@ -1,46 +1,38 @@
 import React from 'react';
-import {
-  SAPModule,
-  TicketComplexity,
-  WricefType,
-} from '@/app/types/entities';
-import { WricefTable, WricefTableViewModel } from '../tables/WricefTable';
+import { WricefTable } from '../tables/WricefTable';
 import { WricefFiltersToolbar } from './wricef/WricefFiltersToolbar';
 import { WricefPagination } from './wricef/WricefPagination';
 import { WricefStatsCards } from './wricef/WricefStatsCards';
-
-export interface WricefPanelViewModel {
-  objectsSearch: string;
-  objectsTypeFilter: WricefType | '';
-  objectsComplexityFilter: TicketComplexity | '';
-  objectsModuleFilter: SAPModule | '';
-  objectsPage: number;
-  objectsPageSize: number;
-  objectsTotalPages: number;
-  filteredObjectsCount: number;
-  wricefObjectCount: number;
-  wricefTotalTickets: number;
-  wricefTotalDocuments: number;
-  wricefImporting: boolean;
-  onObjectsSearchChange: (value: string) => void;
-  onObjectsTypeFilterChange: (value: WricefType | '') => void;
-  onObjectsComplexityFilterChange: (value: TicketComplexity | '') => void;
-  onObjectsModuleFilterChange: (value: SAPModule | '') => void;
-  onObjectsPageChange: (value: number) => void;
-  onObjectsPageSizeChange: (value: number) => void;
-  onClearFilters: () => void;
-  onOpenCreateTicket: () => void;
-  onImportWricefFile: (event: React.ChangeEvent<HTMLInputElement>) => void;
-  table: WricefTableViewModel;
-}
+import { useWricefPanel } from '../../hooks/useWricefPanel';
 
 interface WricefPanelProps {
+  projectId: string;
   active: boolean;
-  vm: WricefPanelViewModel;
+  onOpenCreateTicket: (objectId?: string) => void;
+  onOpenCreateDocument: (objectId?: string) => void;
+  onOpenTicketDetails: (ticketId: string) => void;
+  onViewDocument: (docId: string) => void;
 }
 
-export const WricefPanel: React.FC<WricefPanelProps> = ({ active, vm }) => {
+export const WricefPanel: React.FC<WricefPanelProps> = ({ 
+  projectId,
+  active,
+  onOpenCreateTicket,
+  onOpenCreateDocument,
+  onOpenTicketDetails,
+  onViewDocument
+}) => {
+  const vm = useWricefPanel(projectId);
+
   if (!active) return null;
+
+  const tableVm = {
+    ...vm.table,
+    onOpenCreateTicket,
+    onOpenCreateDocument,
+    onOpenTicketDetails,
+    onViewDocument,
+  };
 
   return (
     <section
@@ -66,10 +58,10 @@ export const WricefPanel: React.FC<WricefPanelProps> = ({ active, vm }) => {
         onObjectsComplexityFilterChange={vm.onObjectsComplexityFilterChange}
         onObjectsModuleFilterChange={vm.onObjectsModuleFilterChange}
         onClearFilters={vm.onClearFilters}
-        onOpenCreateTicket={vm.onOpenCreateTicket}
-        onImportWricefFile={vm.onImportWricefFile}
+        onOpenCreateTicket={onOpenCreateTicket}
+        onImportWricefFile={() => {}}
       />
-      <WricefTable vm={vm.table} />
+      <WricefTable vm={tableVm as any} />
       <WricefPagination
         filteredObjectsCount={vm.filteredObjectsCount}
         objectsPage={vm.objectsPage}

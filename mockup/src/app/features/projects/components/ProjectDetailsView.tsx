@@ -42,14 +42,27 @@ export const ProjectDetailsView: React.FC = () => {
         />
         <OverviewPanel active={vm.activeTab === 'overview'} vm={vm.overviewVm!} />
         <AbaquesPanel active={vm.activeTab === 'abaques'} vm={vm.abaquesVm!} />
-        <TicketsPanel active={vm.activeTab === 'tickets'} vm={vm.ticketsVm} />
+        <TicketsPanel 
+          projectId={vm.project.id}
+          active={vm.activeTab === 'tickets'} 
+          onOpenCreateTicket={() => vm.createTicketDialogVm.vm.onOpenChange(true)}
+          onOpenTicketDetails={vm.ticketsVm.onOpenTicketDetails} 
+        />
         <TeamPanel active={vm.activeTab === 'team'} {...vm.teamVm} />
-        <WricefPanel active={vm.activeTab === 'objects'} vm={vm.wricefVm} />
+        <WricefPanel 
+          projectId={vm.project.id}
+          active={vm.activeTab === 'objects'} 
+          onOpenCreateTicket={(id) => vm.createTicketDialogVm.vm.onOpenChange(true)}
+          onOpenCreateDocument={() => {}}
+          onOpenTicketDetails={vm.ticketsVm.onOpenTicketDetails}
+          onViewDocument={() => {}}
+        />
         <ProjectKpis {...vm.kpisVm} />
         <DocumentationPanel active={vm.activeTab === 'docs'} vm={vm.documentationVm!} />
         <CreateProjectTicketDialog
+          projectId={vm.project.id}
           open={vm.createTicketDialogVm.open}
-          vm={vm.createTicketDialogVm.vm}
+          onOpenChange={(open) => vm.createTicketDialogVm.vm.onOpenChange(open)}
         />
         <CreateDocumentationDialog
           open={vm.createDocumentationDialogVm.open}

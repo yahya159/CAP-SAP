@@ -92,6 +92,11 @@ export const ProjectDetailsAPI = {
     syncProjectWricef: ODataDocumentationAPI.syncProjectWricef,
     getByTicketId: ODataDocumentationAPI.getByTicketId,
   },
+  WricefObjectsAPI: {
+    getByProject: ODataWricefObjectsAPI.getByProject,
+    create: ODataWricefObjectsAPI.create,
+    update: ODataWricefObjectsAPI.update,
+  }
 };
 
 export const {
@@ -102,4 +107,5 @@ export const {
   TicketsAPI,
   AbaquesAPI,
   DocumentationAPI,
+  WricefObjectsAPI,
 } = ProjectDetailsAPI;
