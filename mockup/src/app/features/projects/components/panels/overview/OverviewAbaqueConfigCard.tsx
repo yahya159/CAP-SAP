@@ -17,7 +17,7 @@ import {
   TableHeader,
   TableRow,
 } from '@/app/components/ui/table';
-import { ABAQUE_TASK_NATURE_LABELS } from '@/app/types/entities';
+import { ABAQUE_TICKET_NATURE_LABELS } from '@/app/types/entities';
 import type { OverviewPanelViewModel } from '../OverviewPanel';
 
 interface OverviewAbaqueConfigCardProps {
@@ -74,20 +74,20 @@ export const OverviewAbaqueConfigCard: React.FC<OverviewAbaqueConfigCardProps> =
               </TableRow>
             </TableHeader>
             <TableBody>
-              {vm.abaqueTaskNatures.map((taskNature) => {
+              {vm.abaqueTicketNatures.map((ticketNature) => {
                 const low = vm.selectedAbaque?.entries.find(
-                  (entry) => entry.taskNature === taskNature && entry.complexity === 'LOW'
+                  (entry) => entry.ticketNature === ticketNature && entry.complexity === 'LOW'
                 )?.standardHours;
                 const medium = vm.selectedAbaque?.entries.find(
-                  (entry) => entry.taskNature === taskNature && entry.complexity === 'MEDIUM'
+                  (entry) => entry.ticketNature === ticketNature && entry.complexity === 'MEDIUM'
                 )?.standardHours;
                 const high = vm.selectedAbaque?.entries.find(
-                  (entry) => entry.taskNature === taskNature && entry.complexity === 'HIGH'
+                  (entry) => entry.ticketNature === ticketNature && entry.complexity === 'HIGH'
                 )?.standardHours;
                 return (
-                  <TableRow key={taskNature}>
+                  <TableRow key={ticketNature}>
                     <TableCell className="px-4 py-3">
-                      <Badge variant="secondary">{ABAQUE_TASK_NATURE_LABELS[taskNature]}</Badge>
+                      <Badge variant="secondary">{ABAQUE_TICKET_NATURE_LABELS[ticketNature]}</Badge>
                     </TableCell>
                     <TableCell className="px-4 py-3 text-sm font-semibold">{low ?? '-'}</TableCell>
                     <TableCell className="px-4 py-3 text-sm font-semibold">{medium ?? '-'}</TableCell>

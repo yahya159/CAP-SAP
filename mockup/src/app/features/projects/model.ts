@@ -1,7 +1,7 @@
 import {
   Abaque,
   AbaqueComplexity,
-  AbaqueTaskNature,
+  AbaqueTicketNature,
   DocumentationObject,
   DocumentationObjectType,
   DocumentationAttachment,
@@ -328,10 +328,10 @@ export const withProjectTabIcons = (
   });
 };
 
-export const buildAbaqueTaskNatures = (selectedAbaque: Abaque | null): AbaqueTaskNature[] => {
+export const buildAbaqueTicketNatures = (selectedAbaque: Abaque | null): AbaqueTicketNature[] => {
   if (!selectedAbaque) return [];
   const entries = Array.isArray(selectedAbaque.entries) ? selectedAbaque.entries : [];
-  return [...new Set(entries.map((entry) => entry?.taskNature).filter(Boolean))] as AbaqueTaskNature[];
+  return [...new Set(entries.map((entry) => entry?.ticketNature).filter(Boolean))] as AbaqueTicketNature[];
 };
 
 export const getUsageBarClass = (estimateConsumptionPercent: number): string => {
@@ -348,12 +348,12 @@ export const sortTicketHistoryByLatest = (history: Ticket['history'] = []): Tick
 
 export const getAbaqueEstimateForNature = (
   abaque: Abaque,
-  taskNature: TicketNature,
+  ticketNature: TicketNature,
   complexity: AbaqueComplexity
 ): number | null => {
   const entries = Array.isArray(abaque.entries) ? abaque.entries : [];
   const direct = entries.find(
-    (entry) => entry.taskNature === taskNature && entry.complexity === complexity
+    (entry) => entry.ticketNature === ticketNature && entry.complexity === complexity
   );
   if (direct) return direct.standardHours;
 
@@ -368,7 +368,7 @@ export const getAbaqueEstimateForNature = (
   return (
     entries.find(
       (entry) =>
-        entry.taskNature === fallbackByNature[taskNature] && entry.complexity === complexity
+        entry.ticketNature === fallbackByNature[ticketNature] && entry.complexity === complexity
     )?.standardHours ?? null
   );
 };

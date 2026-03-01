@@ -74,11 +74,11 @@ const abaqueFixture: Abaque = {
   id: 'ABAQUE-TICKETS-001',
   name: 'Abaque Tickets Delivery',
   entries: [
-    { taskNature: 'ENHANCEMENT', complexity: 'MEDIUM', standardHours: 16 },
-    { taskNature: 'WORKFLOW', complexity: 'HIGH', standardHours: 32 },
-    { taskNature: 'REPORT', complexity: 'LOW', standardHours: 6 },
-    { taskNature: 'FEATURE', complexity: 'MEDIUM', standardHours: 14 },
-    { taskNature: 'DOCUMENTATION', complexity: 'LOW', standardHours: 4 },
+    { ticketNature: 'ENHANCEMENT', complexity: 'MEDIUM', standardHours: 16 },
+    { ticketNature: 'WORKFLOW', complexity: 'HIGH', standardHours: 32 },
+    { ticketNature: 'REPORT', complexity: 'LOW', standardHours: 6 },
+    { ticketNature: 'FEATURE', complexity: 'MEDIUM', standardHours: 14 },
+    { ticketNature: 'DOCUMENTATION', complexity: 'LOW', standardHours: 4 },
   ],
 };
 
@@ -247,7 +247,7 @@ describe('getAbaqueEstimateForTicket', () => {
     const fallbackAbaque: Abaque = {
       id: 'AB-FALLBACK-02',
       name: 'Fallback',
-      entries: [{ taskNature: 'FEATURE', complexity: 'MEDIUM', standardHours: 19 }],
+      entries: [{ ticketNature: 'FEATURE', complexity: 'MEDIUM', standardHours: 19 }],
     };
 
     expect(getAbaqueEstimateForTicket(fallbackAbaque, 'PROGRAMME', 'MEDIUM')).toBe(19);

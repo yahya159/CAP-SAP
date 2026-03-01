@@ -90,11 +90,11 @@ export const mapTicketComplexityToAbaque = (
 
 export const getAbaqueEstimateForTicket = (
   abaque: Abaque,
-  taskNature: TicketNature,
+  ticketNature: TicketNature,
   complexity: AbaqueComplexity
 ): number | null => {
   const direct = abaque.entries.find(
-    (entry) => entry.taskNature === taskNature && entry.complexity === complexity
+    (entry) => entry.ticketNature === ticketNature && entry.complexity === complexity
   );
   if (direct) return direct.standardHours;
 
@@ -110,7 +110,7 @@ export const getAbaqueEstimateForTicket = (
   return (
     abaque.entries.find(
       (entry) =>
-        entry.taskNature === fallbackByNature[taskNature] && entry.complexity === complexity
+        entry.ticketNature === fallbackByNature[ticketNature] && entry.complexity === complexity
     )?.standardHours ?? null
   );
 };

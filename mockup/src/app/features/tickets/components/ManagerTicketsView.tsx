@@ -84,7 +84,7 @@ export const ManagerTicketsView: React.FC = () => {
           selectedProject: vm.selectedProject,
           wricefObjects: vm.wricefObjects,
           linkedAbaque: vm.linkedAbaque,
-          abaqueTaskNatures: vm.abaqueTaskNatures,
+          abaqueTicketNatures: vm.abaqueTicketNatures,
           abaqueEntry: vm.abaqueEntry,
           form: vm.form,
           isManualWricef: vm.isManualWricef,

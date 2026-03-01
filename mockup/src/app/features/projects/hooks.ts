@@ -35,7 +35,7 @@ import type { CreateDocumentationDialogViewModel } from './components/dialogs/Cr
 // Imports removed
 import {
   appendFilesAsDocumentationAttachments,
-  buildAbaqueTaskNatures,
+  buildAbaqueTicketNatures,
   buildDocumentationDraft,
   buildObjectTicketRows,
   buildWricefImportPlan,
@@ -310,8 +310,8 @@ export const useProjectDetailsViewModel = (): ProjectDetailsViewModel => {
     () => abaques.find((item) => item.id === project?.linkedAbaqueId) ?? null,
     [abaques, project?.linkedAbaqueId]
   );
-  const abaqueTaskNatures = useMemo(
-    () => buildAbaqueTaskNatures(selectedAbaque),
+  const abaqueTicketNatures = useMemo(
+    () => buildAbaqueTicketNatures(selectedAbaque),
     [selectedAbaque]
   );
   const kpis = useMemo(() => computeProjectKpis(tickets), [tickets]);
@@ -787,7 +787,7 @@ export const useProjectDetailsViewModel = (): ProjectDetailsViewModel => {
         criticalTicketsCount: kpis.critical,
         abaques,
         selectedAbaque,
-        abaqueTaskNatures,
+        abaqueTicketNatures,
         abaqueSaving,
         onLinkedAbaqueChange: (value: any) => {
           void updateProjectAbaque(value);
@@ -937,7 +937,7 @@ export const useProjectDetailsViewModel = (): ProjectDetailsViewModel => {
     projectName: project?.name ?? '',
     wricefObjects,
     selectedAbaque,
-    abaqueTaskNatures,
+    abaqueTicketNatures,
     form: ticketForm,
     isEstimatedByAbaque,
     isCreatingTicket,

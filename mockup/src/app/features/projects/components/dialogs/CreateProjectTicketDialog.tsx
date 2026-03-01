@@ -14,7 +14,7 @@ import { CreateProjectTicketAbaqueReference } from './project-ticket/CreateProje
 import { CreateProjectTicketForm } from './project-ticket/CreateProjectTicketForm';
 import { ticketSchema, TicketFormValues } from './project-ticket/schema';
 import { useProjectDetails, useProjectWricefObjects, useAbaques, useProjectTickets, projectKeys } from '../../queries';
-import { buildAbaqueTaskNatures, TICKET_COMPLEXITY_BY_ABAQUE, getAbaqueEstimateForNature } from '../../model';
+import { buildAbaqueTicketNatures, TICKET_COMPLEXITY_BY_ABAQUE, getAbaqueEstimateForNature } from '../../model';
 import { toast } from 'sonner';
 import { useAuth } from '@/app/context/AuthContext';
 import { createTicketWithUnifiedFlow } from '@/app/services/ticketCreation';
@@ -44,7 +44,7 @@ export const CreateProjectTicketDialog: React.FC<CreateProjectTicketDialogProps>
   const [isCreatingTicket, setIsCreatingTicket] = useState(false);
 
   const selectedAbaque = abaques.find((a) => a.id === project?.linkedAbaqueId) ?? null;
-  const abaqueTaskNatures = buildAbaqueTaskNatures(selectedAbaque);
+  const abaqueTicketNatures = buildAbaqueTicketNatures(selectedAbaque);
 
   const form = useForm<TicketFormValues>({
     resolver: zodResolver(ticketSchema as any),
@@ -121,7 +121,7 @@ export const CreateProjectTicketDialog: React.FC<CreateProjectTicketDialogProps>
     projectName: project?.name ?? '',
     wricefObjects,
     selectedAbaque,
-    abaqueTaskNatures,
+    abaqueTicketNatures,
     formValues: form.watch(),
     setValue: form.setValue,
     isEstimatedByAbaque,

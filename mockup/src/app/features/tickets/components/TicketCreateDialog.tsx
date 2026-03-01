@@ -24,7 +24,7 @@ export interface TicketCreateDialogViewModel {
   selectedProject: Project | undefined;
   wricefObjects: WricefObject[];
   linkedAbaque: Abaque | null;
-  abaqueTaskNatures: string[];
+  abaqueTicketNatures: string[];
   abaqueEntry: AbaqueEntry | null;
   form: TicketForm;
   isManualWricef: boolean;

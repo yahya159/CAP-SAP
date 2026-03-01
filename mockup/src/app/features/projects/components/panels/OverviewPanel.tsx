@@ -1,5 +1,5 @@
 import React from 'react';
-import { Abaque, AbaqueTaskNature, Project } from '@/app/types/entities';
+import { Abaque, AbaqueTicketNature, Project } from '@/app/types/entities';
 import { OverviewAbaqueConfigCard } from './overview/OverviewAbaqueConfigCard';
 import { OverviewEstimatorCard } from './overview/OverviewEstimatorCard';
 import { OverviewLiveMetricsCard } from './overview/OverviewLiveMetricsCard';
@@ -16,7 +16,7 @@ export interface OverviewPanelViewModel {
   criticalTicketsCount: number;
   abaques: Abaque[];
   selectedAbaque: Abaque | null;
-  abaqueTaskNatures: AbaqueTaskNature[];
+  abaqueTicketNatures: AbaqueTicketNature[];
   abaqueSaving: boolean;
   onLinkedAbaqueChange: (linkedAbaqueId: string) => void;
   onOpenCreateTicket: () => void;

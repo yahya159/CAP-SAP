@@ -37,7 +37,7 @@
 | src/app/pages/manager/ManagerDashboard.page.tsx | Replaced legacy odataClient import with direct services/odata module import | ? |
 | src/app/pages/manager/ProjectsEnhanced.page.tsx | Replaced legacy odataClient import with direct services/odata module import | ? |
 | src/app/pages/manager/ResourceAllocation.page.tsx | Replaced legacy odataClient import with direct services/odata module import | ? |
-| src/app/pages/manager/RisksAndCriticalTasks.page.tsx | Replaced legacy odataClient import with direct services/odata module import | ? |
+| src/app/pages/manager/RisksAndCriticalTickets.page.tsx | Replaced legacy odataClient import with direct services/odata module import | ? |
 | src/app/pages/manager/TeamPerformance.page.tsx | Replaced legacy odataClient import with direct services/odata module import | ? |
 | src/app/pages/project-manager/ProjectManagerDashboard.page.tsx | Replaced legacy odataClient import with direct services/odata module import | ? |
 | src/app/pages/shared/CalendarImputations.tsx | Replaced legacy odataClient import with direct services/odata module import | ? |
@@ -154,7 +154,7 @@
 | src/app/pages/manager/ProjectDetails.tsx | src/app/pages/manager/ProjectDetails.page.tsx | Route-level component requires .page.tsx suffix |
 | src/app/pages/manager/ProjectsEnhanced.tsx | src/app/pages/manager/ProjectsEnhanced.page.tsx | Route-level component requires .page.tsx suffix |
 | src/app/pages/manager/ResourceAllocation.tsx | src/app/pages/manager/ResourceAllocation.page.tsx | Route-level component requires .page.tsx suffix |
-| src/app/pages/manager/RisksAndCriticalTasks.tsx | src/app/pages/manager/RisksAndCriticalTasks.page.tsx | Route-level component requires .page.tsx suffix |
+| src/app/pages/manager/RisksAndCriticalTickets.tsx | src/app/pages/manager/RisksAndCriticalTickets.page.tsx | Route-level component requires .page.tsx suffix |
 | src/app/pages/manager/TeamPerformance.tsx | src/app/pages/manager/TeamPerformance.page.tsx | Route-level component requires .page.tsx suffix |
 | src/app/pages/project-manager/PMImputations.tsx | src/app/pages/project-manager/PMImputations.page.tsx | Route-level component requires .page.tsx suffix |
 | src/app/pages/project-manager/ProjectManagerDashboard.tsx | src/app/pages/project-manager/ProjectManagerDashboard.page.tsx | Route-level component requires .page.tsx suffix |
@@ -189,7 +189,7 @@
 | paginateItems | projects | 4 | ? |
 | countDocumentationByType | projects | 4 | ? |
 | withProjectTabIcons | projects | 4 | ? |
-| buildAbaqueTaskNatures | projects | 4 | ? |
+| buildAbaqueTicketNatures | projects | 4 | ? |
 | getUsageBarClass | projects | 4 | ? |
 | sortTicketHistoryByLatest | projects | 4 | ? |
 | getAbaqueEstimateForNature | projects | 4 | ? |

@@ -7,7 +7,7 @@ import {
   TableHeader,
   TableRow,
 } from '@/app/components/ui/table';
-import { ABAQUE_TASK_NATURE_LABELS, AbaqueTaskNature } from '@/app/types/entities';
+import { ABAQUE_TICKET_NATURE_LABELS, AbaqueTicketNature } from '@/app/types/entities';
 
 interface CreateProjectTicketAbaqueReferenceProps {
   vm: any;
@@ -36,21 +36,21 @@ export const CreateProjectTicketAbaqueReference: React.FC<CreateProjectTicketAba
           </TableRow>
         </TableHeader>
         <TableBody>
-          {vm.abaqueTaskNatures.map((taskNature: any) => {
+          {vm.abaqueTicketNatures.map((ticketNature: any) => {
             const low = vm.selectedAbaque?.entries.find(
-              (entry: any) => entry.taskNature === taskNature && entry.complexity === 'LOW'
+              (entry: any) => entry.ticketNature === ticketNature && entry.complexity === 'LOW'
             )?.standardHours;
             const medium = vm.selectedAbaque?.entries.find(
-              (entry: any) => entry.taskNature === taskNature && entry.complexity === 'MEDIUM'
+              (entry: any) => entry.ticketNature === ticketNature && entry.complexity === 'MEDIUM'
             )?.standardHours;
             const high = vm.selectedAbaque?.entries.find(
-              (entry: any) => entry.taskNature === taskNature && entry.complexity === 'HIGH'
+              (entry: any) => entry.ticketNature === ticketNature && entry.complexity === 'HIGH'
             )?.standardHours;
-            const activeRow = taskNature === vm.formValues?.nature;
+            const activeRow = ticketNature === vm.formValues?.nature;
             return (
-              <TableRow key={taskNature} className={activeRow ? 'bg-primary/10' : undefined}>
+              <TableRow key={ticketNature} className={activeRow ? 'bg-primary/10' : undefined}>
                 <TableCell className="px-3 py-2 text-xs font-medium">
-                  {ABAQUE_TASK_NATURE_LABELS[taskNature as AbaqueTaskNature]}
+                  {ABAQUE_TICKET_NATURE_LABELS[ticketNature as AbaqueTicketNature]}
                 </TableCell>
                 <TableCell className="px-3 py-2 text-center text-xs">{low ?? '-'}</TableCell>
                 <TableCell className="px-3 py-2 text-center text-xs">{medium ?? '-'}</TableCell>

@@ -1,6 +1,6 @@
 import { useProjectDetails, useProjectTickets, useProjectDeliverables, useProjectWricefObjects, useAbaques, useActiveUsers } from '../queries';
 import { useMemo } from 'react';
-import { computeProjectKpis, buildAbaqueTaskNatures } from '../model';
+import { computeProjectKpis, buildAbaqueTicketNatures } from '../model';
 
 export const useOverviewPanel = (projectId: string) => {
   const { data: project } = useProjectDetails(projectId);
@@ -22,8 +22,8 @@ export const useOverviewPanel = (projectId: string) => {
     [abaques, project?.linkedAbaqueId]
   );
 
-  const abaqueTaskNatures = useMemo(
-    () => buildAbaqueTaskNatures(selectedAbaque),
+  const abaqueTicketNatures = useMemo(
+    () => buildAbaqueTicketNatures(selectedAbaque),
     [selectedAbaque]
   );
 
@@ -38,7 +38,7 @@ export const useOverviewPanel = (projectId: string) => {
     criticalTicketsCount: kpis.critical,
     abaques,
     selectedAbaque,
-    abaqueTaskNatures,
+    abaqueTicketNatures,
     abaqueSaving: false,
     onLinkedAbaqueChange: async (value: string) => { /* To be implemented in component or hook */ },
   };

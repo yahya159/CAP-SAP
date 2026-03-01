@@ -75,7 +75,7 @@ const getErrorMessage = (error: unknown): string => {
   return 'Failed to update ticket';
 };
 
-export const RisksAndCriticalTasks: React.FC = () => {
+export const RisksAndCriticalTickets: React.FC = () => {
   const [tickets, setTickets] = useState<Ticket[]>([]);
   const [projects, setProjects] = useState<Project[]>([]);
   const [users, setUsers] = useState<User[]>([]);

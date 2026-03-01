@@ -106,7 +106,7 @@ export const TechDashboard: React.FC = () => {
           </Card>
         )}
         <div className="grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-4">
-          <KPICard title="My Tickets" value={myTicketsCount} icon="task" color="blue" />
+          <KPICard title="My Tickets" value={myTicketsCount} icon="ticket" color="blue" />
           <KPICard title="Overdue Tickets" value={overdueTickets} icon="alert" color="red" />
           <KPICard title="Hours This Week" value={hoursThisWeek} icon="timesheet" color="green" />
           <KPICard

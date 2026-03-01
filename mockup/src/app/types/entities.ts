@@ -127,14 +127,14 @@ export const TICKET_STATUS_LABELS: Record<TicketStatus, string> = {
 // Abaques de Chiffrage
 // ---------------------------------------------------------------------------
 
-export type AbaqueTaskNature =
+export type AbaqueTicketNature =
   | TicketNature
   | 'BUG'
   | 'FEATURE'
   | 'DOCUMENTATION'
   | 'SUPPORT';
 
-export const ABAQUE_TASK_NATURE_LABELS: Record<AbaqueTaskNature, string> = {
+export const ABAQUE_TICKET_NATURE_LABELS: Record<AbaqueTicketNature, string> = {
   WORKFLOW: 'Workflow',
   FORMULAIRE: 'Formulaire',
   PROGRAMME: 'Programme',
@@ -150,7 +150,7 @@ export const ABAQUE_TASK_NATURE_LABELS: Record<AbaqueTaskNature, string> = {
 export type AbaqueComplexity = 'LOW' | 'MEDIUM' | 'HIGH';
 
 export interface AbaqueEntry {
-  taskNature: AbaqueTaskNature;
+  ticketNature: AbaqueTicketNature;
   complexity: AbaqueComplexity;
   standardHours: number;
 }
@@ -462,9 +462,9 @@ export interface LeaveRequest {
 
 export interface KPI {
   projectProgress: number;
-  tasksOnTrack: number;
-  tasksLate: number;
-  criticalTasks: number;
+  ticketsOnTrack: number;
+  ticketsLate: number;
+  criticalTickets: number;
   averageProductivity: number;
   allocationRate: number;
   activeRisks: number;

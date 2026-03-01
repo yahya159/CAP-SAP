@@ -112,7 +112,7 @@ export interface ManagerTicketsViewModel {
   selectedProject: Project | undefined;
   wricefObjects: WricefObject[];
   linkedAbaque: Abaque | null;
-  abaqueTaskNatures: string[];
+  abaqueTicketNatures: string[];
   abaqueEntry: AbaqueEntry | null;
   isManualWricef: boolean;
   isEstimatedByAbaque: boolean;
@@ -258,14 +258,14 @@ export const useManagerTicketsViewModel = (): ManagerTicketsViewModel => {
     const abaqueComplexity = mapTicketComplexityToAbaque(form.complexity);
     return (
       linkedAbaque.entries.find(
-        (entry) => entry.taskNature === form.nature && entry.complexity === abaqueComplexity
+        (entry) => entry.ticketNature === form.nature && entry.complexity === abaqueComplexity
       ) ?? null
     );
   }, [linkedAbaque, form.complexity, form.nature]);
 
-  const abaqueTaskNatures = useMemo(() => {
+  const abaqueTicketNatures = useMemo(() => {
     if (!linkedAbaque) return [];
-    return [...new Set(linkedAbaque.entries.map((entry) => entry.taskNature))];
+    return [...new Set(linkedAbaque.entries.map((entry) => entry.ticketNature))];
   }, [linkedAbaque]);
 
   const applyAbaqueEstimate = () => {
@@ -469,7 +469,7 @@ export const useManagerTicketsViewModel = (): ManagerTicketsViewModel => {
     selectedProject,
     wricefObjects,
     linkedAbaque,
-    abaqueTaskNatures,
+    abaqueTicketNatures,
     abaqueEntry,
     isManualWricef,
     isEstimatedByAbaque,

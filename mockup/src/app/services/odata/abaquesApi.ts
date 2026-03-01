@@ -3,7 +3,7 @@ import type { ODataQueryOptions, ODataRequestOptions } from './core';
 import { listEntities, quoteLiteral } from './core';
 
 interface AbaqueEntryRaw {
-  taskNature?: unknown;
+  ticketNature?: unknown;
   complexity?: unknown;
   standardHours?: unknown;
   type?: unknown;
@@ -41,15 +41,15 @@ const normalizeEntries = (value: unknown): Abaque['entries'] => {
     .map((entry) => {
       if (!entry || typeof entry !== 'object') return null;
       const candidate = entry as AbaqueEntryRaw;
-      const taskNature = String(candidate.taskNature ?? candidate.type ?? '').trim().toUpperCase();
+      const ticketNature = String(candidate.ticketNature ?? candidate.type ?? '').trim().toUpperCase();
       const complexity = String(candidate.complexity ?? candidate.field ?? '').trim().toUpperCase();
       const standardHours = Number(candidate.standardHours ?? candidate.value);
-      if (!taskNature) return null;
+      if (!ticketNature) return null;
       if (complexity !== 'LOW' && complexity !== 'MEDIUM' && complexity !== 'HIGH') return null;
       if (!Number.isFinite(standardHours)) return null;
 
       return {
-        taskNature: taskNature as Abaque['entries'][number]['taskNature'],
+        ticketNature: ticketNature as Abaque['entries'][number]['ticketNature'],
         complexity,
         standardHours,
       };

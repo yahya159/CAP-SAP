@@ -13,7 +13,7 @@ import type { ProjectTabDefinition } from '@/app/features/projects/components/Pr
 import type { ParsedWricefResult } from '@/app/utils/wricefExcel';
 import {
   appendFilesAsDocumentationAttachments,
-  buildAbaqueTaskNatures,
+  buildAbaqueTicketNatures,
   buildDocumentationDraft,
   buildObjectTicketRows,
   buildWricefImportPlan,
@@ -95,11 +95,11 @@ const abaqueFixture: Abaque = {
   id: 'ABAQUE-CORE-001',
   name: 'Abaque S4 Delivery',
   entries: [
-    { taskNature: 'PROGRAMME', complexity: 'LOW', standardHours: 8 },
-    { taskNature: 'PROGRAMME', complexity: 'MEDIUM', standardHours: 18 },
-    { taskNature: 'FORMULAIRE', complexity: 'LOW', standardHours: 6 },
-    { taskNature: 'FEATURE', complexity: 'MEDIUM', standardHours: 14 },
-    { taskNature: 'SUPPORT', complexity: 'HIGH', standardHours: 28 },
+    { ticketNature: 'PROGRAMME', complexity: 'LOW', standardHours: 8 },
+    { ticketNature: 'PROGRAMME', complexity: 'MEDIUM', standardHours: 18 },
+    { ticketNature: 'FORMULAIRE', complexity: 'LOW', standardHours: 6 },
+    { ticketNature: 'FEATURE', complexity: 'MEDIUM', standardHours: 14 },
+    { ticketNature: 'SUPPORT', complexity: 'HIGH', standardHours: 28 },
   ],
 };
 
@@ -556,14 +556,14 @@ describe('withProjectTabIcons', () => {
   });
 });
 
-describe('buildAbaqueTaskNatures', () => {
+describe('buildAbaqueTicketNatures', () => {
   it('returns expected output for typical input', () => {
-    const result = buildAbaqueTaskNatures({
+    const result = buildAbaqueTicketNatures({
       ...abaqueFixture,
       entries: [
-        { taskNature: 'PROGRAMME', complexity: 'LOW', standardHours: 8 },
-        { taskNature: 'PROGRAMME', complexity: 'MEDIUM', standardHours: 16 },
-        { taskNature: 'FORMULAIRE', complexity: 'LOW', standardHours: 6 },
+        { ticketNature: 'PROGRAMME', complexity: 'LOW', standardHours: 8 },
+        { ticketNature: 'PROGRAMME', complexity: 'MEDIUM', standardHours: 16 },
+        { ticketNature: 'FORMULAIRE', complexity: 'LOW', standardHours: 6 },
       ],
     });
 
@@ -571,19 +571,19 @@ describe('buildAbaqueTaskNatures', () => {
   });
 
   it('handles empty input without throwing', () => {
-    expect(buildAbaqueTaskNatures(null)).toEqual([]);
+    expect(buildAbaqueTicketNatures(null)).toEqual([]);
   });
 
   it('handles null/undefined fields gracefully', () => {
-    const result = buildAbaqueTaskNatures({ ...abaqueFixture, entries: undefined as unknown as Abaque['entries'] });
+    const result = buildAbaqueTicketNatures({ ...abaqueFixture, entries: undefined as unknown as Abaque['entries'] });
     expect(result).toEqual([]);
   });
 
   it('handles malformed entry edge case', () => {
-    const result = buildAbaqueTaskNatures({
+    const result = buildAbaqueTicketNatures({
       ...abaqueFixture,
       entries: [
-        { taskNature: 'SUPPORT', complexity: 'HIGH', standardHours: 20 },
+        { ticketNature: 'SUPPORT', complexity: 'HIGH', standardHours: 20 },
         undefined as unknown as Abaque['entries'][number],
       ],
     });
@@ -660,7 +660,7 @@ describe('getAbaqueEstimateForNature', () => {
     const fallbackAbaque: Abaque = {
       id: 'AB-FALLBACK',
       name: 'Fallback',
-      entries: [{ taskNature: 'FEATURE', complexity: 'MEDIUM', standardHours: 22 }],
+      entries: [{ ticketNature: 'FEATURE', complexity: 'MEDIUM', standardHours: 22 }],
     };
     expect(getAbaqueEstimateForNature(fallbackAbaque, 'PROGRAMME', 'MEDIUM')).toBe(22);
   });

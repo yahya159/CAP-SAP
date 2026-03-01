@@ -107,7 +107,7 @@ export const AdminDashboard: React.FC = () => {
             icon="project-definition-triangle-2"
             color="yellow"
           />
-          <KPICard title="Tickets" value={ticketCount} icon="task" color="purple" />
+          <KPICard title="Tickets" value={ticketCount} icon="ticket" color="purple" />
         </div>
 
         <div className="grid grid-cols-1 gap-6 xl:grid-cols-[1.4fr_1fr]">

@@ -7,7 +7,7 @@ import {
   TableHeader,
   TableRow,
 } from '@/app/components/ui/table';
-import { ABAQUE_TASK_NATURE_LABELS } from '@/app/types/entities';
+import { ABAQUE_TICKET_NATURE_LABELS } from '@/app/types/entities';
 import type { TicketCreateDialogViewModel } from '../../TicketCreateDialog';
 
 interface TicketCreateAbaqueReferenceProps {
@@ -37,21 +37,21 @@ export const TicketCreateAbaqueReference: React.FC<TicketCreateAbaqueReferencePr
           </TableRow>
         </TableHeader>
         <TableBody>
-          {vm.abaqueTaskNatures.map((taskNature) => {
+          {vm.abaqueTicketNatures.map((ticketNature) => {
             const low = vm.linkedAbaque?.entries.find(
-              (entry) => entry.taskNature === taskNature && entry.complexity === 'LOW'
+              (entry) => entry.ticketNature === ticketNature && entry.complexity === 'LOW'
             )?.standardHours;
             const medium = vm.linkedAbaque?.entries.find(
-              (entry) => entry.taskNature === taskNature && entry.complexity === 'MEDIUM'
+              (entry) => entry.ticketNature === ticketNature && entry.complexity === 'MEDIUM'
             )?.standardHours;
             const high = vm.linkedAbaque?.entries.find(
-              (entry) => entry.taskNature === taskNature && entry.complexity === 'HIGH'
+              (entry) => entry.ticketNature === ticketNature && entry.complexity === 'HIGH'
             )?.standardHours;
-            const activeRow = taskNature === vm.form.nature;
+            const activeRow = ticketNature === vm.form.nature;
             return (
-              <TableRow key={taskNature} className={activeRow ? 'bg-primary/10' : undefined}>
+              <TableRow key={ticketNature} className={activeRow ? 'bg-primary/10' : undefined}>
                 <TableCell className="px-3 py-2 text-xs font-medium">
-                  {ABAQUE_TASK_NATURE_LABELS[taskNature as keyof typeof ABAQUE_TASK_NATURE_LABELS]}
+                  {ABAQUE_TICKET_NATURE_LABELS[ticketNature as keyof typeof ABAQUE_TICKET_NATURE_LABELS]}
                 </TableCell>
                 <TableCell className="px-3 py-2 text-center text-xs">{low ?? '-'}</TableCell>
                 <TableCell className="px-3 py-2 text-center text-xs">{medium ?? '-'}</TableCell>

@@ -149,7 +149,7 @@ export const ROLE_ROUTE_REGISTRY: Record<UserRole, RoleRouteGroup> = {
       {
         id: 'manager-risks',
         path: 'risks',
-        lazy: lazyNamed(() => import('../pages/manager/RisksAndCriticalTasks.page'), 'RisksAndCriticalTasks'),
+        lazy: lazyNamed(() => import('../pages/manager/RisksAndCriticalTickets.page'), 'RisksAndCriticalTickets'),
         nav: { label: 'Risks', iconKey: 'triangle-alert' },
       },
       {
