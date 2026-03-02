@@ -3,16 +3,16 @@
 ## Project Structure & Module Organization
 This repository has two main workspaces:
 
-- `mockup/`: Vite + React + TypeScript frontend.
+- `frontend/`: Vite + React + TypeScript frontend.
 - `cap-backend/`: SAP CAP OData v4 backend (Node.js + SQLite).
 
-Frontend code lives in `mockup/src/` with feature-first folders under `src/app/features/` (for example `tickets/`, `projects/`), shared UI in `src/app/components/`, and page routes in `src/app/pages/` and `src/app/routes.tsx`.  
+Frontend code lives in `frontend/src/` with feature-first folders under `src/app/features/` (for example `tickets/`, `projects/`), shared UI in `src/app/components/`, and page routes in `src/app/pages/` and `src/app/routes.tsx`.  
 Backend domain model is in `cap-backend/db/schema.cds`, seed data in `cap-backend/db/data/*.csv`, and service handlers in `cap-backend/srv/`.
 
 ## Build, Test, and Development Commands
 Run commands from each module directory.
 
-- Frontend (`mockup/`)
+- Frontend (`frontend/`)
   - `npm install`: install dependencies.
   - `npm run dev`: start Vite dev server.
   - `npm run typecheck`: run strict TypeScript checks.

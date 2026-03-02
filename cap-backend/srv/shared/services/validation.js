@@ -7,6 +7,7 @@ const ENTITIES = Object.freeze({
   Users: 'sap.performance.dashboard.db.Users',
   Projects: 'sap.performance.dashboard.db.Projects',
   Tickets: 'sap.performance.dashboard.db.Tickets',
+  TicketComments: 'sap.performance.dashboard.db.TicketComments',
   Allocations: 'sap.performance.dashboard.db.Allocations',
   Deliverables: 'sap.performance.dashboard.db.Deliverables',
   Imputations: 'sap.performance.dashboard.db.Imputations',
@@ -19,6 +20,7 @@ const ENTITIES = Object.freeze({
   Evaluations: 'sap.performance.dashboard.db.Evaluations',
   DocumentationObjects: 'sap.performance.dashboard.db.DocumentationObjects',
   Notifications: 'sap.performance.dashboard.db.Notifications',
+  ProjectFeedback: 'sap.performance.dashboard.db.ProjectFeedback',
   ReferenceData: 'sap.performance.dashboard.db.ReferenceData',
 });
 

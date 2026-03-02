@@ -1,0 +1,520 @@
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { useNavigate } from 'react-router';
+import { toast } from 'sonner';
+import { useAuth } from '../../context/AuthContext';
+import { getBaseRouteForRole } from '../../context/roleRouting';
+import { createTicketWithUnifiedFlow } from '../../services/ticketCreation';
+import {
+  Abaque,
+  AbaqueEntry,
+  Project,
+  SAPModule,
+  Ticket,
+  TicketComplexity,
+  TicketEvent,
+  TicketStatus,
+  User,
+  UserRole,
+  WricefObject,
+} from '../../types/entities';
+import { isAbortError } from '../../utils/async';import { WricefObjectsAPI } from '../../services/odata/wricefObjectsApi';
+import {
+  buildCalendarDays,
+  buildTicketsByDate,
+  filterTickets,
+  getAbaqueEstimateForTicket,
+  mapTicketComplexityToAbaque,
+} from './model';
+import { ManagerTicketsAPI } from './api';
+import { EMPTY_FORM, TicketForm, ViewMode } from './components/types';
+
+export const useManagerTicketsBootstrap = () => {
+  const [projects, setProjects] = useState<Project[]>([]);
+  const [users, setUsers] = useState<User[]>([]);
+  const [tickets, setTickets] = useState<Ticket[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+  const requestRef = useRef<AbortController | null>(null);
+
+  const reload = useCallback(async () => {
+    requestRef.current?.abort();
+    const controller = new AbortController();
+    requestRef.current = controller;
+    setLoading(true);
+    setError(null);
+
+    try {
+      const data = await ManagerTicketsAPI.getBootstrapData({ signal: controller.signal });
+      if (controller.signal.aborted) return;
+
+      setProjects(data.projects);
+      setUsers(data.users);
+      setTickets(data.tickets);
+    } catch (err) {
+      if (!isAbortError(err)) {
+        console.error('[useManagerTicketsBootstrap] Failed to load bootstrap data', err);
+        setError(err instanceof Error ? err.message : 'Failed to load ticket data');
+      }
+    } finally {
+      if (requestRef.current === controller) {
+        requestRef.current = null;
+        setLoading(false);
+      }
+    }
+  }, []);
+
+  useEffect(() => {
+    void reload();
+
+    return () => {
+      requestRef.current?.abort();
+      requestRef.current = null;
+    };
+  }, [reload]);
+
+  return {
+    projects,
+    setProjects,
+    users,
+    setUsers,
+    tickets,
+    setTickets,
+    loading,
+    error,
+    reload,
+  };
+};
+
+export const useManagerTicketsMutations = () => {
+  return {
+    updateTicket: ManagerTicketsAPI.updateTicket,
+    getAbaqueById: ManagerTicketsAPI.getAbaqueById,
+    createNotification: ManagerTicketsAPI.createNotification,
+  };
+};
+
+export interface ManagerTicketsViewModel {
+  currentUserId?: string;
+  currentUserRole?: UserRole;
+  roleBasePath: string;
+  loading: boolean;
+  isViewOnly: boolean;
+  projects: Project[];
+  users: User[];
+  tickets: Ticket[];
+  filteredTickets: Ticket[];
+  ticketsByDate: Record<string, Ticket[]>;
+  calendarDays: { date: string; day: number; isCurrentMonth: boolean }[];
+  calendarMonth: string;
+  viewMode: ViewMode;
+  showAdvancedFilters: boolean;
+  selectedTicket: Ticket | null;
+  showCreate: boolean;
+  form: TicketForm;
+  selectedProject: Project | undefined;
+  wricefObjects: WricefObject[];
+  linkedAbaque: Abaque | null;
+  abaqueTicketNatures: string[];
+  abaqueEntry: AbaqueEntry | null;
+  isManualWricef: boolean;
+  isEstimatedByAbaque: boolean;
+  isSubmitting: boolean;
+  searchQuery: string;
+  statusFilter: Ticket['status'] | 'ALL';
+  moduleFilter: SAPModule | 'ALL';
+  complexityFilter: TicketComplexity | 'ALL';
+  projectFilter: string;
+  assigneeFilter: string;
+  dateFrom: string;
+  dateTo: string;
+  wricefFilter: string;
+  setViewMode: (value: ViewMode) => void;
+  setShowAdvancedFilters: React.Dispatch<React.SetStateAction<boolean>>;
+  setShowCreate: React.Dispatch<React.SetStateAction<boolean>>;
+  setSelectedTicket: React.Dispatch<React.SetStateAction<Ticket | null>>;
+  setForm: React.Dispatch<React.SetStateAction<TicketForm>>;
+  setIsManualWricef: React.Dispatch<React.SetStateAction<boolean>>;
+  setIsEstimatedByAbaque: React.Dispatch<React.SetStateAction<boolean>>;
+  setSearchQuery: React.Dispatch<React.SetStateAction<string>>;
+  setStatusFilter: React.Dispatch<React.SetStateAction<Ticket['status'] | 'ALL'>>;
+  setModuleFilter: React.Dispatch<React.SetStateAction<SAPModule | 'ALL'>>;
+  setComplexityFilter: React.Dispatch<React.SetStateAction<TicketComplexity | 'ALL'>>;
+  setProjectFilter: React.Dispatch<React.SetStateAction<string>>;
+  setAssigneeFilter: React.Dispatch<React.SetStateAction<string>>;
+  setDateFrom: React.Dispatch<React.SetStateAction<string>>;
+  setDateTo: React.Dispatch<React.SetStateAction<string>>;
+  setWricefFilter: React.Dispatch<React.SetStateAction<string>>;
+  applyAbaqueEstimate: () => void;
+  submitTicket: (event: React.FormEvent) => Promise<void>;
+  changeStatus: (ticket: Ticket, newStatus: TicketStatus) => Promise<void>;
+  updateTicketDueDate: (ticketId: string, dueDate: string) => Promise<void>;
+  openTicketDetails: (ticketId: string) => void;
+  prevMonth: () => void;
+  nextMonth: () => void;
+  clearAllFilters: () => void;
+  resolveProjectName: (id: string) => string;
+  resolveUserName: (id?: string) => string;
+  handleDocumentationChanged: (ticketId: string, documentationIds: string[]) => void;
+}
+
+export const useManagerTicketsViewModel = (): ManagerTicketsViewModel => {
+  const { currentUser } = useAuth();
+  const navigate = useNavigate();
+  const { projects, setProjects, users, tickets, setTickets, loading } = useManagerTicketsBootstrap();
+  const { updateTicket, getAbaqueById } = useManagerTicketsMutations();
+
+  const isViewOnly = currentUser?.role === 'CONSULTANT_TECHNIQUE';
+  const [form, setForm] = useState<TicketForm>(EMPTY_FORM);
+  const [searchQuery, setSearchQuery] = useState('');
+  const [statusFilter, setStatusFilter] = useState<Ticket['status'] | 'ALL'>('ALL');
+  const [moduleFilter, setModuleFilter] = useState<SAPModule | 'ALL'>('ALL');
+  const [complexityFilter, setComplexityFilter] = useState<TicketComplexity | 'ALL'>('ALL');
+  const [projectFilter, setProjectFilter] = useState<string>('ALL');
+  const [assigneeFilter, setAssigneeFilter] = useState<string>('ALL');
+  const [dateFrom, setDateFrom] = useState('');
+  const [dateTo, setDateTo] = useState('');
+  const [wricefFilter, setWricefFilter] = useState('');
+  const [showAdvancedFilters, setShowAdvancedFilters] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [showCreate, setShowCreate] = useState(false);
+  const [viewMode, setViewMode] = useState<ViewMode>('list');
+  const [selectedTicket, setSelectedTicket] = useState<Ticket | null>(null);
+  const [calendarMonth, setCalendarMonth] = useState(() => {
+    const date = new Date();
+    return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}`;
+  });
+  const [isManualWricef, setIsManualWricef] = useState(true);
+  const [wricefObjects, setWricefObjects] = useState<WricefObject[]>([]);
+  const [linkedAbaque, setLinkedAbaque] = useState<Abaque | null>(null);
+  const [isEstimatedByAbaque, setIsEstimatedByAbaque] = useState(false);
+
+  const roleBasePath = currentUser ? getBaseRouteForRole(currentUser.role) : '/manager';
+
+  const resolveUserName = useCallback(
+    (id?: string) => users.find((user) => user.id === id)?.name ?? '-',
+    [users]
+  );
+  const resolveProjectName = useCallback(
+    (id: string) => projects.find((project) => project.id === id)?.name ?? id,
+    [projects]
+  );
+
+  const handleDocumentationChanged = useCallback(
+    (ticketId: string, documentationIds: string[]) => {
+      setTickets((previous) =>
+        previous.map((ticket) =>
+          ticket.id === ticketId
+            ? {
+                ...ticket,
+                documentationObjectIds: documentationIds.length > 0 ? documentationIds : undefined,
+              }
+            : ticket
+        )
+      );
+      setSelectedTicket((previous) =>
+        previous?.id === ticketId
+          ? {
+              ...previous,
+              documentationObjectIds: documentationIds.length > 0 ? documentationIds : undefined,
+            }
+          : previous
+      );
+    },
+    [setTickets]
+  );
+
+  const selectedProject = useMemo(
+    () => projects.find((project) => project.id === form.projectId),
+    [projects, form.projectId]
+  );
+
+  useEffect(() => {
+    if (form.projectId) {
+      void WricefObjectsAPI.getByProject(form.projectId).then(setWricefObjects);
+    } else {
+      setWricefObjects([]);
+    }
+  }, [form.projectId]);
+
+  const hasWricefObjects = wricefObjects.length > 0;
+
+  useEffect(() => {
+    setIsManualWricef(!hasWricefObjects);
+  }, [hasWricefObjects, form.projectId]);
+
+  useEffect(() => {
+    const loadAbaque = async () => {
+      if (selectedProject?.linkedAbaqueId) {
+        const abaque = await getAbaqueById(selectedProject.linkedAbaqueId);
+        setLinkedAbaque(abaque);
+      } else {
+        setLinkedAbaque(null);
+      }
+    };
+
+    void loadAbaque();
+  }, [getAbaqueById, selectedProject?.linkedAbaqueId]);
+
+  const abaqueEntry = useMemo<AbaqueEntry | null>(() => {
+    if (!linkedAbaque) return null;
+    const abaqueComplexity = mapTicketComplexityToAbaque(form.complexity);
+    return (
+      linkedAbaque.entries.find(
+        (entry) => entry.ticketNature === form.nature && entry.complexity === abaqueComplexity
+      ) ?? null
+    );
+  }, [linkedAbaque, form.complexity, form.nature]);
+
+  const abaqueTicketNatures = useMemo(() => {
+    if (!linkedAbaque) return [];
+    return [...new Set(linkedAbaque.entries.map((entry) => entry.ticketNature))];
+  }, [linkedAbaque]);
+
+  const applyAbaqueEstimate = () => {
+    if (!linkedAbaque) {
+      toast.error('No abaque linked to this project');
+      return;
+    }
+
+    const abaqueComplexity = mapTicketComplexityToAbaque(form.complexity);
+    const estimate = getAbaqueEstimateForTicket(linkedAbaque, form.nature, abaqueComplexity);
+
+    if (estimate === null) {
+      toast.error('No matching abaque entry for selected nature and complexity');
+      return;
+    }
+
+    setForm((previous) => ({ ...previous, estimationHours: estimate }));
+    setIsEstimatedByAbaque(true);
+    toast.success('Effort pre-filled from project abaque');
+  };
+
+  const filteredTickets = useMemo(
+    () =>
+      filterTickets(
+        tickets,
+        {
+          searchQuery,
+          statusFilter,
+          moduleFilter,
+          complexityFilter,
+          projectFilter,
+          assigneeFilter,
+          dateFrom,
+          dateTo,
+          wricefFilter,
+        },
+        resolveProjectName
+      ),
+    [
+      assigneeFilter,
+      complexityFilter,
+      dateFrom,
+      dateTo,
+      moduleFilter,
+      projectFilter,
+      resolveProjectName,
+      searchQuery,
+      statusFilter,
+      tickets,
+      wricefFilter,
+    ]
+  );
+
+  const submitTicket = async (event: React.FormEvent) => {
+    event.preventDefault();
+    if (!currentUser) return;
+
+    if (!form.projectId || !form.title.trim()) {
+      toast.error('Project and title are required');
+      return;
+    }
+
+    try {
+      setIsSubmitting(true);
+      const project = projects.find((item) => item.id === form.projectId);
+      if (!project) {
+        toast.error('Selected project not found');
+        return;
+      }
+
+      // Functional Consultants cannot assign — ticket goes to PENDING_APPROVAL
+      const isFuncConsultant = currentUser.role === 'CONSULTANT_FONCTIONNEL';
+      const assignedTo = isFuncConsultant ? undefined : (form.assignedTo || undefined);
+      const assignedUser = assignedTo
+        ? users.find((user) => user.id === assignedTo)
+        : undefined;
+
+      const { ticket: created, updatedProject } = await createTicketWithUnifiedFlow({
+        project,
+        wricefObjects,
+        existingProjectTickets: tickets.filter((ticket) => ticket.projectId === project.id),
+        createdBy: currentUser.id,
+        assignedTo,
+        assignedToRole: assignedUser?.role,
+        priority: form.priority,
+        nature: form.nature,
+        title: form.title.trim(),
+        description: form.description.trim(),
+        dueDate: form.dueDate || undefined,
+        module: form.module,
+        complexity: form.complexity,
+        estimationHours: form.estimationHours,
+        estimatedViaAbaque: Boolean(abaqueEntry && form.estimationHours === abaqueEntry.standardHours),
+        selectedWricefObjectId: !isManualWricef ? form.wricefId.trim() || undefined : undefined,
+        manualWricefId: isManualWricef ? form.wricefId.trim() || undefined : undefined,
+        creationComment: 'Ticket created',
+      });
+
+      setTickets((previous) => [created, ...previous]);
+      if (updatedProject) {
+        setProjects((previous) =>
+          previous.map((item) => (item.id === updatedProject.id ? updatedProject : item))
+        );
+      }
+
+      setForm(EMPTY_FORM);
+      setShowCreate(false);
+      toast.success('Ticket created successfully');
+    } catch {
+      toast.error('Failed to create ticket');
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
+  const changeStatus = async (ticket: Ticket, newStatus: TicketStatus) => {
+    if (!currentUser) return;
+
+    const event: TicketEvent = {
+      id: `te${Date.now()}`,
+      timestamp: new Date().toISOString(),
+      userId: currentUser.id,
+      action: 'STATUS_CHANGE',
+      fromValue: ticket.status,
+      toValue: newStatus,
+    };
+
+    try {
+      const updated = await updateTicket(ticket.id, {
+        status: newStatus,
+        history: [...(ticket.history || []), event],
+      });
+      setTickets((previous) => previous.map((item) => (item.id === ticket.id ? updated : item)));
+      if (selectedTicket?.id === ticket.id) {
+        setSelectedTicket(updated);
+      }
+      toast.success(`Status -> ${newStatus.replace('_', ' ')}`);
+    } catch {
+      toast.error('Failed to update status');
+    }
+  };
+
+  const updateTicketDueDate = async (ticketId: string, dueDate: string) => {
+    const ticket = tickets.find((item) => item.id === ticketId);
+    if (!ticket) return;
+
+    try {
+      const updated = await updateTicket(ticket.id, { dueDate });
+      setTickets((previous) => previous.map((item) => (item.id === updated.id ? updated : item)));
+      toast.success(`Due date -> ${dueDate}`);
+    } catch {
+      toast.error('Failed to update due date');
+    }
+  };
+
+  const openTicketDetails = useCallback(
+    (ticketId: string) => navigate(`${roleBasePath}/tickets/${ticketId}`),
+    [navigate, roleBasePath]
+  );
+
+  const calendarDays = useMemo(() => buildCalendarDays(calendarMonth), [calendarMonth]);
+  const ticketsByDate = useMemo(() => buildTicketsByDate(filteredTickets), [filteredTickets]);
+
+  const prevMonth = () => {
+    const [year, month] = calendarMonth.split('-').map(Number);
+    const date = new Date(year, month - 2, 1);
+    setCalendarMonth(`${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}`);
+  };
+
+  const nextMonth = () => {
+    const [year, month] = calendarMonth.split('-').map(Number);
+    const date = new Date(year, month, 1);
+    setCalendarMonth(`${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}`);
+  };
+
+  const clearAllFilters = () => {
+    setProjectFilter('ALL');
+    setAssigneeFilter('ALL');
+    setWricefFilter('');
+    setDateFrom('');
+    setDateTo('');
+    setModuleFilter('ALL');
+    setComplexityFilter('ALL');
+    setStatusFilter('ALL');
+  };
+
+  return {
+    currentUserId: currentUser?.id,
+    currentUserRole: currentUser?.role,
+    roleBasePath,
+    loading,
+    isViewOnly,
+    projects,
+    users,
+    tickets,
+    filteredTickets,
+    ticketsByDate,
+    calendarDays,
+    calendarMonth,
+    viewMode,
+    showAdvancedFilters,
+    selectedTicket,
+    showCreate,
+    form,
+    selectedProject,
+    wricefObjects,
+    linkedAbaque,
+    abaqueTicketNatures,
+    abaqueEntry,
+    isManualWricef,
+    isEstimatedByAbaque,
+    isSubmitting,
+    searchQuery,
+    statusFilter,
+    moduleFilter,
+    complexityFilter,
+    projectFilter,
+    assigneeFilter,
+    dateFrom,
+    dateTo,
+    wricefFilter,
+    setViewMode,
+    setShowAdvancedFilters,
+    setShowCreate,
+    setSelectedTicket,
+    setForm,
+    setIsManualWricef,
+    setIsEstimatedByAbaque,
+    setSearchQuery,
+    setStatusFilter,
+    setModuleFilter,
+    setComplexityFilter,
+    setProjectFilter,
+    setAssigneeFilter,
+    setDateFrom,
+    setDateTo,
+    setWricefFilter,
+    applyAbaqueEstimate,
+    submitTicket,
+    changeStatus,
+    updateTicketDueDate,
+    openTicketDetails,
+    prevMonth,
+    nextMonth,
+    clearAllFilters,
+    resolveProjectName,
+    resolveUserName,
+    handleDocumentationChanged,
+  };
+};

@@ -5,7 +5,9 @@ using { cuid, managed } from '@sap/cds/common';
 // ---------------------------------------------------------------------------
 // Enum Types
 // ---------------------------------------------------------------------------
-type TicketStatus     : String(20) enum { NEW; IN_PROGRESS; IN_TEST; BLOCKED; DONE; REJECTED; };
+type TicketStatus     : String(20) enum { PENDING_APPROVAL; APPROVED; NEW; IN_PROGRESS; IN_TEST; BLOCKED; DONE; REJECTED; };
+type CommentType      : String(20) enum { GENERAL; BLOCKER; QUESTION; UPDATE; FEEDBACK; };
+type WricefStatus     : String(30) enum { DRAFT; PENDING_VALIDATION; VALIDATED; REJECTED; };
 type ProjectStatus    : String(20) enum { PLANNED; ACTIVE; ON_HOLD; COMPLETED; CANCELLED; };
 type Priority         : String(20) enum { LOW; MEDIUM; HIGH; CRITICAL; };
 type RiskLevel        : String(20) enum { NONE; LOW; MEDIUM; HIGH; CRITICAL; };
@@ -86,6 +88,11 @@ entity Wricefs : cuid, managed {
   projectId       : String(50) not null;
   sourceFileName  : String(200);
   importedAt      : DateTime;
+  status          : WricefStatus default 'DRAFT';
+  autoCreated     : Boolean     default false;
+  rejectionReason : LargeString;
+  submittedBy     : String(50);
+  submittedAt     : DateTime;
 }
 
 entity WricefObjects : cuid, managed {
@@ -98,6 +105,8 @@ entity WricefObjects : cuid, managed {
   description             : LargeString;
   complexity              : TicketComplexity default 'SIMPLE';
   module                  : SAPModule;
+  status                  : WricefStatus default 'DRAFT';
+  rejectionReason         : LargeString;
   documentationObjectIds  : Composition of many WricefDocumentationObjects on documentationObjectIds.wricefObject = $self;
 }
 
@@ -193,6 +202,8 @@ entity Tickets : cuid, managed {
   estimatedViaAbaque      : Boolean          default false;
   documentationObjectIds  : Composition of many TicketDocumentationObjects on documentationObjectIds.ticket = $self;
   history                 : Composition of many TicketHistory on history.ticket = $self;
+  comments                : Composition of many TicketComments on comments.ticket = $self;
+  allocatedHours          : Decimal(6,2)     default 0;
   updatedAt               : DateTime;
 }
 
@@ -213,6 +224,22 @@ entity TicketHistory : cuid, managed {
 }
 
 // ---------------------------------------------------------------------------
+// TicketComments – exchange thread per ticket (Features 1 & 5)
+// ---------------------------------------------------------------------------
+entity TicketComments : cuid, managed {
+  ticket          : Association to Tickets;
+  ticketId        : String(50) not null;
+  authorId        : String(50) not null;
+  author          : Association to Users on author.ID = authorId;
+  message         : LargeString not null;
+  isInternal      : Boolean default false;
+  commentType     : CommentType default 'GENERAL';
+  parentCommentId : String(50);
+  parentComment   : Association to TicketComments on parentComment.ID = parentCommentId;
+  resolved        : Boolean default false;
+}
+
+// ---------------------------------------------------------------------------
 // Notifications
 // ---------------------------------------------------------------------------
 entity Notifications : cuid, managed {
@@ -222,6 +249,17 @@ entity Notifications : cuid, managed {
   title     : String(200);
   message   : LargeString;
   read      : Boolean   default false;
+}
+
+// ---------------------------------------------------------------------------
+// ProjectFeedback
+// ---------------------------------------------------------------------------
+entity ProjectFeedback : cuid, managed {
+  projectId : String(50) not null;
+  project   : Association to Projects on project.ID = projectId;
+  authorId  : String(50) not null;
+  author    : Association to Users on author.ID = authorId;
+  content   : LargeString not null;
 }
 
 // ---------------------------------------------------------------------------

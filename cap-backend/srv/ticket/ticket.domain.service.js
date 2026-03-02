@@ -8,16 +8,19 @@ const TicketRepo = require('./ticket.repo');
 const { generateTicketCode } = require('../shared/utils/id');
 const { nowIso } = require('../shared/utils/timestamp');
 const { assertEntityExists, ENTITIES, MANAGER_ROLES, requireRole } = require('../shared/services/validation');
+const cds = require('@sap/cds');
 
 const CONSULTANT_ROLES = new Set(['CONSULTANT_TECHNIQUE', 'CONSULTANT_FONCTIONNEL']);
 
 const TICKET_STATUS_TRANSITIONS = {
+  PENDING_APPROVAL: new Set(['APPROVED', 'REJECTED']),
+  APPROVED: new Set(['NEW', 'IN_PROGRESS', 'REJECTED']),
   NEW: new Set(['IN_PROGRESS', 'BLOCKED', 'REJECTED']),
   IN_PROGRESS: new Set(['IN_TEST', 'BLOCKED', 'DONE', 'REJECTED']),
   IN_TEST: new Set(['IN_PROGRESS', 'DONE', 'REJECTED']),
   BLOCKED: new Set(['IN_PROGRESS', 'REJECTED']),
   DONE: new Set([]),
-  REJECTED: new Set(['NEW']),
+  REJECTED: new Set(['NEW', 'PENDING_APPROVAL']),
 };
 
 class TicketDomainService {
@@ -38,13 +41,20 @@ class TicketDomainService {
     const select = req.query?.SELECT;
     if (!select) return;
 
-    const assignedToSelf = [{ ref: ['assignedTo'] }, '=', { val: userId }];
+    // Consultants see tickets assigned to them OR tickets they created
+    const visibilityFilter = [
+      '(',
+      { ref: ['assignedTo'] }, '=', { val: userId },
+      'or',
+      { ref: ['createdBy'] }, '=', { val: userId },
+      ')',
+    ];
     if (Array.isArray(select.where) && select.where.length > 0) {
-      select.where = ['(', ...select.where, ')', 'and', ...assignedToSelf];
+      select.where = ['(', ...select.where, ')', 'and', ...visibilityFilter];
       return;
     }
 
-    select.where = assignedToSelf;
+    select.where = visibilityFilter;
   }
 
   /**
@@ -73,10 +83,20 @@ class TicketDomainService {
     data.ticketCode = await this._allocateTicketCode(year);
 
     // Defaults
-    data.status        = data.status       || 'NEW';
-    data.effortHours   = data.effortHours  ?? 0;
+    // FuncConsultant creates tickets as PENDING_APPROVAL (Feature 2 workflow)
+    const creatorRole = req._authClaims?.role;
+    if (creatorRole === 'CONSULTANT_FONCTIONNEL') {
+      data.status = 'PENDING_APPROVAL';
+      // Functional consultants cannot assign – manager assigns after approval
+      data.assignedTo = null;
+      data.assignedToRole = null;
+    } else {
+      data.status = data.status || 'NEW';
+    }
+    data.effortHours     = data.effortHours  ?? 0;
     data.estimationHours = data.estimationHours ?? 0;
-    data.createdAt     = data.createdAt    || nowIso();
+    data.allocatedHours  = data.allocatedHours ?? 0;
+    data.createdAt       = data.createdAt    || nowIso();
 
     if (data.history !== undefined) {
       data.history = this._coerceHistoryRows(data.history);
@@ -144,6 +164,93 @@ class TicketDomainService {
       row.tags                   = this._deserializeArray(row.tags);
       row.documentationObjectIds = this._deserializeArray(row.documentationObjectIds);
     }
+  }
+
+  // ---- Approval workflow (Feature 2) ------------------------------------
+
+  /**
+   * approveTicket – Manager approves a PENDING_APPROVAL ticket, assigns tech consultant + hours.
+   */
+  async approveTicket(req) {
+    requireRole(req, MANAGER_ROLES, 'Only managers can approve tickets');
+    const id = req.params?.[0]?.ID ?? req.params?.[0];
+    const { techConsultantId, allocatedHours } = req.data ?? {};
+
+    if (!techConsultantId) req.reject(400, 'techConsultantId is required for approval');
+    if (allocatedHours === undefined || allocatedHours === null || Number(allocatedHours) <= 0) {
+      req.reject(400, 'allocatedHours must be greater than 0');
+    }
+
+    const ticket = await this.repo.findById(id);
+    if (!ticket) { req.reject(404, 'Ticket not found'); return; }
+    if (ticket.status !== 'PENDING_APPROVAL') {
+      req.reject(409, `Cannot approve ticket in status '${ticket.status}'; expected PENDING_APPROVAL`);
+      return;
+    }
+
+    await assertEntityExists(ENTITIES.Users, techConsultantId, 'techConsultantId', req);
+
+    const updated = await this.repo.update(id, {
+      status: 'APPROVED',
+      assignedTo: techConsultantId,
+      assignedToRole: 'CONSULTANT_TECHNIQUE',
+      allocatedHours: Number(allocatedHours),
+      updatedAt: nowIso(),
+    });
+
+    // Create notification for the assigned consultant
+    await cds.db.run(INSERT.into(ENTITIES.Notifications).entries({
+      userId: techConsultantId,
+      type: 'TICKET_ASSIGNED',
+      title: `Ticket ${ticket.ticketCode} assigned to you`,
+      message: `You have been assigned to ticket "${ticket.title}" with ${allocatedHours}h budget.`,
+      read: false,
+    }));
+
+    this.afterRead(updated);
+    return updated;
+  }
+
+  /**
+   * rejectTicket – Manager rejects a PENDING_APPROVAL ticket with a reason.
+   */
+  async rejectTicket(req) {
+    requireRole(req, MANAGER_ROLES, 'Only managers can reject tickets');
+    const id = req.params?.[0]?.ID ?? req.params?.[0];
+    const { reason } = req.data ?? {};
+
+    const ticket = await this.repo.findById(id);
+    if (!ticket) { req.reject(404, 'Ticket not found'); return; }
+    if (ticket.status !== 'PENDING_APPROVAL') {
+      req.reject(409, `Cannot reject ticket in status '${ticket.status}'; expected PENDING_APPROVAL`);
+      return;
+    }
+
+    // Record rejection reason in history
+    await cds.db.run(INSERT.into('sap.performance.dashboard.db.TicketHistory').entries({
+      ticket_ID: id,
+      event: 'REJECTED',
+      details: reason || 'Rejected by manager',
+    }));
+
+    const updated = await this.repo.update(id, {
+      status: 'REJECTED',
+      updatedAt: nowIso(),
+    });
+
+    // Notify the creator
+    if (ticket.createdBy) {
+      await cds.db.run(INSERT.into(ENTITIES.Notifications).entries({
+        userId: ticket.createdBy,
+        type: 'TICKET_REJECTED',
+        title: `Ticket ${ticket.ticketCode} rejected`,
+        message: reason || 'Your ticket was rejected by the manager.',
+        read: false,
+      }));
+    }
+
+    this.afterRead(updated);
+    return updated;
   }
 
   // ---- Private helpers ---------------------------------------------------
