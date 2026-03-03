@@ -4,39 +4,37 @@ import { listEntities, createEntity, updateEntity, deleteEntity, quoteLiteral, o
 
 export const WricefsAPI = {
   async getAll(requestOptions?: ODataRequestOptions): Promise<Wricef[]> {
-    return await listEntities<Wricef>('Wricefs', undefined, requestOptions);
+    return await listEntities<Wricef>('core', 'Wricefs', undefined, requestOptions);
   },
 
   async getByProject(projectId: string, requestOptions?: ODataRequestOptions): Promise<Wricef[]> {
-    return await listEntities<Wricef>(
-      'Wricefs',
+    return await listEntities<Wricef>('core', 'Wricefs',
       { $filter: `projectId eq ${quoteLiteral(projectId)}` },
       requestOptions
     );
   },
 
   async getByStatus(status: string, requestOptions?: ODataRequestOptions): Promise<Wricef[]> {
-    return await listEntities<Wricef>(
-      'Wricefs',
+    return await listEntities<Wricef>('core', 'Wricefs',
       { $filter: `status eq ${quoteLiteral(status)}` },
       requestOptions
     );
   },
 
   async create(wricef: Omit<Wricef, 'id' | 'createdAt' | 'updatedAt'>, requestOptions?: ODataRequestOptions): Promise<Wricef> {
-    return await createEntity<Wricef>('Wricefs', wricef, requestOptions);
+    return await createEntity<Wricef>('core', 'Wricefs', wricef, requestOptions);
   },
 
   async update(id: string, data: Partial<Wricef>, requestOptions?: ODataRequestOptions): Promise<Wricef> {
-    return await updateEntity<Wricef>('Wricefs', id, data, requestOptions);
+    return await updateEntity<Wricef>('core', 'Wricefs', id, data, requestOptions);
   },
 
   async delete(id: string, requestOptions?: ODataRequestOptions): Promise<void> {
-    await deleteEntity('Wricefs', id, requestOptions);
+    await deleteEntity('core', 'Wricefs', id, requestOptions);
   },
 
   async submitWricef(id: string, requestOptions?: ODataRequestOptions): Promise<Wricef> {
-    const data = await odataFetch<Wricef>(`${entityPath('Wricefs', id)}/submitWricef`, {
+    const data = await odataFetch<Wricef>('core', `${entityPath('Wricefs', id)}/submitWricef`, {
       ...requestOptions,
       method: 'POST',
       body: JSON.stringify({}),
@@ -46,7 +44,7 @@ export const WricefsAPI = {
   },
 
   async validateWricef(id: string, requestOptions?: ODataRequestOptions): Promise<Wricef> {
-    const data = await odataFetch<Wricef>(`${entityPath('Wricefs', id)}/validateWricef`, {
+    const data = await odataFetch<Wricef>('core', `${entityPath('Wricefs', id)}/validateWricef`, {
       ...requestOptions,
       method: 'POST',
       body: JSON.stringify({}),
@@ -56,7 +54,7 @@ export const WricefsAPI = {
   },
 
   async rejectWricef(id: string, reason: string, requestOptions?: ODataRequestOptions): Promise<Wricef> {
-    const data = await odataFetch<Wricef>(`${entityPath('Wricefs', id)}/rejectWricef`, {
+    const data = await odataFetch<Wricef>('core', `${entityPath('Wricefs', id)}/rejectWricef`, {
       ...requestOptions,
       method: 'POST',
       body: JSON.stringify({ reason }),

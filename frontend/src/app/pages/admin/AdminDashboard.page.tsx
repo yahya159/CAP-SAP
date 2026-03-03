@@ -37,7 +37,7 @@ const kpiReferences = [
 ];
 
 export const AdminDashboard: React.FC = () => {
-  const odataEndpoint = import.meta.env.VITE_ODATA_BASE_URL || '/odata/v4/performance';
+  const odataEndpoint = '/odata/v4/* (4 Microservices)';
   const [userCount, setUserCount] = useState(0);
   const [projectCount, setProjectCount] = useState(0);
   const [ticketCount, setTicketCount] = useState(0);

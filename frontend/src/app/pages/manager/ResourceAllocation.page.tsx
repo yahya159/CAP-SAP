@@ -1,5 +1,5 @@
 import React, { useEffect, useMemo, useState } from 'react';
-import { Plus, Sparkles, Trash2 } from 'lucide-react';
+import { Plus, Trash2 } from 'lucide-react';
 import { toast } from 'sonner';
 import { PageHeader } from '../../components/common/PageHeader';
 import {
@@ -16,8 +16,7 @@ import { Button } from '../../components/ui/button';
 import { Card, CardContent } from '../../components/ui/card';
 import { Input } from '../../components/ui/input';
 import { Label } from '../../components/ui/label';
-import { Badge } from '../../components/ui/badge';
-import { Progress } from '../../components/ui/progress';
+
 import {
   Select,
   SelectContent,
@@ -35,18 +34,11 @@ import {
 } from '../../components/ui/table';import { AllocationsAPI } from '../../services/odata/allocationsApi';
 import { NotificationsAPI } from '../../services/odata/notificationsApi';
 import { ProjectsAPI } from '../../services/odata/projectsApi';
-import { TicketsAPI } from '../../services/odata/ticketsApi';
 import { UsersAPI } from '../../services/odata/usersApi';
-import { assigneeRecommender } from '../../services/aiRecommender';
 import { useAuth } from '../../context/AuthContext';
 import {
   Allocation,
-  AssigneeRecommendation,
   Project,
-  Ticket,
-  TICKET_NATURE_LABELS,
-  TICKET_STATUS_LABELS,
-  USER_ROLE_LABELS,
   User,
 } from '../../types/entities';
 import { todayLocalDateKey } from '../../utils/date';
@@ -75,16 +67,12 @@ export const ResourceAllocation: React.FC = () => {
   const [users, setUsers] = useState<User[]>([]);
   const [projects, setProjects] = useState<Project[]>([]);
   const [allocations, setAllocations] = useState<Allocation[]>([]);
-  const [tickets, setTickets] = useState<Ticket[]>([]);
   const [loading, setLoading] = useState(true);
   const [form, setForm] = useState<NewAllocationForm>(EMPTY_FORM);
   const [projectFilter, setProjectFilter] = useState<string>('ALL');
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [allocationPendingDelete, setAllocationPendingDelete] = useState<Allocation | null>(null);
   const [allocationDrafts, setAllocationDrafts] = useState<Record<string, string>>({});
-  const [selectedTicketId, setSelectedTicketId] = useState('');
-  const [recommendations, setRecommendations] = useState<AssigneeRecommendation[]>([]);
-  const [recommending, setRecommending] = useState(false);
 
   useEffect(() => {
     void loadData();
@@ -93,16 +81,14 @@ export const ResourceAllocation: React.FC = () => {
   const loadData = async () => {
     setLoading(true);
     try {
-      const [userData, projectData, allocationData, ticketData] = await Promise.all([
+      const [userData, projectData, allocationData] = await Promise.all([
         UsersAPI.getAll(),
         ProjectsAPI.getAll(),
         AllocationsAPI.getAll(),
-        TicketsAPI.getAll(),
       ]);
       setUsers(userData.filter((user) => user.role !== 'ADMIN'));
       setProjects(projectData);
       setAllocations(allocationData);
-      setTickets(ticketData);
       setAllocationDrafts({});
     } finally {
       setLoading(false);
@@ -174,7 +160,7 @@ export const ResourceAllocation: React.FC = () => {
 
       setForm(EMPTY_FORM);
       toast.success('Allocation created');
-    } catch (error) {
+    } catch {
       toast.error('Failed to create allocation');
     } finally {
       setIsSubmitting(false);
@@ -200,7 +186,7 @@ export const ResourceAllocation: React.FC = () => {
         allocationPercent: nextPercent,
       });
       setAllocations((prev) => prev.map((entry) => (entry.id === allocation.id ? updated : entry)));
-    } catch (error) {
+    } catch {
       toast.error('Failed to update allocation');
     }
   };
@@ -210,7 +196,7 @@ export const ResourceAllocation: React.FC = () => {
       await AllocationsAPI.delete(id);
       setAllocations((prev) => prev.filter((entry) => entry.id !== id));
       toast.success('Allocation removed');
-    } catch (error) {
+    } catch {
       toast.error('Failed to remove allocation');
     } finally {
       setAllocationPendingDelete(null);
@@ -221,45 +207,6 @@ export const ResourceAllocation: React.FC = () => {
   const resolveProject = (projectId: string) => projects.find((project) => project.id === projectId);
   const isProjectManager = currentUser?.role === 'PROJECT_MANAGER';
   const homePath = isProjectManager ? '/project-manager/dashboard' : '/manager/dashboard';
-  const unassignedTickets = useMemo(
-    () => tickets.filter((ticket) => !ticket.assignedTo && ticket.status !== 'DONE' && ticket.status !== 'REJECTED'),
-    [tickets]
-  );
-  const selectedTicket = tickets.find((ticket) => ticket.id === selectedTicketId);
-
-  const runRecommendation = async () => {
-    if (!selectedTicket) return;
-    setRecommending(true);
-    try {
-      const recs = assigneeRecommender.recommend(selectedTicket, users, tickets);
-      setRecommendations(recs);
-    } finally {
-      setRecommending(false);
-    }
-  };
-
-  const assignTicket = async (userId: string) => {
-    if (!selectedTicket) return;
-    const user = users.find((entry) => entry.id === userId);
-    if (!user) return;
-
-    try {
-      await TicketsAPI.update(selectedTicket.id, {
-        assignedTo: userId,
-        assignedToRole: user.role,
-        status: selectedTicket.status === 'NEW' ? 'IN_PROGRESS' : selectedTicket.status,
-      });
-      toast.success('Ticket assigned', {
-        description: `"${selectedTicket.title}" assigned to ${user.name} (${USER_ROLE_LABELS[user.role]})`,
-      });
-      const refreshed = await TicketsAPI.getAll();
-      setTickets(refreshed);
-      setSelectedTicketId('');
-      setRecommendations([]);
-    } catch {
-      toast.error('Failed to assign ticket');
-    }
-  };
 
   return (
     <div className="min-h-screen bg-background">
@@ -483,107 +430,6 @@ export const ResourceAllocation: React.FC = () => {
                 )}
               </TableBody>
             </Table>
-          </CardContent>
-        </Card>
-      </div>
-
-      <div className="px-6 pb-6 lg:px-8">
-        <Card className="bg-card/92">
-          <CardContent className="space-y-5 p-6">
-            <div className="flex items-center gap-2">
-              <Sparkles className="h-5 w-5 text-primary" />
-              <h3 className="text-lg font-semibold text-foreground">AI Dispatcher</h3>
-            </div>
-
-            <div className="grid grid-cols-1 gap-5 xl:grid-cols-2">
-              <div className="space-y-4 rounded-lg border border-border/70 bg-surface-2 p-4">
-                <div>
-                  <Label htmlFor="allocation-ai-ticket">Unassigned ticket</Label>
-                  <Select value={selectedTicketId} onValueChange={setSelectedTicketId}>
-                    <SelectTrigger id="allocation-ai-ticket">
-                      <SelectValue placeholder="Choose an unassigned ticket" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {unassignedTickets.map((ticket) => (
-                        <SelectItem key={ticket.id} value={ticket.id}>
-                          [{TICKET_NATURE_LABELS[ticket.nature]}] {ticket.title}
-                        </SelectItem>
-                      ))}
-                      {unassignedTickets.length === 0 && (
-                        <SelectItem value="__none" disabled>
-                          No unassigned tickets
-                        </SelectItem>
-                      )}
-                    </SelectContent>
-                  </Select>
-                </div>
-
-                {selectedTicket && (
-                  <div className="rounded-md border border-border/70 bg-card p-3">
-                    <p className="text-sm font-medium text-foreground">{selectedTicket.title}</p>
-                    <p className="mt-1 text-xs text-muted-foreground">{selectedTicket.description}</p>
-                    <div className="mt-2 flex flex-wrap gap-2">
-                      <Badge variant="outline">{TICKET_NATURE_LABELS[selectedTicket.nature]}</Badge>
-                      <Badge variant="secondary">{selectedTicket.priority}</Badge>
-                      <Badge>{TICKET_STATUS_LABELS[selectedTicket.status]}</Badge>
-                    </div>
-                  </div>
-                )}
-
-                <Button
-                  type="button"
-                  onClick={() => void runRecommendation()}
-                  disabled={!selectedTicket || recommending}
-                  className="w-full"
-                >
-                  <Sparkles className="h-4 w-4" />
-                  {recommending ? 'Analyzing...' : 'Suggest Assignees'}
-                </Button>
-              </div>
-
-              <div className="space-y-3 rounded-lg border border-border/70 bg-surface-2 p-4">
-                {recommendations.length === 0 ? (
-                  <p className="text-sm text-muted-foreground">
-                    Run AI Dispatcher to see candidate recommendations and assign directly.
-                  </p>
-                ) : (
-                  recommendations.map((rec, index) => {
-                    const user = users.find((entry) => entry.id === rec.userId);
-                    if (!user) return null;
-                    return (
-                      <div key={rec.userId} className="space-y-2 rounded-md border border-border/70 bg-card p-3">
-                        <div className="flex items-center justify-between gap-2">
-                          <div className="min-w-0">
-                            <p className="truncate text-sm font-semibold text-foreground">
-                              #{index + 1} {user.name}
-                            </p>
-                            <p className="text-xs text-muted-foreground">{USER_ROLE_LABELS[user.role]}</p>
-                          </div>
-                          <div className="flex items-center gap-3">
-                            <span className="text-lg font-bold text-primary">{Math.round(rec.score)}</span>
-                            <Button size="sm" onClick={() => void assignTicket(rec.userId)}>
-                              Assign
-                            </Button>
-                          </div>
-                        </div>
-                        <div className="space-y-2">
-                          <div className="flex items-center justify-between text-xs">
-                            <span className="text-muted-foreground">Availability</span>
-                            <span>{rec.factors.availabilityScore}/100</span>
-                          </div>
-                          <Progress value={rec.factors.availabilityScore} className="h-2" />
-                          <div className="flex items-center justify-between text-xs">
-                            <span className="text-muted-foreground">Skills Match</span>
-                            <span>{rec.factors.skillsMatchScore}/100</span>
-                          </div>
-                          <Progress value={rec.factors.skillsMatchScore} className="h-2" />
-                        </div>
-                      </div>
-                    );
-                  })
-                )}
-              </div>
-            </div>
           </CardContent>
         </Card>
       </div>

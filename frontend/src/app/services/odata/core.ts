@@ -49,7 +49,17 @@ export type {
 // Configuration
 // ---------------------------------------------------------------------------
 
-const ODATA_BASE_URL = import.meta.env.VITE_ODATA_BASE_URL || '/odata/v4/performance';
+export type ODataService = 'core' | 'user' | 'ticket' | 'time';
+
+const FALLBACK_BASE = import.meta.env.VITE_ODATA_BASE_URL ? import.meta.env.VITE_ODATA_BASE_URL.replace(/\/performance\/?$/, '') : '/odata/v4';
+
+const ODATA_SERVICES: Record<ODataService, string> = {
+  core: import.meta.env.VITE_ODATA_CORE_URL || `${FALLBACK_BASE}/core`,
+  user: import.meta.env.VITE_ODATA_USER_URL || `${FALLBACK_BASE}/user`,
+  ticket: import.meta.env.VITE_ODATA_TICKET_URL || `${FALLBACK_BASE}/ticket`,
+  time: import.meta.env.VITE_ODATA_TIME_URL || `${FALLBACK_BASE}/time`,
+};
+
 const ODATA_OBSERVABILITY_ENABLED = import.meta.env.VITE_ODATA_OBSERVABILITY === 'true';
 const ODATA_AUTH_TOKEN_STORAGE_KEY = 'odata.auth.token';
 
@@ -620,7 +630,11 @@ async function parseODataErrorResponse(
  * @throws {ODataNormalizedError} Throws normalized client errors for HTTP failures, aborted requests, and network errors.
  * @example const data = await odataFetch<ODataResponse<Ticket>>('/Tickets?$top=10');
  */
-export async function odataFetch<T>(endpoint: string, options?: ODataRequestOptions): Promise<T | undefined> {
+export async function odataFetch<T>(
+  serviceName: ODataService,
+  endpoint: string,
+  options?: ODataRequestOptions
+): Promise<T | undefined> {
   const {
     timeoutMs,
     ifMatch,
@@ -663,7 +677,8 @@ export async function odataFetch<T>(endpoint: string, options?: ODataRequestOpti
   });
 
   try {
-    const response = await fetch(`${ODATA_BASE_URL}${endpoint}`, {
+    const baseUrl = ODATA_SERVICES[serviceName];
+    const response = await fetch(`${baseUrl}${endpoint}`, {
       ...requestInit,
       signal: combinedSignal,
       credentials: credentials ?? odataClientConfig.credentials,
@@ -820,28 +835,30 @@ function toPagedResult<T>(data: ODataResponse<T> | T[] | undefined): ODataPagedR
  * @example const page = await listEntitiesPage<Ticket>('Tickets', { $top: 20, $count: true });
  */
 export async function listEntitiesPage<T>(
+  serviceName: ODataService,
   entitySet: string,
   options?: ODataQueryOptions,
   requestOptions?: ODataRequestOptions
 ): Promise<ODataPagedResult<T>> {
-  const data = await odataFetch<ODataResponse<T> | T[]>(`/${entitySet}${buildQueryString(options)}`, requestOptions);
+  const data = await odataFetch<ODataResponse<T> | T[]>(serviceName, `/${entitySet}${buildQueryString(options)}`, requestOptions);
   return toPagedResult(data);
 }
 
-const resolveNextLinkEndpoint = (nextLink: string): string => {
+const resolveNextLinkEndpoint = (nextLink: string, serviceName: ODataService): string => {
   const ensureLeadingSlash = (path: string): string => (path.startsWith('/') ? path : `/${path}`);
+  const baseUrl = ODATA_SERVICES[serviceName];
 
   if (nextLink.startsWith('http://') || nextLink.startsWith('https://')) {
     const url = new URL(nextLink);
     const withQuery = `${url.pathname}${url.search}${url.hash}`;
-    if (withQuery.startsWith(ODATA_BASE_URL)) {
-      return ensureLeadingSlash(withQuery.slice(ODATA_BASE_URL.length));
+    if (withQuery.startsWith(baseUrl)) {
+      return ensureLeadingSlash(withQuery.slice(baseUrl.length));
     }
     return ensureLeadingSlash(withQuery);
   }
 
-  if (nextLink.startsWith(ODATA_BASE_URL)) {
-    return ensureLeadingSlash(nextLink.slice(ODATA_BASE_URL.length));
+  if (nextLink.startsWith(baseUrl)) {
+    return ensureLeadingSlash(nextLink.slice(baseUrl.length));
   }
 
   if (nextLink.startsWith('/')) {
@@ -864,11 +881,12 @@ const resolveNextLinkEndpoint = (nextLink: string): string => {
  * @example const next = await fetchNextPage<Ticket>(page.nextLink!, { timeoutMs: 8000 });
  */
 export async function fetchNextPage<T>(
+  serviceName: ODataService,
   nextLink: string,
   requestOptions?: ODataRequestOptions
 ): Promise<ODataPagedResult<T>> {
-  const endpoint = resolveNextLinkEndpoint(nextLink);
-  const data = await odataFetch<ODataResponse<T> | T[]>(endpoint, requestOptions);
+  const endpoint = resolveNextLinkEndpoint(nextLink, serviceName);
+  const data = await odataFetch<ODataResponse<T> | T[]>(serviceName, endpoint, requestOptions);
   return toPagedResult(data);
 }
 
@@ -883,13 +901,14 @@ export async function fetchNextPage<T>(
  * @example const allProjects = await listAllPages<Project>('Projects', { $orderby: 'name asc' });
  */
 export async function listAllPages<T>(
+  serviceName: ODataService,
   entitySet: string,
   options?: ODataQueryOptions,
   requestOptions?: ODataRequestOptions,
   listAllOptions?: ODataListAllOptions
 ): Promise<ODataPagedResult<T>> {
   const maxPages = Math.max(1, listAllOptions?.maxPages ?? 100);
-  const firstPage = await listEntitiesPage<T>(entitySet, options, requestOptions);
+  const firstPage = await listEntitiesPage<T>(serviceName, entitySet, options, requestOptions);
   const items = [...firstPage.items];
   let count = firstPage.count;
   let nextLink = firstPage.nextLink;
@@ -899,7 +918,7 @@ export async function listAllPages<T>(
   while (nextLink && pageCount < maxPages) {
     if (seenLinks.has(nextLink)) break;
     seenLinks.add(nextLink);
-    const page = await fetchNextPage<T>(nextLink, requestOptions);
+    const page = await fetchNextPage<T>(serviceName, nextLink, requestOptions);
     items.push(...page.items);
     if (typeof page.count === 'number') {
       count = page.count;
@@ -926,17 +945,18 @@ export async function listAllPages<T>(
  * @example const tickets = await listEntities<Ticket>('Tickets', { $filter: \"status eq 'NEW'\" }, undefined, true);
  */
 export async function listEntities<T>(
+  serviceName: ODataService,
   entitySet: string,
   options?: ODataQueryOptions,
   requestOptions?: ODataRequestOptions,
   fetchAllPages = false
 ): Promise<T[]> {
   if (fetchAllPages) {
-    const pages = await listAllPages<T>(entitySet, options, requestOptions);
+    const pages = await listAllPages<T>(serviceName, entitySet, options, requestOptions);
     return pages.items;
   }
 
-  const page = await listEntitiesPage<T>(entitySet, options, requestOptions);
+  const page = await listEntitiesPage<T>(serviceName, entitySet, options, requestOptions);
   return page.items;
 }
 
@@ -948,8 +968,8 @@ export async function listEntities<T>(
  * @throws {ODataNormalizedError} Throws when the count request fails.
  * @example const blocked = await countEntities('Tickets', \"status eq 'BLOCKED'\");
  */
-export async function countEntities(entitySet: string, filter?: string): Promise<number> {
-  const page = await listEntitiesPage<unknown>(entitySet, {
+export async function countEntities(serviceName: ODataService, entitySet: string, filter?: string): Promise<number> {
+  const page = await listEntitiesPage<unknown>(serviceName, entitySet, {
     $count: true,
     $top: 0,
     ...(filter ? { $filter: filter } : {}),
@@ -968,12 +988,14 @@ export async function countEntities(entitySet: string, filter?: string): Promise
  * @example const ticket = await getEntityById<Ticket>('Tickets', 'TK-001');
  */
 export async function getEntityById<T>(
+  serviceName: ODataService,
   entitySet: string,
   id: string,
   requestOptions?: ODataRequestOptions
 ): Promise<T | null> {
   try {
     const data = await odataFetch<T | ODataSingleResponse<T>>(
+      serviceName,
       entityPath(entitySet, id),
       requestOptions
     );
@@ -994,11 +1016,12 @@ export async function getEntityById<T>(
  * @example const created = await createEntity<Ticket>('Tickets', draftTicket);
  */
 export async function createEntity<T>(
+  serviceName: ODataService,
   entitySet: string,
   payload: unknown,
   requestOptions?: ODataRequestOptions
 ): Promise<T> {
-  const data = await odataFetch<T>(`/${entitySet}`, {
+  const data = await odataFetch<T>(serviceName, `/${entitySet}`, {
     ...requestOptions,
     method: 'POST',
     body: JSON.stringify(toODataEntityPayload(payload)),
@@ -1019,12 +1042,13 @@ export async function createEntity<T>(
  * @example const updated = await updateEntity<Ticket>('Tickets', ticketId, { status: 'DONE' });
  */
 export async function updateEntity<T>(
+  serviceName: ODataService,
   entitySet: string,
   id: string,
   payload: unknown,
   requestOptions?: ODataRequestOptions
 ): Promise<T> {
-  const data = await odataFetch<T>(entityPath(entitySet, id), {
+  const data = await odataFetch<T>(serviceName, entityPath(entitySet, id), {
     ...requestOptions,
     method: 'PATCH',
     body: JSON.stringify(toODataEntityPayload(payload)),
@@ -1047,12 +1071,13 @@ export async function updateEntity<T>(
  * @example await deleteEntity('Tickets', ticketId);
  */
 export async function deleteEntity(
+  serviceName: ODataService,
   entitySet: string,
   id: string,
   requestOptions?: ODataRequestOptions
 ): Promise<void> {
   // DELETE typically returns 204 (no content), odataFetch returns undefined which is fine for void
-  await odataFetch<void>(entityPath(entitySet, id), {
+  await odataFetch<void>(serviceName, entityPath(entitySet, id), {
     ...requestOptions,
     method: 'DELETE',
   });

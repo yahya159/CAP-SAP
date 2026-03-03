@@ -147,8 +147,7 @@ export const UsersAPI = {
     requestOptions?: ODataRequestOptions
   ): Promise<User[]> {
     try {
-      const rows = await listEntities<UserRaw>(
-        'Users',
+      const rows = await listEntities<UserRaw>('user', 'Users',
         {
           ...options,
           $select: options?.$select ?? USER_BASE_SELECT,
@@ -160,8 +159,7 @@ export const UsersAPI = {
       return rows.map(normalizeUser);
     } catch (error) {
       if (!isMissingUserCompositionTable(error)) throw error;
-      const legacyRows = await listEntities<UserRaw>(
-        'Users',
+      const legacyRows = await listEntities<UserRaw>('user', 'Users',
         {
           ...options,
           $select: options?.$select ?? `${USER_BASE_SELECT},skills,certifications`,
@@ -240,8 +238,7 @@ export const UsersAPI = {
   },
 
   async create(user: Omit<User, 'id'>, requestOptions?: ODataRequestOptions): Promise<User> {
-    const created = await createEntity<UserRaw>(
-      'Users',
+    const created = await createEntity<UserRaw>('user', 'Users',
       toUserPayload(user),
       requestOptions
     );
@@ -253,11 +250,11 @@ export const UsersAPI = {
     user: Partial<User>,
     requestOptions?: ODataRequestOptions
   ): Promise<User> {
-    const updated = await updateEntity<UserRaw>('Users', id, toUserPayload(user), requestOptions);
+    const updated = await updateEntity<UserRaw>('user', 'Users', id, toUserPayload(user), requestOptions);
     return normalizeUser(updated);
   },
 
   async delete(id: string, requestOptions?: ODataRequestOptions): Promise<void> {
-    await deleteEntity('Users', id, requestOptions);
+    await deleteEntity('user', 'Users', id, requestOptions);
   },
 };

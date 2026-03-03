@@ -7,7 +7,7 @@ export const TimeLogsAPI = {
     options?: ODataQueryOptions,
     requestOptions?: ODataRequestOptions
   ): Promise<TimeLog[]> {
-    return await listEntities<TimeLog>('TimeLogs', options, requestOptions, true);
+    return await listEntities<TimeLog>('time', 'TimeLogs', options, requestOptions, true);
   },
 
   async getAll(requestOptions?: ODataRequestOptions): Promise<TimeLog[]> {
@@ -36,7 +36,7 @@ export const TimeLogsAPI = {
   },
 
   async create(timeLog: Omit<TimeLog, 'id'>, requestOptions?: ODataRequestOptions): Promise<TimeLog> {
-    return await createEntity<TimeLog>('TimeLogs', timeLog, requestOptions);
+    return await createEntity<TimeLog>('time', 'TimeLogs', timeLog, requestOptions);
   },
 
   async update(
@@ -44,11 +44,11 @@ export const TimeLogsAPI = {
     data: Partial<TimeLog>,
     requestOptions?: ODataRequestOptions
   ): Promise<TimeLog> {
-    return await updateEntity<TimeLog>('TimeLogs', id, data, requestOptions);
+    return await updateEntity<TimeLog>('time', 'TimeLogs', id, data, requestOptions);
   },
 
   async sendToStraTIME(id: string, requestOptions?: ODataRequestOptions): Promise<TimeLog> {
-    const data = await odataFetch<TimeLog>(`${entityPath('TimeLogs', id)}/sendToStraTIME`, {
+    const data = await odataFetch<TimeLog>('time', `${entityPath('TimeLogs', id)}/sendToStraTIME`, {
       ...requestOptions,
       method: 'POST',
     });

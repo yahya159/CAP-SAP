@@ -13,7 +13,7 @@ export const TicketCommentsAPI = {
     options?: ODataQueryOptions,
     requestOptions?: ODataRequestOptions
   ): Promise<TicketComment[]> {
-    return await listEntities<TicketComment>('TicketComments', options, requestOptions, true);
+    return await listEntities<TicketComment>('ticket', 'TicketComments', options, requestOptions, true);
   },
 
   async getByTicket(
@@ -33,7 +33,7 @@ export const TicketCommentsAPI = {
     comment: Omit<TicketComment, 'id' | 'createdAt' | 'updatedAt'>,
     requestOptions?: ODataRequestOptions
   ): Promise<TicketComment> {
-    return await createEntity<TicketComment>('TicketComments', comment, requestOptions);
+    return await createEntity<TicketComment>('ticket', 'TicketComments', comment, requestOptions);
   },
 
   async resolve(
@@ -41,8 +41,7 @@ export const TicketCommentsAPI = {
     resolved: boolean,
     requestOptions?: ODataRequestOptions
   ): Promise<TicketComment> {
-    const data = await updateEntity<TicketComment>(
-      'TicketComments',
+    const data = await updateEntity<TicketComment>('ticket', 'TicketComments',
       id,
       { resolved },
       requestOptions

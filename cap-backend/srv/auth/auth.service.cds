@@ -1,6 +1,6 @@
 using { sap.performance.dashboard.db as db } from '../../db/schema';
 
-extend PerformanceService with definitions {
+extend UserService with definitions {
   type AuthUser {
     id                 : String(50);
     name               : String(100);

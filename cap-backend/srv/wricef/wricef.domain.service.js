@@ -67,7 +67,7 @@ class WricefDomainService {
       return;
     }
 
-    const userId = req.user?.id || req.headers?.['x-user-id'] || 'unknown';
+    const userId = req._authClaims?.sub || req.user?.id || req.headers?.['x-user-id'] || 'unknown';
     const now = nowIso();
 
     // Transition the WRICEF

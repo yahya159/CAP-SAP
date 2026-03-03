@@ -11,20 +11,23 @@ const registerDomainImpls = (srv) => {
     if (!entry.isDirectory() || entry.name === 'shared') continue;
     const implPath = path.join(__dirname, entry.name, `${entry.name}.impl.js`);
     if (!fs.existsSync(implPath)) continue;
+    
+    // Only register implementations that belong to the current bounded context
+    // This is a naive load-all for now that delegates registration scoping
+    // to the individual domains, or we can just load them as long as the srv 
+    // exposes the corresponding entities. The domain impls usually check if `srv.entities` contains their target.
     const register = require(implPath);
     if (typeof register === 'function') register(srv);
   }
 };
 
-module.exports = cds.service.impl(function () {
-  if (this.name !== 'PerformanceService') return;
+module.exports = function (srv) {
+  const auth = new AuthDomainService(srv);
 
-  const auth = new AuthDomainService(this);
-
-  this.before('*', (req) => {
+  srv.before('*', (req) => {
     if (auth.isPublicEvent(req.event)) return;
     req._authClaims = auth.authenticateRequest(req);
   });
 
-  registerDomainImpls(this);
-});
+  registerDomainImpls(srv);
+};

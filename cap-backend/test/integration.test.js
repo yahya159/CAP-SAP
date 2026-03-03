@@ -2,7 +2,7 @@
 /**
  * Integration tests for the Ticket domain (CRUD) and Imputation state machine.
  *
- * Uses @sap/cds built-in test bootstrapper with in-memory SQLite.
+ * Uses @sap/cds built-in test bootstrapper backing to the persistent SQLite DB.
  * Run: npm test
  */
 const cds = require('@sap/cds');
@@ -31,7 +31,7 @@ const withConsultantAuth = () => ({
 
 const ensureAuth = async () => {
   if (authToken) return;
-  const { data } = await POST('/odata/v4/performance/authenticate', {
+  const { data } = await POST('/odata/v4/user/authenticate', {
     email: 'marc.manager@inetum.com',
     password: 'Manager#2026',
   });
@@ -40,7 +40,7 @@ const ensureAuth = async () => {
 
 const ensureAdminAuth = async () => {
   if (adminAuthToken) return;
-  const { data } = await POST('/odata/v4/performance/authenticate', {
+  const { data } = await POST('/odata/v4/user/authenticate', {
     email: 'alice.admin@inetum.com',
     password: 'Admin#2026',
   });
@@ -49,7 +49,7 @@ const ensureAdminAuth = async () => {
 
 const ensureConsultantAuth = async () => {
   if (consultantAuthToken) return;
-  const { data } = await POST('/odata/v4/performance/authenticate', {
+  const { data } = await POST('/odata/v4/user/authenticate', {
     email: 'theo.tech@inetum.com',
     password: 'Tech#2026',
   });
@@ -58,7 +58,7 @@ const ensureConsultantAuth = async () => {
 
 describe('Authentication', () => {
   test('POST /authenticate with valid credentials returns token + user', async () => {
-    const { status, data } = await POST('/odata/v4/performance/authenticate', {
+    const { status, data } = await POST('/odata/v4/user/authenticate', {
       email: 'marc.manager@inetum.com',
       password: 'Manager#2026',
     });
@@ -75,7 +75,7 @@ describe('Authentication', () => {
 
   test('POST /authenticate with bad password returns 401', async () => {
     try {
-      await POST('/odata/v4/performance/authenticate', {
+      await POST('/odata/v4/user/authenticate', {
         email: 'marc.manager@inetum.com',
         password: 'wrong',
       });
@@ -86,7 +86,7 @@ describe('Authentication', () => {
   });
 
   test('POST /quickAccessAccounts returns demo accounts', async () => {
-    const { status, data } = await POST('/odata/v4/performance/quickAccessAccounts', {});
+    const { status, data } = await POST('/odata/v4/user/quickAccessAccounts', {});
     expect(status).toBe(200);
     const accounts = data.value ?? data;
     expect(Array.isArray(accounts)).toBe(true);
@@ -98,7 +98,7 @@ describe('Authentication', () => {
 describe('Ticket CRUD', () => {
   test('Consultant sees only tickets assigned to self', async () => {
     await ensureConsultantAuth();
-    const { status, data } = await GET('/odata/v4/performance/Tickets', withConsultantAuth());
+    const { status, data } = await GET('/odata/v4/ticket/Tickets', withConsultantAuth());
     expect(status).toBe(200);
     expect(data.value.length).toBeGreaterThan(0);
     data.value.forEach((ticket) => {
@@ -107,27 +107,27 @@ describe('Ticket CRUD', () => {
   });
 
   test('Manager can still read tickets beyond own assignment', async () => {
-    const { status, data } = await GET('/odata/v4/performance/Tickets?$filter=ID eq \x27tk-002\x27', withAuth());
+    const { status, data } = await GET('/odata/v4/ticket/Tickets?$filter=ID eq \x27tk-002\x27', withAuth());
     expect(status).toBe(200);
     expect(data.value.length).toBe(1);
     expect(data.value[0].assignedTo).toBe('u-fonc');
   });
 
   test('GET /Tickets returns seed tickets', async () => {
-    const { status, data } = await GET('/odata/v4/performance/Tickets?$top=5', withAuth());
+    const { status, data } = await GET('/odata/v4/ticket/Tickets?$top=5', withAuth());
     expect(status).toBe(200);
     expect(data.value.length).toBeGreaterThan(0);
   });
 
   test('GET /Tickets with $count returns inline count', async () => {
-    const { status, data } = await GET('/odata/v4/performance/Tickets?$count=true&$top=1', withAuth());
+    const { status, data } = await GET('/odata/v4/ticket/Tickets?$count=true&$top=1', withAuth());
     expect(status).toBe(200);
     expect(typeof data['@odata.count']).toBe('number');
     expect(data['@odata.count']).toBeGreaterThan(0);
   });
 
   test('GET /Tickets by ID returns a single ticket', async () => {
-    const { status, data } = await GET("/odata/v4/performance/Tickets('tk-001')", withAuth());
+    const { status, data } = await GET("/odata/v4/ticket/Tickets('tk-001')", withAuth());
     expect(status).toBe(200);
     expect(data.ID).toBe('tk-001');
     expect(data.title).toBeTruthy();
@@ -135,7 +135,7 @@ describe('Ticket CRUD', () => {
 
   test('GET /Tickets with $filter by status works', async () => {
     const { status, data } = await GET(
-      "/odata/v4/performance/Tickets?$filter=status eq 'IN_PROGRESS'",
+      "/odata/v4/ticket/Tickets?$filter=status eq 'IN_PROGRESS'",
       withAuth()
     );
     expect(status).toBe(200);
@@ -156,7 +156,7 @@ describe('Ticket CRUD', () => {
       description: 'Integration test ticket',
     };
 
-    const { status, data } = await POST('/odata/v4/performance/Tickets', payload, withAuth());
+    const { status, data } = await POST('/odata/v4/ticket/Tickets', payload, withAuth());
     expect(status).toBe(201);
     expect(data.ID).toBeTruthy();
     expect(data.ticketCode).toMatch(/^TK-\d{4}-[A-F0-9]{6}$/);
@@ -168,7 +168,7 @@ describe('Ticket CRUD', () => {
   test('PATCH /Tickets updates ticket status', async () => {
     expect(createdTicketId).toBeTruthy();
     const { status, data } = await PATCH(
-      `/odata/v4/performance/Tickets('${createdTicketId}')`,
+      `/odata/v4/ticket/Tickets('${createdTicketId}')`,
       { status: 'IN_PROGRESS' },
       withAuth()
     );
@@ -178,7 +178,7 @@ describe('Ticket CRUD', () => {
 
   test('POST /Tickets with missing required fields returns 400', async () => {
     try {
-      await POST('/odata/v4/performance/Tickets', { title: 'Missing fields' }, withAuth());
+      await POST('/odata/v4/ticket/Tickets', { title: 'Missing fields' }, withAuth());
       fail('Should have thrown');
     } catch (err) {
       expect(err.response?.status ?? err.status).toBe(400);
@@ -188,7 +188,7 @@ describe('Ticket CRUD', () => {
   test('POST /Tickets with unknown projectId returns 400', async () => {
     try {
       await POST(
-        '/odata/v4/performance/Tickets',
+        '/odata/v4/ticket/Tickets',
         {
           projectId: 'nonexistent-project',
           createdBy: 'u-manager',
@@ -206,13 +206,13 @@ describe('Ticket CRUD', () => {
 
 describe('User entity', () => {
   test('GET /Users returns seed users', async () => {
-    const { status, data } = await GET('/odata/v4/performance/Users?$filter=active eq true', withAuth());
+    const { status, data } = await GET('/odata/v4/user/Users?$filter=active eq true', withAuth());
     expect(status).toBe(200);
     expect(data.value.length).toBeGreaterThanOrEqual(6);
   });
 
   test('GET /Users by ID returns a single user', async () => {
-    const { status, data } = await GET("/odata/v4/performance/Users('u-admin')", withAuth());
+    const { status, data } = await GET("/odata/v4/user/Users('u-admin')", withAuth());
     expect(status).toBe(200);
     expect(data.email).toBe('alice.admin@inetum.com');
   });
@@ -220,7 +220,7 @@ describe('User entity', () => {
 
 describe('Projects entity', () => {
   test('GET /Projects returns seed projects', async () => {
-    const { status, data } = await GET('/odata/v4/performance/Projects', withAuth());
+    const { status, data } = await GET('/odata/v4/core/Projects', withAuth());
     expect(status).toBe(200);
     expect(data.value.length).toBeGreaterThanOrEqual(3);
   });
@@ -234,7 +234,7 @@ describe('Imputation state machine', () => {
   const createDraftPeriod = async () => {
     const suffix = Math.random().toString(36).slice(2, 10).toUpperCase();
     const { data } = await POST(
-      '/odata/v4/performance/ImputationPeriods',
+      '/odata/v4/time/ImputationPeriods',
       {
         periodKey: `IT-${suffix}`,
         consultantId: 'u-tech',
@@ -247,14 +247,14 @@ describe('Imputation state machine', () => {
   };
 
   test('POST /Imputations(id)/validate transitions DRAFT -> VALIDATED', async () => {
-    const { data: list } = await GET('/odata/v4/performance/Imputations?$top=1', withAuth());
+    const { data: list } = await GET('/odata/v4/time/Imputations?$top=1', withAuth());
     expect(list.value.length).toBeGreaterThan(0);
     const imp = list.value[0];
 
     // Only test if currently in a valid from-state
     if (['DRAFT', 'SUBMITTED', 'REJECTED'].includes(imp.validationStatus)) {
       const { status, data } = await POST(
-        `/odata/v4/performance/Imputations('${imp.ID}')/validate`,
+        `/odata/v4/time/Imputations('${imp.ID}')/validate`,
         { validatedBy: 'u-manager' },
         withAuth()
       );
@@ -266,7 +266,7 @@ describe('Imputation state machine', () => {
   test('POST /ImputationPeriods(id)/submit transitions DRAFT -> SUBMITTED', async () => {
     const draftPeriod = await createDraftPeriod();
     const { status, data } = await POST(
-      `/odata/v4/performance/ImputationPeriods('${draftPeriod.ID}')/submit`,
+      `/odata/v4/time/ImputationPeriods('${draftPeriod.ID}')/submit`,
       {},
       withAuth()
     );
@@ -276,10 +276,10 @@ describe('Imputation state machine', () => {
 
   test('POST /ImputationPeriods(id)/validate on SUBMITTED transitions to VALIDATED', async () => {
     const created = await createDraftPeriod();
-    await POST(`/odata/v4/performance/ImputationPeriods('${created.ID}')/submit`, {}, withAuth());
+    await POST(`/odata/v4/time/ImputationPeriods('${created.ID}')/submit`, {}, withAuth());
 
     const { status, data } = await POST(
-      `/odata/v4/performance/ImputationPeriods('${created.ID}')/validate`,
+      `/odata/v4/time/ImputationPeriods('${created.ID}')/validate`,
       { validatedBy: 'u-manager' },
       withAuth()
     );
@@ -289,11 +289,11 @@ describe('Imputation state machine', () => {
 
   test('POST /ImputationPeriods(id)/submit on already SUBMITTED returns 409', async () => {
     const created = await createDraftPeriod();
-    await POST(`/odata/v4/performance/ImputationPeriods('${created.ID}')/submit`, {}, withAuth());
+    await POST(`/odata/v4/time/ImputationPeriods('${created.ID}')/submit`, {}, withAuth());
 
     try {
       await POST(
-        `/odata/v4/performance/ImputationPeriods('${created.ID}')/submit`,
+        `/odata/v4/time/ImputationPeriods('${created.ID}')/submit`,
         {},
         withAuth()
       );
@@ -307,7 +307,7 @@ describe('Imputation state machine', () => {
 describe('Unauthenticated access', () => {
   test('GET /Tickets without token returns 401', async () => {
     try {
-      await GET('/odata/v4/performance/Tickets');
+      await GET('/odata/v4/ticket/Tickets');
       fail('Should have thrown');
     } catch (err) {
       expect(err.response?.status ?? err.status).toBe(401);
@@ -322,7 +322,7 @@ describe('Validation and state-machine guards', () => {
 
   test('Ticket invalid status transition returns 409', async () => {
     try {
-      await PATCH("/odata/v4/performance/Tickets('tk-002')", { status: 'DONE' }, withAuth());
+      await PATCH("/odata/v4/ticket/Tickets('tk-002')", { status: 'DONE' }, withAuth());
       fail('Should have thrown');
     } catch (err) {
       expect(err.response?.status ?? err.status).toBe(409);
@@ -332,7 +332,7 @@ describe('Validation and state-machine guards', () => {
   test('Project delete with children returns 409', async () => {
     await ensureAdminAuth();
     try {
-      await DELETE("/odata/v4/performance/Projects('proj-1')", withAdminAuth());
+      await DELETE("/odata/v4/core/Projects('proj-1')", withAdminAuth());
       fail('Should have thrown');
     } catch (err) {
       expect(err.response?.status ?? err.status).toBe(409);
@@ -342,7 +342,7 @@ describe('Validation and state-machine guards', () => {
   test('User delete with references returns 409', async () => {
     await ensureAdminAuth();
     try {
-      await DELETE("/odata/v4/performance/Users('u-manager')", withAdminAuth());
+      await DELETE("/odata/v4/user/Users('u-manager')", withAdminAuth());
       fail('Should have thrown');
     } catch (err) {
       expect(err.response?.status ?? err.status).toBe(409);
@@ -352,7 +352,7 @@ describe('Validation and state-machine guards', () => {
   test('Imputation direct PATCH of validationStatus returns 403', async () => {
     try {
       await PATCH(
-        "/odata/v4/performance/Imputations('imp-2')",
+        "/odata/v4/time/Imputations('imp-2')",
         { validationStatus: 'VALIDATED' },
         withAuth()
       );
@@ -364,7 +364,7 @@ describe('Validation and state-machine guards', () => {
 
   test('ImputationPeriod direct PATCH of status returns 403', async () => {
     const { data: createdPeriod } = await POST(
-      '/odata/v4/performance/ImputationPeriods',
+      '/odata/v4/time/ImputationPeriods',
       {
         periodKey: '2026-03-H1',
         consultantId: 'u-tech',
@@ -376,7 +376,7 @@ describe('Validation and state-machine guards', () => {
 
     try {
       await PATCH(
-        `/odata/v4/performance/ImputationPeriods('${createdPeriod.ID}')`,
+        `/odata/v4/time/ImputationPeriods('${createdPeriod.ID}')`,
         { status: 'SUBMITTED' },
         withAuth()
       );
@@ -389,7 +389,7 @@ describe('Validation and state-machine guards', () => {
   test('LeaveRequest invalid transition returns 409', async () => {
     try {
       await PATCH(
-        "/odata/v4/performance/LeaveRequests('leave-1')",
+        "/odata/v4/user/LeaveRequests('leave-1')",
         { status: 'PENDING' },
         withAuth()
       );
@@ -402,7 +402,7 @@ describe('Validation and state-machine guards', () => {
   test('Allocation create with invalid percent returns 400', async () => {
     try {
       await POST(
-        '/odata/v4/performance/Allocations',
+        '/odata/v4/user/Allocations',
         {
           userId: 'u-tech',
           projectId: 'proj-1',
@@ -421,7 +421,7 @@ describe('Validation and state-machine guards', () => {
   test('Allocation create with unknown userId returns 400', async () => {
     try {
       await POST(
-        '/odata/v4/performance/Allocations',
+        '/odata/v4/user/Allocations',
         {
           userId: 'u-unknown',
           projectId: 'proj-1',
@@ -439,7 +439,7 @@ describe('Validation and state-machine guards', () => {
 
   test('Wricef delete cascades WricefObjects', async () => {
     const { data: wricef } = await POST(
-      '/odata/v4/performance/Wricefs',
+      '/odata/v4/core/Wricefs',
       {
         projectId: 'proj-2',
         sourceFileName: 'cascade-test.xlsx',
@@ -449,7 +449,7 @@ describe('Validation and state-machine guards', () => {
     expect(wricef.ID).toBeTruthy();
 
     await POST(
-      '/odata/v4/performance/WricefObjects',
+      '/odata/v4/core/WricefObjects',
       {
         wricefId: wricef.ID,
         projectId: 'proj-2',
@@ -459,7 +459,7 @@ describe('Validation and state-machine guards', () => {
       withAuth()
     );
     await POST(
-      '/odata/v4/performance/WricefObjects',
+      '/odata/v4/core/WricefObjects',
       {
         wricefId: wricef.ID,
         projectId: 'proj-2',
@@ -469,11 +469,11 @@ describe('Validation and state-machine guards', () => {
       withAuth()
     );
 
-    const delRes = await DELETE(`/odata/v4/performance/Wricefs('${wricef.ID}')`, withAuth());
+    const delRes = await DELETE(`/odata/v4/core/Wricefs('${wricef.ID}')`, withAuth());
     expect(delRes.status).toBe(204);
 
     const { data: remaining } = await GET(
-      `/odata/v4/performance/WricefObjects?$filter=wricefId eq '${wricef.ID}'`,
+      `/odata/v4/core/WricefObjects?$filter=wricefId eq '${wricef.ID}'`,
       withAuth()
     );
     expect(remaining.value.length).toBe(0);
@@ -483,7 +483,7 @@ describe('Validation and state-machine guards', () => {
     await ensureAdminAuth();
     try {
       await POST(
-        '/odata/v4/performance/ReferenceData',
+        '/odata/v4/core/ReferenceData',
         { type: 'PRIORITY', code: 'LOW', label: 'Duplicate low' },
         withAdminAuth()
       );
@@ -496,7 +496,7 @@ describe('Validation and state-machine guards', () => {
   test('Consultant cannot read Evaluations', async () => {
     await ensureConsultantAuth();
     try {
-      await GET('/odata/v4/performance/Evaluations?$top=1', withConsultantAuth());
+      await GET('/odata/v4/time/Evaluations?$top=1', withConsultantAuth());
       fail('Should have thrown');
     } catch (err) {
       expect(err.response?.status ?? err.status).toBe(403);
@@ -505,7 +505,7 @@ describe('Validation and state-machine guards', () => {
 
   test('DocumentationObjects PATCH auto-updates updatedAt', async () => {
     const { data: created } = await POST(
-      '/odata/v4/performance/DocumentationObjects',
+      '/odata/v4/core/DocumentationObjects',
       {
         title: 'Doc update test',
         description: 'Before update',
@@ -519,7 +519,7 @@ describe('Validation and state-machine guards', () => {
 
     await new Promise((resolve) => setTimeout(resolve, 1200));
     const { data: updated } = await PATCH(
-      `/odata/v4/performance/DocumentationObjects('${created.ID}')`,
+      `/odata/v4/core/DocumentationObjects('${created.ID}')`,
       { description: 'After update' },
       withAuth()
     );

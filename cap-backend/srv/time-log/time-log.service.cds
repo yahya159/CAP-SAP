@@ -1,9 +1,9 @@
 using { sap.performance.dashboard.db as db } from '../../db/schema';
-using { PerformanceService } from '../performance-service';
+using { TimeService } from '../time-service';
 
-extend PerformanceService with definitions {
+extend TimeService with definitions {
   entity TimeLogs as projection on db.TimeLogs actions {
-    action sendToStraTIME() returns PerformanceService.TimeLogs;
+    action sendToStraTIME() returns TimeService.TimeLogs;
   };
 };
 

@@ -46,7 +46,7 @@ export const AuthAPI = {
     password: string,
     requestOptions?: ODataRequestOptions
   ): Promise<AuthSession> {
-    const data = await odataFetch<AuthSessionResponse>('/authenticate', {
+    const data = await odataFetch<AuthSessionResponse>('user', '/authenticate', {
       ...requestOptions,
       method: 'POST',
       body: JSON.stringify({ email: email.trim(), password }),
@@ -67,7 +67,7 @@ export const AuthAPI = {
   },
 
   async quickAccessAccounts(requestOptions?: ODataRequestOptions): Promise<QuickAccessAccount[]> {
-    const data = await odataFetch<QuickAccessAccountsResponse>('/quickAccessAccounts', {
+    const data = await odataFetch<QuickAccessAccountsResponse>('user', '/quickAccessAccounts', {
       ...requestOptions,
       method: 'POST',
       body: JSON.stringify({}),

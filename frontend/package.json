@@ -7,7 +7,7 @@
     "build": "vite build",
     "dev": "vite",
     "typecheck": "tsc --noEmit",
-    "check": "npm run typecheck && npm run build"
+    "check": "npm run typecheck && npm run build && vitest run"
   },
   "dependencies": {
     "@hello-pangea/dnd": "^18.0.1",

@@ -201,8 +201,7 @@ export const DocumentationAPI = {
       $expand: options?.$expand ?? 'relatedTicketIds,attachedFiles',
     };
     try {
-      const docs = await listEntities<DocumentationObjectRaw>(
-        'DocumentationObjects',
+      const docs = await listEntities<DocumentationObjectRaw>('core', 'DocumentationObjects',
         mergedOptions,
         requestOptions,
         true
@@ -210,8 +209,7 @@ export const DocumentationAPI = {
       return docs.map(normalizeDocumentationObject);
     } catch (error) {
       if (!isMissingDocumentationCompositionTable(error)) throw error;
-      const legacyDocs = await listEntities<DocumentationObjectRaw>(
-        'DocumentationObjects',
+      const legacyDocs = await listEntities<DocumentationObjectRaw>('core', 'DocumentationObjects',
         {
           ...options,
           $select:
@@ -245,7 +243,7 @@ export const DocumentationAPI = {
     id: string,
     requestOptions?: ODataRequestOptions
   ): Promise<DocumentationObject | null> {
-    const doc = await getEntityById<DocumentationObjectRaw>('DocumentationObjects', id, requestOptions);
+    const doc = await getEntityById<DocumentationObjectRaw>('core', 'DocumentationObjects', id, requestOptions);
     if (!doc) return null;
     return normalizeDocumentationObject(doc);
   },
@@ -266,8 +264,7 @@ export const DocumentationAPI = {
     documentation: Omit<DocumentationObject, 'id' | 'createdAt' | 'updatedAt'>,
     requestOptions?: ODataRequestOptions
   ): Promise<DocumentationObject> {
-    const created = await createEntity<DocumentationObjectRaw>(
-      'DocumentationObjects',
+    const created = await createEntity<DocumentationObjectRaw>('core', 'DocumentationObjects',
       toDocumentationPayload(documentation),
       requestOptions
     );
@@ -279,8 +276,7 @@ export const DocumentationAPI = {
     data: Partial<DocumentationObject>,
     requestOptions?: ODataRequestOptions
   ): Promise<DocumentationObject> {
-    const updated = await updateEntity<DocumentationObjectRaw>(
-      'DocumentationObjects',
+    const updated = await updateEntity<DocumentationObjectRaw>('core', 'DocumentationObjects',
       id,
       toDocumentationPayload(data),
       requestOptions
@@ -289,7 +285,7 @@ export const DocumentationAPI = {
   },
 
   async delete(id: string, requestOptions?: ODataRequestOptions): Promise<void> {
-    await deleteEntity('DocumentationObjects', id, requestOptions);
+    await deleteEntity('core', 'DocumentationObjects', id, requestOptions);
   },
 
   async syncProjectWricef(

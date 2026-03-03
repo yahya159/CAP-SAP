@@ -82,7 +82,7 @@ const isMissingGridTableError = (error: unknown): boolean => {
 
 const listWithGridFallback = async (filter?: string): Promise<Evaluation[]> => {
   try {
-    const data = await listEntities<EvaluationRaw>('Evaluations', {
+    const data = await listEntities<EvaluationRaw>('time', 'Evaluations', {
       ...(filter ? { $filter: filter } : {}),
       $select: EVALUATION_BASE_SELECT,
       $expand: 'qualitativeGrid',
@@ -90,7 +90,7 @@ const listWithGridFallback = async (filter?: string): Promise<Evaluation[]> => {
     return data.map(normalizeEvaluation);
   } catch (error) {
     if (!isMissingGridTableError(error)) throw error;
-    const legacyData = await listEntities<EvaluationRaw>('Evaluations', {
+    const legacyData = await listEntities<EvaluationRaw>('time', 'Evaluations', {
       ...(filter ? { $filter: filter } : {}),
       $select: `${EVALUATION_BASE_SELECT},qualitativeGrid`,
     });
@@ -104,7 +104,7 @@ export const EvaluationsAPI = {
   },
 
   async create(evaluation: Omit<Evaluation, 'id'>): Promise<Evaluation> {
-    const created = await createEntity<EvaluationRaw>('Evaluations', evaluation);
+    const created = await createEntity<EvaluationRaw>('time', 'Evaluations', evaluation);
     return normalizeEvaluation(created);
   },
 };

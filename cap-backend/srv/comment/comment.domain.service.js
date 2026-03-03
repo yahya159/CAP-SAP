@@ -1,5 +1,7 @@
 'use strict';
 
+const cds = require('@sap/cds');
+
 const CommentRepo = require('./comment.repo');
 const { assertEntityExists, ENTITIES, MANAGER_ROLES, ALL_ROLES } = require('../shared/services/validation');
 

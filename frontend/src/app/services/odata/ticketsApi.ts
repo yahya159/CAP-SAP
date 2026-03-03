@@ -181,7 +181,7 @@ export const TicketsAPI = {
     options?: ODataQueryOptions,
     requestOptions?: ODataRequestOptions
   ): Promise<Ticket[]> {
-    const tickets = await listEntities<TicketRaw>('Tickets', options, requestOptions, true);
+    const tickets = await listEntities<TicketRaw>('ticket', 'Tickets', options, requestOptions, true);
     return tickets.map(normalizeTicket);
   },
 
@@ -208,7 +208,7 @@ export const TicketsAPI = {
   },
 
   async getById(id: string, requestOptions?: ODataRequestOptions): Promise<Ticket | null> {
-    const ticket = await getEntityById<TicketRaw>('Tickets', id, requestOptions);
+    const ticket = await getEntityById<TicketRaw>('ticket', 'Tickets', id, requestOptions);
     if (!ticket) return null;
     return normalizeTicket(ticket);
   },
@@ -217,8 +217,7 @@ export const TicketsAPI = {
     ticket: Omit<Ticket, 'id' | 'createdAt' | 'ticketCode' | 'status'> & { status?: TicketStatus },
     requestOptions?: ODataRequestOptions
   ): Promise<Ticket> {
-    const created = await createEntity<TicketRaw>(
-      'Tickets',
+    const created = await createEntity<TicketRaw>('ticket', 'Tickets',
       toTicketPayload(ticket),
       requestOptions
     );
@@ -230,8 +229,7 @@ export const TicketsAPI = {
     ticket: Partial<Ticket>,
     requestOptions?: ODataRequestOptions
   ): Promise<Ticket> {
-    const updated = await updateEntity<TicketRaw>(
-      'Tickets',
+    const updated = await updateEntity<TicketRaw>('ticket', 'Tickets',
       id,
       toTicketPayload(ticket),
       requestOptions
@@ -245,8 +243,7 @@ export const TicketsAPI = {
     allocatedHours: number,
     requestOptions?: ODataRequestOptions
   ): Promise<Ticket> {
-    const data = await odataFetch<TicketRaw>(
-      `${entityPath('Tickets', id)}/approveTicket`,
+    const data = await odataFetch<TicketRaw>('ticket', `${entityPath('Tickets', id)}/approveTicket`,
       {
         ...requestOptions,
         method: 'POST',
@@ -262,8 +259,7 @@ export const TicketsAPI = {
     reason: string,
     requestOptions?: ODataRequestOptions
   ): Promise<Ticket> {
-    const data = await odataFetch<TicketRaw>(
-      `${entityPath('Tickets', id)}/rejectTicket`,
+    const data = await odataFetch<TicketRaw>('ticket', `${entityPath('Tickets', id)}/rejectTicket`,
       {
         ...requestOptions,
         method: 'POST',

@@ -76,8 +76,7 @@ export const AbaquesAPI = {
     requestOptions?: ODataRequestOptions
   ): Promise<Abaque[]> {
     try {
-      const rows = await listEntities<AbaqueRaw>(
-        'Abaques',
+      const rows = await listEntities<AbaqueRaw>('core', 'Abaques',
         {
           ...options,
           $select: options?.$select ?? ABAQUE_BASE_SELECT,
@@ -90,8 +89,7 @@ export const AbaquesAPI = {
       return rows.map(normalizeAbaque);
     } catch (error) {
       if (!isMissingAbaqueEntriesTable(error)) throw error;
-      const legacyRows = await listEntities<AbaqueRaw>(
-        'Abaques',
+      const legacyRows = await listEntities<AbaqueRaw>('core', 'Abaques',
         {
           ...options,
           $select: options?.$select ?? `${ABAQUE_BASE_SELECT},entries`,

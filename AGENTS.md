@@ -51,5 +51,5 @@ For PRs, include:
 - UI screenshots/videos for frontend changes.
 
 ## Security & Configuration Tips
-Frontend proxies `/odata/v4` to `http://localhost:4004` in Vite dev server by default. Use `VITE_ODATA_BASE_URL` only if you need a different OData base path.  
+Frontend proxies `/odata/v4` to `http://localhost:4004` in Vite dev server by default. Production deployments should use `VITE_ODATA_CORE_URL`, `VITE_ODATA_USER_URL`, `VITE_ODATA_TICKET_URL`, and `VITE_ODATA_TIME_URL` to point to the dedicated microservices. `VITE_ODATA_BASE_URL` is still supported as a legacy fallback.
 Backend uses local SQLite at `cap-backend/db/performance.db`; do not commit local DB files or secrets.

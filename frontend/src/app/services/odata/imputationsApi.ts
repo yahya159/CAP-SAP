@@ -7,7 +7,7 @@ export const ImputationsAPI = {
     options?: ODataQueryOptions,
     requestOptions?: ODataRequestOptions
   ): Promise<Imputation[]> {
-    return await listEntities<Imputation>('Imputations', options, requestOptions, true);
+    return await listEntities<Imputation>('time', 'Imputations', options, requestOptions, true);
   },
 
   async getAll(requestOptions?: ODataRequestOptions): Promise<Imputation[]> {
@@ -39,7 +39,7 @@ export const ImputationsAPI = {
     imputation: Omit<Imputation, 'id' | 'createdAt'>,
     requestOptions?: ODataRequestOptions
   ): Promise<Imputation> {
-    return await createEntity<Imputation>('Imputations', imputation, requestOptions);
+    return await createEntity<Imputation>('time', 'Imputations', imputation, requestOptions);
   },
 
   async update(
@@ -47,11 +47,11 @@ export const ImputationsAPI = {
     data: Partial<Imputation>,
     requestOptions?: ODataRequestOptions
   ): Promise<Imputation> {
-    return await updateEntity<Imputation>('Imputations', id, data, requestOptions);
+    return await updateEntity<Imputation>('time', 'Imputations', id, data, requestOptions);
   },
 
   async delete(id: string, requestOptions?: ODataRequestOptions): Promise<void> {
-    await deleteEntity('Imputations', id, requestOptions);
+    await deleteEntity('time', 'Imputations', id, requestOptions);
   },
 
   async validate(
@@ -59,7 +59,7 @@ export const ImputationsAPI = {
     validatedBy: string,
     requestOptions?: ODataRequestOptions
   ): Promise<Imputation> {
-    const data = await odataFetch<Imputation>(`${entityPath('Imputations', id)}/validate`, {
+    const data = await odataFetch<Imputation>('time', `${entityPath('Imputations', id)}/validate`, {
       ...requestOptions,
       method: 'POST',
       body: JSON.stringify({ validatedBy }),
@@ -73,7 +73,7 @@ export const ImputationsAPI = {
     validatedBy: string,
     requestOptions?: ODataRequestOptions
   ): Promise<Imputation> {
-    const data = await odataFetch<Imputation>(`${entityPath('Imputations', id)}/rejectEntry`, {
+    const data = await odataFetch<Imputation>('time', `${entityPath('Imputations', id)}/rejectEntry`, {
       ...requestOptions,
       method: 'POST',
       body: JSON.stringify({ validatedBy }),

@@ -1,12 +1,12 @@
 using { sap.performance.dashboard.db as db } from '../../db/schema';
-using { PerformanceService } from '../performance-service';
+using { TimeService } from '../time-service';
 
-extend PerformanceService with definitions {
+extend TimeService with definitions {
   entity ImputationPeriods as projection on db.ImputationPeriods actions {
-    action submit() returns PerformanceService.ImputationPeriods;
-    action validate(validatedBy: String) returns PerformanceService.ImputationPeriods;
-    action rejectEntry(validatedBy: String) returns PerformanceService.ImputationPeriods;
-    action sendToStraTIME(sentBy: String) returns PerformanceService.ImputationPeriods;
+    action submit() returns TimeService.ImputationPeriods;
+    action validate(validatedBy: String) returns TimeService.ImputationPeriods;
+    action rejectEntry(validatedBy: String) returns TimeService.ImputationPeriods;
+    action sendToStraTIME(sentBy: String) returns TimeService.ImputationPeriods;
   };
 };
 

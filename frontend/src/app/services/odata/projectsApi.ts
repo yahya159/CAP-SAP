@@ -131,12 +131,11 @@ const listWithCompositionFallback = async (
     $expand: options?.$expand ?? 'techKeywords,abaqueEstimate',
   };
   try {
-    const rows = await listEntities<ProjectRaw>('Projects', mergedOptions, requestOptions, true);
+    const rows = await listEntities<ProjectRaw>('core', 'Projects', mergedOptions, requestOptions, true);
     return rows.map(normalizeProject);
   } catch (error) {
     if (!isMissingProjectCompositionTable(error)) throw error;
-    const legacyRows = await listEntities<ProjectRaw>(
-      'Projects',
+    const legacyRows = await listEntities<ProjectRaw>('core', 'Projects',
       {
         ...options,
         $select: options?.$select ?? `${PROJECT_BASE_SELECT},techKeywords,abaqueEstimate`,
@@ -175,8 +174,7 @@ export const ProjectsAPI = {
     project: Omit<Project, 'id'>,
     requestOptions?: ODataRequestOptions
   ): Promise<Project> {
-    const created = await createEntity<ProjectRaw>(
-      'Projects',
+    const created = await createEntity<ProjectRaw>('core', 'Projects',
       toProjectPayload(project),
       requestOptions
     );
@@ -188,8 +186,7 @@ export const ProjectsAPI = {
     project: Partial<Project>,
     requestOptions?: ODataRequestOptions
   ): Promise<Project> {
-    const updated = await updateEntity<ProjectRaw>(
-      'Projects',
+    const updated = await updateEntity<ProjectRaw>('core', 'Projects',
       id,
       toProjectPayload(project),
       requestOptions
@@ -198,6 +195,6 @@ export const ProjectsAPI = {
   },
 
   async delete(id: string, requestOptions?: ODataRequestOptions): Promise<void> {
-    await deleteEntity('Projects', id, requestOptions);
+    await deleteEntity('core', 'Projects', id, requestOptions);
   },
 };

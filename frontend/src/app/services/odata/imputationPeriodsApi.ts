@@ -7,7 +7,7 @@ export const ImputationPeriodsAPI = {
     options?: ODataQueryOptions,
     requestOptions?: ODataRequestOptions
   ): Promise<ImputationPeriod[]> {
-    return await listEntities<ImputationPeriod>('ImputationPeriods', options, requestOptions, true);
+    return await listEntities<ImputationPeriod>('time', 'ImputationPeriods', options, requestOptions, true);
   },
 
   async getAll(requestOptions?: ODataRequestOptions): Promise<ImputationPeriod[]> {
@@ -30,7 +30,7 @@ export const ImputationPeriodsAPI = {
     period: Omit<ImputationPeriod, 'id'>,
     requestOptions?: ODataRequestOptions
   ): Promise<ImputationPeriod> {
-    return await createEntity<ImputationPeriod>('ImputationPeriods', period, requestOptions);
+    return await createEntity<ImputationPeriod>('time', 'ImputationPeriods', period, requestOptions);
   },
 
   async update(
@@ -38,11 +38,11 @@ export const ImputationPeriodsAPI = {
     data: Partial<ImputationPeriod>,
     requestOptions?: ODataRequestOptions
   ): Promise<ImputationPeriod> {
-    return await updateEntity<ImputationPeriod>('ImputationPeriods', id, data, requestOptions);
+    return await updateEntity<ImputationPeriod>('time', 'ImputationPeriods', id, data, requestOptions);
   },
 
   async submit(id: string, requestOptions?: ODataRequestOptions): Promise<ImputationPeriod> {
-    const data = await odataFetch<ImputationPeriod>(`${entityPath('ImputationPeriods', id)}/submit`, {
+    const data = await odataFetch<ImputationPeriod>('time', `${entityPath('ImputationPeriods', id)}/submit`, {
       ...requestOptions,
       method: 'POST',
     });
@@ -55,7 +55,7 @@ export const ImputationPeriodsAPI = {
     validatedBy: string,
     requestOptions?: ODataRequestOptions
   ): Promise<ImputationPeriod> {
-    const data = await odataFetch<ImputationPeriod>(`${entityPath('ImputationPeriods', id)}/validate`, {
+    const data = await odataFetch<ImputationPeriod>('time', `${entityPath('ImputationPeriods', id)}/validate`, {
       ...requestOptions,
       method: 'POST',
       body: JSON.stringify({ validatedBy }),
@@ -69,7 +69,7 @@ export const ImputationPeriodsAPI = {
     sentBy: string,
     requestOptions?: ODataRequestOptions
   ): Promise<ImputationPeriod> {
-    const data = await odataFetch<ImputationPeriod>(`${entityPath('ImputationPeriods', id)}/sendToStraTIME`, {
+    const data = await odataFetch<ImputationPeriod>('time', `${entityPath('ImputationPeriods', id)}/sendToStraTIME`, {
       ...requestOptions,
       method: 'POST',
       body: JSON.stringify({ sentBy }),
@@ -83,7 +83,7 @@ export const ImputationPeriodsAPI = {
     validatedBy: string,
     requestOptions?: ODataRequestOptions
   ): Promise<ImputationPeriod> {
-    const data = await odataFetch<ImputationPeriod>(`${entityPath('ImputationPeriods', id)}/rejectEntry`, {
+    const data = await odataFetch<ImputationPeriod>('time', `${entityPath('ImputationPeriods', id)}/rejectEntry`, {
       ...requestOptions,
       method: 'POST',
       body: JSON.stringify({ validatedBy }),

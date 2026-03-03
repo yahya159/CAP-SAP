@@ -28,8 +28,7 @@ export const DeliverablesAPI = {
     options?: ODataQueryOptions,
     requestOptions?: ODataRequestOptions
   ): Promise<Deliverable[]> {
-    const rows = await listEntities<Partial<Deliverable>>(
-      'Deliverables',
+    const rows = await listEntities<Partial<Deliverable>>('core', 'Deliverables',
       {
         ...options,
         // Avoid selecting optional columns on stale local SQLite schemas.
@@ -61,7 +60,7 @@ export const DeliverablesAPI = {
     deliverable: Omit<Deliverable, 'id' | 'createdAt'>,
     requestOptions?: ODataRequestOptions
   ): Promise<Deliverable> {
-    return await createEntity<Deliverable>('Deliverables', deliverable, requestOptions);
+    return await createEntity<Deliverable>('core', 'Deliverables', deliverable, requestOptions);
   },
 
   async update(
@@ -69,6 +68,6 @@ export const DeliverablesAPI = {
     deliverable: Partial<Deliverable>,
     requestOptions?: ODataRequestOptions
   ): Promise<Deliverable> {
-    return await updateEntity<Deliverable>('Deliverables', id, deliverable, requestOptions);
+    return await updateEntity<Deliverable>('core', 'Deliverables', id, deliverable, requestOptions);
   },
 };
