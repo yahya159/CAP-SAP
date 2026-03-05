@@ -3,9 +3,6 @@ import type {
   DocumentationAttachment,
   DocumentationObject,
   Ticket,
-  TicketComplexity,
-  TicketNature,
-  TicketStatus,
   WricefObject,
 } from '@/app/types/entities';
 import type { ProjectTabDefinition } from '@/app/features/projects/components/ProjectTabs';

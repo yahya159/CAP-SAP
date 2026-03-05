@@ -24,11 +24,15 @@ export interface TicketCreateDialogViewModel {
   wricefObjects: WricefObject[];
   form: TicketForm;
   isManualWricef: boolean;
+  abaqueSuggestedHours: number | null;
+  isEstimatedByAbaque: boolean;
   isSubmitting: boolean;
   onOpenChange: (open: boolean) => void;
   onSubmit: (event: React.FormEvent) => void;
   onFormChange: (form: TicketForm) => void;
   onManualWricefChange: (value: boolean) => void;
+  onEstimatedByAbaqueChange: (value: boolean) => void;
+  onApplyAbaqueEstimate: () => void;
   onCancel: () => void;
 }
 

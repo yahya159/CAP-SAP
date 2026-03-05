@@ -2,7 +2,7 @@ import React, { useEffect, useMemo, useState } from 'react';
 import { PageHeader } from '../../components/common/PageHeader';import { LeaveRequestsAPI } from '../../services/odata/leaveRequestsApi';
 import { LeaveRequest, LeaveStatus } from '../../types/entities';
 import { useAuth } from '../../context/AuthContext';
-import { CalendarDays, Plus } from 'lucide-react';
+import { Plus } from 'lucide-react';
 import { toast } from 'sonner';
 import { Button } from '../../components/ui/button';
 import { Input } from '../../components/ui/input';

@@ -125,7 +125,7 @@ export const WricefFiltersToolbar: React.FC<WricefFiltersToolbarProps> = ({
         <div className="flex items-center gap-2">
           <Button size="sm" onClick={onOpenCreateTicket}>
             <Plus className="h-4 w-4 mr-1" />
-            Add Object
+            Add Ticket
           </Button>
           <Label
             htmlFor="wricef-upload-objects"

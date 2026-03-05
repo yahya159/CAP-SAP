@@ -3,13 +3,8 @@ import {
   AlertCircle,
   CheckCircle2,
   ChevronRight,
-  Clock,
-  FileText,
-  Layers,
   Package,
   ShieldCheck,
-  Tag,
-  Ticket,
   XCircle,
 } from 'lucide-react';
 import { toast } from 'sonner';

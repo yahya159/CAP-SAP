@@ -3,36 +3,14 @@ import { WricefTable } from '../tables/WricefTable';
 import { WricefFiltersToolbar } from './wricef/WricefFiltersToolbar';
 import { WricefPagination } from './wricef/WricefPagination';
 import { WricefStatsCards } from './wricef/WricefStatsCards';
-import { useWricefPanel } from '../../hooks/useWricefPanel';
 
 interface WricefPanelProps {
-  projectId: string;
   active: boolean;
-  onOpenCreateTicket: (objectId?: string) => void;
-  onOpenCreateDocument: (objectId?: string) => void;
-  onOpenTicketDetails: (ticketId: string) => void;
-  onViewDocument: (docId: string) => void;
+  vm: any;
 }
 
-export const WricefPanel: React.FC<WricefPanelProps> = ({ 
-  projectId,
-  active,
-  onOpenCreateTicket,
-  onOpenCreateDocument,
-  onOpenTicketDetails,
-  onViewDocument
-}) => {
-  const vm = useWricefPanel(projectId);
-
+export const WricefPanel: React.FC<WricefPanelProps> = ({ active, vm }) => {
   if (!active) return null;
-
-  const tableVm = {
-    ...vm.table,
-    onOpenCreateTicket,
-    onOpenCreateDocument,
-    onOpenTicketDetails,
-    onViewDocument,
-  };
 
   return (
     <section
@@ -58,10 +36,10 @@ export const WricefPanel: React.FC<WricefPanelProps> = ({
         onObjectsComplexityFilterChange={vm.onObjectsComplexityFilterChange}
         onObjectsModuleFilterChange={vm.onObjectsModuleFilterChange}
         onClearFilters={vm.onClearFilters}
-        onOpenCreateTicket={onOpenCreateTicket}
-        onImportWricefFile={() => {}}
+        onOpenCreateTicket={vm.onOpenCreateTicket}
+        onImportWricefFile={vm.onImportWricefFile}
       />
-      <WricefTable vm={tableVm as any} />
+      <WricefTable vm={vm.table} />
       <WricefPagination
         filteredObjectsCount={vm.filteredObjectsCount}
         objectsPage={vm.objectsPage}

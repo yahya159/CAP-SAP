@@ -9,7 +9,7 @@ import { toast } from 'sonner';
 import { Imputation, ImputationPeriod } from '@/app/types/entities';
 import { ImputationFormValues } from '../schema';
 
-export const useCalendarImputations = (canImpute: boolean, canValidate: boolean) => {
+export const useCalendarImputations = (canImpute: boolean, _canValidate: boolean) => {
   const { currentUser } = useAuth();
   const queryClient = useQueryClient();
   const userId = currentUser?.id;

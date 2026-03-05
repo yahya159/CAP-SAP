@@ -1,6 +1,6 @@
 import React, { useEffect, useState, useMemo } from 'react';
 import { useNavigate } from 'react-router';
-import { Sparkles, Ticket, Users, BarChart3, AlertTriangle, CheckCircle2, Clock } from 'lucide-react';
+import { Sparkles, Ticket, BarChart3, AlertTriangle, CheckCircle2, Clock } from 'lucide-react';
 import { PageHeader } from '../../components/common/PageHeader';
 import { KPICard } from '../../components/common/KPICard';
 import { Card, CardContent, CardHeader, CardTitle } from '../../components/ui/card';

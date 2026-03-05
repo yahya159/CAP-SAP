@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { Calculator } from 'lucide-react';
 import { Button } from '@/app/components/ui/button';
 import { useForm } from 'react-hook-form';
@@ -19,6 +19,7 @@ import { toast } from 'sonner';
 import { useAuth } from '@/app/context/AuthContext';
 import { createTicketWithUnifiedFlow } from '@/app/services/ticketCreation';
 import { useQueryClient } from '@tanstack/react-query';
+import { getProjectAbaqueEstimate } from '@/app/utils/projectAbaque';
 
 interface CreateProjectTicketDialogProps {
   projectId: string;
@@ -40,6 +41,7 @@ export const CreateProjectTicketDialog: React.FC<CreateProjectTicketDialogProps>
   const queryClient = useQueryClient();
 
   const [isCreatingTicket, setIsCreatingTicket] = useState(false);
+  const [isEstimatedByAbaque, setIsEstimatedByAbaque] = useState(false);
 
   const form = useForm<TicketFormValues>({
     resolver: zodResolver(ticketSchema as any),
@@ -48,12 +50,34 @@ export const CreateProjectTicketDialog: React.FC<CreateProjectTicketDialogProps>
       description: '',
       nature: 'ENHANCEMENT',
       priority: 'MEDIUM',
-      complexity: 'LOW',
+      complexity: 'SIMPLE',
       effortHours: 0,
       dueDate: '',
       wricefObjectId: defaultWricefObjectId || '',
     },
   });
+
+  useEffect(() => {
+    if (!open) return;
+    setIsEstimatedByAbaque(false);
+    form.reset({
+      title: '',
+      description: '',
+      nature: 'ENHANCEMENT',
+      priority: 'MEDIUM',
+      complexity: 'SIMPLE',
+      effortHours: 0,
+      dueDate: '',
+      wricefObjectId: defaultWricefObjectId || '',
+    });
+  }, [defaultWricefObjectId, form, open]);
+
+  const formValues = form.watch();
+  const abaqueSuggestedHours = getProjectAbaqueEstimate(
+    project?.abaqueEstimate,
+    formValues.nature,
+    formValues.complexity
+  );
 
   const onSubmit = async (values: any) => {
     if (!project || !currentUser) return;
@@ -70,11 +94,13 @@ export const CreateProjectTicketDialog: React.FC<CreateProjectTicketDialogProps>
         description: values.description.trim(),
         dueDate: values.dueDate || undefined,
         module: 'OTHER',
-        complexity: values.complexity === 'HIGH' || values.complexity === 'CRITICAL' ? 'COMPLEXE' : values.complexity === 'MEDIUM' ? 'MOYEN' : 'SIMPLE',
+        complexity: values.complexity,
         estimationHours: values.effortHours,
-        estimatedViaAbaque: false,
+        estimatedViaAbaque: isEstimatedByAbaque,
         selectedWricefObjectId: values.wricefObjectId || undefined,
-        creationComment: 'Ticket created with manual estimation',
+        creationComment: isEstimatedByAbaque
+          ? 'Ticket created with project matrix estimation'
+          : 'Ticket created with manual estimation',
       });
       
       queryClient.invalidateQueries({ queryKey: projectKeys.tickets(projectId) });
@@ -93,10 +119,29 @@ export const CreateProjectTicketDialog: React.FC<CreateProjectTicketDialogProps>
   const vm = {
     projectName: project?.name ?? '',
     wricefObjects,
-    formValues: form.watch(),
+    formValues,
     setValue: form.setValue,
     register: form.register,
     errors: form.formState.errors,
+    abaqueSuggestedHours,
+    isEstimatedByAbaque,
+    onNatureChange: (value: TicketFormValues['nature']) => {
+      setIsEstimatedByAbaque(false);
+      form.setValue('nature', value);
+    },
+    onComplexityChange: (value: TicketFormValues['complexity']) => {
+      setIsEstimatedByAbaque(false);
+      form.setValue('complexity', value);
+    },
+    onEffortHoursChange: (value: number) => {
+      setIsEstimatedByAbaque(false);
+      form.setValue('effortHours', value);
+    },
+    onApplyAbaqueEstimate: () => {
+      if (abaqueSuggestedHours === null) return;
+      form.setValue('effortHours', abaqueSuggestedHours);
+      setIsEstimatedByAbaque(true);
+    },
   };
 
   return (

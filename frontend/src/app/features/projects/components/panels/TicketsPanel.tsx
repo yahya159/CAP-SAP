@@ -2,23 +2,13 @@ import React from 'react';
 import { TicketsPanelActivity } from './tickets/TicketsPanelActivity';
 import { TicketsPanelTable } from './tickets/TicketsPanelTable';
 import { TicketsPanelToolbar } from './tickets/TicketsPanelToolbar';
-import { useTicketsPanel } from '../../hooks/useTicketsPanel';
 
 interface TicketsPanelProps {
-  projectId: string;
   active: boolean;
-  onOpenCreateTicket: () => void;
-  onOpenTicketDetails: (ticketId: string) => void;
+  vm: any;
 }
 
-export const TicketsPanel: React.FC<TicketsPanelProps> = ({ 
-  projectId,
-  active, 
-  onOpenCreateTicket,
-  onOpenTicketDetails 
-}) => {
-  const vm = useTicketsPanel(projectId);
-
+export const TicketsPanel: React.FC<TicketsPanelProps> = ({ active, vm }) => {
   if (!active) return null;
 
   return (
@@ -35,7 +25,7 @@ export const TicketsPanel: React.FC<TicketsPanelProps> = ({
         onTicketsSearchChange={vm.setTicketsSearch}
         onTicketsStatusFilterChange={vm.setTicketsStatusFilter}
         onTicketsPageChange={vm.setTicketsPage}
-        onOpenCreateTicket={onOpenCreateTicket}
+        onOpenCreateTicket={vm.onOpenCreateTicket}
       />
       <TicketsPanelTable
         tickets={vm.tickets}
@@ -48,7 +38,7 @@ export const TicketsPanel: React.FC<TicketsPanelProps> = ({
         wricefStatusColor={vm.wricefStatusColor}
         wricefPriorityColor={vm.wricefPriorityColor}
         onSelectTicket={vm.setSelectedTicketId}
-        onOpenTicketDetails={onOpenTicketDetails}
+        onOpenTicketDetails={vm.onOpenTicketDetails}
         onTicketsPageChange={vm.setTicketsPage}
         onTicketsPageSizeChange={vm.setTicketsPageSize}
       />

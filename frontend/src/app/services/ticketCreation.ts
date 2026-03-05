@@ -1,4 +1,3 @@
-import { ProjectsAPI } from './odata/projectsApi';
 import { TicketsAPI } from './odata/ticketsApi';
 import {
   Project,
@@ -38,26 +37,6 @@ export interface UnifiedTicketCreateResult {
 
 const normalizeRef = (value?: string | null): string =>
   (value ?? '').trim().toLowerCase();
-
-const sanitizeObjectId = (value: string): string => {
-  const safe = value.replace(/[^a-zA-Z0-9_-]/g, '').toUpperCase();
-  return safe || 'OBJ';
-};
-
-const buildNextWricefTicketId = (
-  objectId: string,
-  usedRefs: Set<string>,
-  startAt: number
-): string => {
-  const safeObjectId = sanitizeObjectId(objectId);
-  let sequence = Math.max(1, startAt);
-  let candidate = `${safeObjectId}-TK-${String(sequence).padStart(3, '0')}`;
-  while (usedRefs.has(candidate.toLowerCase())) {
-    sequence += 1;
-    candidate = `${safeObjectId}-TK-${String(sequence).padStart(3, '0')}`;
-  }
-  return candidate;
-};
 
 const buildManualWricefId = (usedRefs: Set<string>, startAt: number): string => {
   let sequence = Math.max(1, startAt);

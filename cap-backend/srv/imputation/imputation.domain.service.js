@@ -2,7 +2,7 @@
 
 const ImputationRepo = require('./imputation.repo');
 const AuthDomainService = require('../auth/auth.domain.service');
-const { assertEntityExists, ENTITIES } = require('../shared/services/validation');
+const { assertEntityExists, ENTITIES, MANAGER_ROLES, requireOwnerOrRole } = require('../shared/services/validation');
 const { nowIso } = require('../shared/utils/timestamp');
 
 const extractEntityId = (req) => req.params?.[0]?.ID ?? req.params?.[0] ?? req.data?.ID;
@@ -64,9 +64,12 @@ class ImputationDomainService {
     const id = extractEntityId(req);
     if (!id) return;
     const current = await this.repo.findById(id);
-    if (current && current.validationStatus !== 'DRAFT') {
+    if (!current) return;
+    if (current.validationStatus !== 'DRAFT') {
       req.reject(409, 'Only DRAFT imputations can be deleted');
     }
+    // Only the owning consultant or a reviewer may delete
+    requireOwnerOrRole(req, current.consultantId, MANAGER_ROLES, 'You can only delete your own DRAFT imputations');
   }
 
   async validate(req) {

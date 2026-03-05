@@ -59,6 +59,8 @@ class ProjectDomainService {
     const id = extractEntityId(req);
     if (!id) return;
 
+    // This runs inside the same CAP-managed transaction as the DELETE,
+    // so concurrent inserts into child tables are serialised by the DB lock.
     const hasChildren = await this.repo.hasRelatedRecords(id);
     if (hasChildren) {
       req.reject(409, 'Cannot delete project with existing related records. Delete children first.');

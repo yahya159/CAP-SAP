@@ -1,6 +1,7 @@
 // React Router configuration with role-based routing
 
 import { lazy, Suspense, type ReactElement } from 'react';
+import { ErrorBoundary } from './components/common/ErrorBoundary';
 import {
   createBrowserRouter,
   Navigate,
@@ -110,9 +111,11 @@ const RoleDashboardRedirect = () => {
 const renderLazyRoute = (loader: LazyPageImport): ReactElement => {
   const LazyComponent = lazy(loader);
   return (
-    <SuspensePage>
-      <LazyComponent />
-    </SuspensePage>
+    <ErrorBoundary>
+      <SuspensePage>
+        <LazyComponent />
+      </SuspensePage>
+    </ErrorBoundary>
   );
 };
 

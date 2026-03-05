@@ -8,7 +8,7 @@ interface ProjectRaw extends Omit<Project, 'techKeywords' | 'abaqueEstimate'> {
 }
 
 const PROJECT_BASE_SELECT =
-  'ID,name,projectType,managerId,startDate,endDate,status,priority,description,progress,complexity,documentation,linkedAbaqueId,createdAt,modifiedAt';
+  'ID,name,projectType,managerId,startDate,endDate,status,priority,description,progress,complexity,documentation,createdAt,modifiedAt';
 
 const parseJsonIfString = (value: unknown): unknown => {
   if (typeof value !== 'string') return value;
@@ -96,7 +96,8 @@ const toProjectPayload = (project: Partial<Project>): Record<string, unknown> =>
 };
 
 const normalizeProject = (raw: ProjectRaw): Project => {
-  const { techKeywords: _rawTechKeywords, abaqueEstimate: _rawAbaqueEstimate, ...base } = raw;
+  // Exclude composition fields via destructure; normalized separately below
+  const { techKeywords: _kw, abaqueEstimate: _ae, ...base } = raw;
   const techKeywords = normalizeTechKeywords(raw.techKeywords);
   const abaqueEstimate = normalizeAbaqueEstimate(raw.abaqueEstimate);
   return {

@@ -1,7 +1,7 @@
 // Authentication and user context
 
 import React, { createContext, useCallback, useContext, useEffect, useMemo, useState } from 'react';
-import { User, UserRole } from '../types/entities';import { AuthAPI } from '../services/odata/authApi';
+import { User, UserRole, USER_ROLE_LABELS } from '../types/entities';import { AuthAPI } from '../services/odata/authApi';
 import { getODataAuthToken, setODataAuthToken, onAuthExpired } from '../services/odata/core';
 import { UsersAPI } from '../services/odata/usersApi';
 
@@ -57,7 +57,7 @@ const readLegacyStoredUserId = (): string | null => {
 const persistStoredSession = (session: StoredAuthSession): void => {
   try {
     localStorage.setItem(SESSION_STORAGE_KEY, JSON.stringify(session));
-    localStorage.setItem(LEGACY_USER_STORAGE_KEY, session.user.id);
+    // Legacy key is only read for backward-compat migration; no need to write it
   } catch {
     // no-op: storage write failure should not block session state
   }
@@ -113,6 +113,12 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
           }
 
           const role = storedUserId.replace('direct-', '') as UserRole;
+          if (!(role in USER_ROLE_LABELS)) {
+            setCurrentUser(null);
+            clearStoredUserId();
+            if (isMounted) setIsAuthLoading(false);
+            return;
+          }
           setCurrentUser({
             id: storedUserId,
             name: `Direct ${role}`,

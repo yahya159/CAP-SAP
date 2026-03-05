@@ -10,7 +10,6 @@ import {
   SelectValue,
 } from '@/app/components/ui/select';
 import {
-  Project,
   SAPModule,
   SAP_MODULE_LABELS,
   Ticket,

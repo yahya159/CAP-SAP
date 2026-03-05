@@ -193,6 +193,7 @@ export const TicketsAPI = {
     return await TicketsAPI.list(
       {
         $filter: `projectId eq ${quoteLiteral(projectId)}`,
+        $top: 500,
       },
       requestOptions
     );

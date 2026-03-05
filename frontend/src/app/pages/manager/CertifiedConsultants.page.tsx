@@ -1,7 +1,7 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import { PageHeader } from '../../components/common/PageHeader';import { UsersAPI } from '../../services/odata/usersApi';
 import { Certification, CertificationStatus, User } from '../../types/entities';
-import { Award, Search } from 'lucide-react';
+import { Award } from 'lucide-react';
 import { Input } from '../../components/ui/input';
 import { Badge } from '../../components/ui/badge';
 import {

@@ -8,7 +8,6 @@ import {
 import {
   SAP_MODULE_LABELS,
   TicketComplexity,
-  TicketStatus,
   TICKET_COMPLEXITY_LABELS,
   WricefObject,
   WricefType,

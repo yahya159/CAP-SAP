@@ -4,9 +4,6 @@ import { Edit3, Plus, RefreshCcw, Trash2, FolderSearch, FileUp, X } from 'lucide
 import { toast } from 'sonner';
 import { PageHeader } from '../../components/common/PageHeader';
 import { useAuth } from '../../context/AuthContext';import { ProjectsAPI } from '../../services/odata/projectsApi';
-import { TicketsAPI } from '../../services/odata/ticketsApi';
-import { WricefObjectsAPI } from '../../services/odata/wricefObjectsApi';
-import { WricefsAPI } from '../../services/odata/wricefsApi';
 import {
   Priority,
   Project,

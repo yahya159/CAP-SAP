@@ -11,7 +11,6 @@ import {
   ListTodo,
   Siren,
   TrendingUp,
-  TrendingDown,
   Users,
   ArrowDownRight,
   ArrowUpRight,

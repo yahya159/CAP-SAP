@@ -1,4 +1,6 @@
 import React from 'react';
+import { Calculator, Scale } from 'lucide-react';
+import { Badge } from '@/app/components/ui/badge';
 import { Button } from '@/app/components/ui/button';
 import { Input } from '@/app/components/ui/input';
 import { Label } from '@/app/components/ui/label';
@@ -11,6 +13,7 @@ import {
 } from '@/app/components/ui/select';
 import { Textarea } from '@/app/components/ui/textarea';
 import {
+  TICKET_COMPLEXITY_LABELS,
   TICKET_NATURE_LABELS,
 } from '@/app/types/entities';
 import { CreateProjectTicketContextBlock } from './CreateProjectTicketContextBlock';
@@ -40,7 +43,7 @@ export const CreateProjectTicketForm: React.FC<CreateProjectTicketFormProps> = (
           <Label>Ticket Nature</Label>
           <Select
             value={vm.formValues.nature}
-            onValueChange={(value) => vm.setValue('nature', value)}
+            onValueChange={(value) => vm.onNatureChange(value)}
           >
             <SelectTrigger>
               <SelectValue />
@@ -58,15 +61,17 @@ export const CreateProjectTicketForm: React.FC<CreateProjectTicketFormProps> = (
           <Label>Complexity</Label>
           <Select
             value={vm.formValues.complexity}
-            onValueChange={(value) => vm.setValue('complexity', value)}
+            onValueChange={(value) => vm.onComplexityChange(value)}
           >
             <SelectTrigger>
               <SelectValue />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="LOW">Low</SelectItem>
-              <SelectItem value="MEDIUM">Medium</SelectItem>
-              <SelectItem value="HIGH">High</SelectItem>
+              {Object.entries(TICKET_COMPLEXITY_LABELS).map(([value, label]) => (
+                <SelectItem key={value} value={value}>
+                  {label}
+                </SelectItem>
+              ))}
             </SelectContent>
           </Select>
         </div>
@@ -95,16 +100,39 @@ export const CreateProjectTicketForm: React.FC<CreateProjectTicketFormProps> = (
           />
         </div>
         <div className="space-y-1.5 sm:col-span-2">
-          <Label htmlFor="project-ticket-effort">Effort (Hours)</Label>
+          <div className="flex items-center justify-between gap-2">
+            <Label htmlFor="project-ticket-effort">Effort (Hours)</Label>
+            <Button
+              type="button"
+              size="sm"
+              variant="outline"
+              onClick={vm.onApplyAbaqueEstimate}
+              disabled={vm.abaqueSuggestedHours === null}
+            >
+              <Calculator className="h-3.5 w-3.5 mr-1" />
+              Use Matrix Estimate
+            </Button>
+          </div>
           <Input
             id="project-ticket-effort"
             type="number"
             min={0}
             name={vm.register('effortHours', { valueAsNumber: true }).name}
-            onChange={vm.register('effortHours', { valueAsNumber: true }).onChange}
+            onChange={(event) => vm.onEffortHoursChange(Number(event.target.value))}
             onBlur={vm.register('effortHours', { valueAsNumber: true }).onBlur}
           />
           {vm.errors.effortHours && <span className="text-xs text-destructive">{vm.errors.effortHours.message}</span>}
+          {vm.abaqueSuggestedHours !== null && (
+            <div className="flex flex-wrap items-center gap-2 text-xs text-muted-foreground">
+              <span>Matrix suggests {vm.abaqueSuggestedHours}h for the selected nature and complexity.</span>
+              {vm.isEstimatedByAbaque && (
+                <Badge variant="secondary" className="inline-flex items-center gap-1">
+                  <Scale className="h-3 w-3" />
+                  Matrix applied
+                </Badge>
+              )}
+            </div>
+          )}
         </div>
         <div className="space-y-1.5 sm:col-span-2">
           <Label htmlFor="project-ticket-description">Description</Label>

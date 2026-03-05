@@ -22,7 +22,7 @@ type UserRole         : String(40) enum { ADMIN; MANAGER; CONSULTANT_TECHNIQUE; 
 type ProjectType      : String(20) enum { TMA; BUILD; };
 type DocObjectType    : String(30) enum { SFD; GUIDE; ARCHITECTURE_DOC; GENERAL; };
 type WricefType       : String(10) enum { W; R; I; C; E; F; };
-type Complexity       : String(20) enum { LOW; MEDIUM; HIGH; };
+type Complexity       : String(20) enum { LOW; MEDIUM; HIGH; CRITICAL; };
 
 // ---------------------------------------------------------------------------
 // Users
@@ -67,7 +67,6 @@ entity Projects : cuid, managed {
   complexity      : Complexity;
   techKeywords    : Composition of many ProjectTechKeywords on techKeywords.project = $self;
   documentation   : LargeString;
-  linkedAbaqueId  : String(50);
   abaqueEstimate  : Composition of many ProjectAbaqueEstimates on abaqueEstimate.project = $self;
 }
 
@@ -370,8 +369,8 @@ entity DocumentationObjects : cuid, managed {
   project          : Association to Projects on project.ID = projectId;
   authorId         : String(50)  not null;
   author           : Association to Users on author.ID = authorId;
-  createdAt        : DateTime;
-  updatedAt        : DateTime;
+  // createdAt is provided by `managed`; do not redeclare it here
+  updatedAt        : DateTime;  // application-managed; updated by domain logic on PATCH
   sourceSystem     : String(20);
   sourceRefId      : String(200);
 }
@@ -396,4 +395,17 @@ entity ReferenceData : cuid, managed {
   label  : String(100);
   active : Boolean    default true;
   order  : Integer;
+}
+
+// ---------------------------------------------------------------------------
+// AuditLogs – immutable record of all CUD operations
+// ---------------------------------------------------------------------------
+entity AuditLogs : cuid {
+  timestamp  : DateTime not null;
+  userId     : String(50);
+  userRole   : String(40);
+  action     : String(10) not null;       // CREATE, UPDATE, DELETE
+  entityName : String(100) not null;
+  entityId   : String(50);
+  details    : LargeString;               // JSON diff / summary
 }

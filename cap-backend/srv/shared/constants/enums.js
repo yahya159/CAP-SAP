@@ -1,0 +1,95 @@
+'use strict';
+/**
+ * enums.js – Centralised enum constants that mirror db/schema.cds.
+ * Import from here instead of scattering magic strings across domain services.
+ */
+
+const TICKET_STATUS = Object.freeze({
+  PENDING_APPROVAL: 'PENDING_APPROVAL',
+  APPROVED: 'APPROVED',
+  NEW: 'NEW',
+  IN_PROGRESS: 'IN_PROGRESS',
+  IN_TEST: 'IN_TEST',
+  BLOCKED: 'BLOCKED',
+  DONE: 'DONE',
+  REJECTED: 'REJECTED',
+});
+
+const TICKET_PRIORITY = Object.freeze({
+  LOW: 'LOW',
+  MEDIUM: 'MEDIUM',
+  HIGH: 'HIGH',
+  CRITICAL: 'CRITICAL',
+});
+
+const TICKET_NATURE = Object.freeze({
+  WORKFLOW: 'WORKFLOW',
+  FORMULAIRE: 'FORMULAIRE',
+  PROGRAMME: 'PROGRAMME',
+  ENHANCEMENT: 'ENHANCEMENT',
+  MODULE: 'MODULE',
+  REPORT: 'REPORT',
+});
+
+const TICKET_COMPLEXITY = Object.freeze({
+  SIMPLE: 'SIMPLE',
+  MOYEN: 'MOYEN',
+  COMPLEXE: 'COMPLEXE',
+  TRES_COMPLEXE: 'TRES_COMPLEXE',
+});
+
+const PROJECT_STATUS = Object.freeze({
+  PLANNED: 'PLANNED',
+  ACTIVE: 'ACTIVE',
+  ON_HOLD: 'ON_HOLD',
+  COMPLETED: 'COMPLETED',
+  CANCELLED: 'CANCELLED',
+});
+
+const IMPUTATION_STATUS = Object.freeze({
+  DRAFT: 'DRAFT',
+  SUBMITTED: 'SUBMITTED',
+  VALIDATED: 'VALIDATED',
+  REJECTED: 'REJECTED',
+});
+
+const LEAVE_STATUS = Object.freeze({
+  PENDING: 'PENDING',
+  APPROVED: 'APPROVED',
+  REJECTED: 'REJECTED',
+});
+
+const WRICEF_STATUS = Object.freeze({
+  DRAFT: 'DRAFT',
+  PENDING_VALIDATION: 'PENDING_VALIDATION',
+  VALIDATED: 'VALIDATED',
+  REJECTED: 'REJECTED',
+});
+
+const USER_ROLE = Object.freeze({
+  ADMIN: 'ADMIN',
+  MANAGER: 'MANAGER',
+  CONSULTANT_TECHNIQUE: 'CONSULTANT_TECHNIQUE',
+  CONSULTANT_FONCTIONNEL: 'CONSULTANT_FONCTIONNEL',
+  PROJECT_MANAGER: 'PROJECT_MANAGER',
+  DEV_COORDINATOR: 'DEV_COORDINATOR',
+});
+
+const SAP_MODULE = Object.freeze({
+  FI: 'FI', CO: 'CO', MM: 'MM', SD: 'SD', PP: 'PP',
+  PM: 'PM', QM: 'QM', HR: 'HR', PS: 'PS', WM: 'WM',
+  BASIS: 'BASIS', ABAP: 'ABAP', FIORI: 'FIORI', BW: 'BW', OTHER: 'OTHER',
+});
+
+module.exports = {
+  TICKET_STATUS,
+  TICKET_PRIORITY,
+  TICKET_NATURE,
+  TICKET_COMPLEXITY,
+  PROJECT_STATUS,
+  IMPUTATION_STATUS,
+  LEAVE_STATUS,
+  WRICEF_STATUS,
+  USER_ROLE,
+  SAP_MODULE,
+};

@@ -333,8 +333,6 @@ export interface Project {
   complexity?: Complexity;
   techKeywords?: string[];
   documentation?: string;
-  /** Optional linked estimation matrix (Abaque de chiffrage) */
-  linkedAbaqueId?: string;
   /** Manual project matrix mapping Ticket Nature + Complexity -> Hours */
   abaqueEstimate?: ProjectAbaqueRow[];
   /** Deprecated: Moved to standalone Wricef table */

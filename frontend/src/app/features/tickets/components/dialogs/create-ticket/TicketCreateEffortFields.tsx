@@ -1,4 +1,6 @@
 import React from 'react';
+import { Calculator, Scale } from 'lucide-react';
+import { Badge } from '@/app/components/ui/badge';
 import { Label } from '@/app/components/ui/label';
 import {
   Select,
@@ -36,16 +38,40 @@ export const TicketCreateEffortFields: React.FC<TicketCreateEffortFieldsProps> =
         </Select>
       </div>
       <div className="space-y-1.5 sm:col-span-2">
-        <Label>Estimation (hours)</Label>
+        <div className="flex items-center justify-between gap-2">
+          <Label>Estimation (hours)</Label>
+          <Button
+            type="button"
+            size="sm"
+            variant="outline"
+            onClick={vm.onApplyAbaqueEstimate}
+            disabled={vm.abaqueSuggestedHours === null}
+          >
+            <Calculator className="h-3.5 w-3.5 mr-1" />
+            Use Matrix Estimate
+          </Button>
+        </div>
         <Input
           type="number"
           min={0}
           step={0.5}
           value={vm.form.estimationHours}
           onChange={(event) => {
+            vm.onEstimatedByAbaqueChange(false);
             vm.onFormChange({ ...vm.form, estimationHours: Number(event.target.value) });
           }}
         />
+        {vm.abaqueSuggestedHours !== null && (
+          <div className="flex flex-wrap items-center gap-2 text-xs text-muted-foreground">
+            <span>Matrix suggests {vm.abaqueSuggestedHours}h for the selected nature and complexity.</span>
+            {vm.isEstimatedByAbaque && (
+              <Badge variant="secondary" className="inline-flex items-center gap-1">
+                <Scale className="h-3 w-3" />
+                Matrix applied
+              </Badge>
+            )}
+          </div>
+        )}
       </div>
       <div className="space-y-1.5">
         <Label>Priority</Label>
