@@ -22,6 +22,11 @@ export const ManagerTicketsView: React.FC = () => {
       />
 
       <div className="p-6 space-y-4">
+        {vm.error && (
+          <div className="rounded border border-destructive/40 bg-destructive/10 px-4 py-3 text-sm text-destructive">
+            {vm.error}
+          </div>
+        )}
         <TicketKPIs tickets={vm.filteredTickets} />
         <TicketFilters
           searchQuery={vm.searchQuery}
@@ -86,6 +91,8 @@ export const ManagerTicketsView: React.FC = () => {
           wricefObjects: vm.wricefObjects,
           form: vm.form,
           isManualWricef: vm.isManualWricef,
+          abaqueSuggestedHours: vm.abaqueSuggestedHours,
+          isEstimatedByAbaque: vm.isEstimatedByAbaque,
           isSubmitting: vm.isSubmitting,
           onOpenChange: (open) => {
             vm.setShowCreate(open);
@@ -95,6 +102,8 @@ export const ManagerTicketsView: React.FC = () => {
           },
           onFormChange: vm.setForm,
           onManualWricefChange: vm.setIsManualWricef,
+          onEstimatedByAbaqueChange: vm.onEstimatedByAbaqueChange,
+          onApplyAbaqueEstimate: vm.onApplyAbaqueEstimate,
           onCancel: () => {
             vm.setShowCreate(false);
           },

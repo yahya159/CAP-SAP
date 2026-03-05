@@ -56,6 +56,94 @@ const ensureConsultantAuth = async () => {
   consultantAuthToken = data.token;
 };
 
+// ---------------------------------------------------------------------------
+// Dynamic seed ID resolution – avoids hardcoded DB IDs tied to specific CSV rows.
+// IDs are resolved once at the start of the test run by querying the live API.
+// ---------------------------------------------------------------------------
+const seedIds = {
+  adminId: null,
+  managerId: null,
+  techId: null,
+  foncId: null,
+  project1Id: null,
+  project2Id: null,
+  anyTicketId: null,
+  foncTicketId: null,
+  newStatusTicketId: null,
+  draftImputationId: null,
+  approvedLeaveId: null,
+};
+
+const requireSeedId = (key) => {
+  const value = seedIds[key];
+  expect(value).toBeTruthy();
+  return value;
+};
+
+const resolveSeedIds = async () => {
+  await ensureAdminAuth();
+  await ensureAuth();
+
+  // Resolve user IDs by canonical email addresses (stable across re-seeds)
+  const { data: usersData } = await GET(
+    '/odata/v4/user/Users?$filter=active eq true',
+    withAdminAuth()
+  );
+  const users = usersData.value ?? [];
+  seedIds.adminId = users.find((u) => u.email === 'alice.admin@inetum.com')?.ID ?? null;
+  seedIds.managerId = users.find((u) => u.email === 'marc.manager@inetum.com')?.ID ?? null;
+  seedIds.techId = users.find((u) => u.email === 'theo.tech@inetum.com')?.ID ?? null;
+  seedIds.foncId = users.find((u) => u.email === 'fatima.fonc@inetum.com')?.ID ?? null;
+
+  // Resolve projects by canonical names instead of relying on list order
+  const { data: projectsData } = await GET('/odata/v4/core/Projects?$top=100', withAdminAuth());
+  const projects = projectsData.value ?? [];
+  seedIds.project1Id =
+    projects.find((p) => p.name === 'SAP S/4HANA Migration - Acme Corp')?.ID ?? null;
+  seedIds.project2Id =
+    projects.find((p) => p.name === 'Fiori Launchpad - Groupe Lebon')?.ID ?? null;
+
+  // Resolve tickets by canonical ticketCode instead of relying on list order
+  const { data: ticketsData } = await GET('/odata/v4/ticket/Tickets?$top=100', withAdminAuth());
+  const tickets = ticketsData.value ?? [];
+  seedIds.anyTicketId = tickets.find((t) => t.ticketCode === 'TK-2026-0001')?.ID ?? null;
+  if (seedIds.foncId) {
+    seedIds.foncTicketId = tickets.find((t) => t.assignedTo === seedIds.foncId)?.ID ?? null;
+  }
+  seedIds.newStatusTicketId = tickets.find((t) => t.ticketCode === 'TK-2026-0002')?.ID ?? null;
+
+  // Resolve a non-VALIDATED imputation (for direct-PATCH guard test)
+  const { data: impData } = await GET(
+    "/odata/v4/time/Imputations?$filter=validationStatus eq 'SUBMITTED'&$top=5",
+    withAdminAuth()
+  );
+  seedIds.draftImputationId =
+    (impData.value ?? []).find((imputation) => imputation.periodKey === '2026-02-H1')?.ID ?? null;
+
+  // Resolve an APPROVED leave request (for invalid-transition test)
+  const { data: leaveData } = await GET(
+    "/odata/v4/user/LeaveRequests?$filter=status eq 'APPROVED'&$top=10",
+    withAdminAuth()
+  );
+  seedIds.approvedLeaveId =
+    (leaveData.value ?? []).find((leave) => leave.reason === 'Annual holidays')?.ID ?? null;
+};
+
+beforeAll(async () => {
+  await resolveSeedIds();
+  requireSeedId('adminId');
+  requireSeedId('managerId');
+  requireSeedId('techId');
+  requireSeedId('foncId');
+  requireSeedId('project1Id');
+  requireSeedId('project2Id');
+  requireSeedId('anyTicketId');
+  requireSeedId('foncTicketId');
+  requireSeedId('newStatusTicketId');
+  requireSeedId('draftImputationId');
+  requireSeedId('approvedLeaveId');
+}, 30000);
+
 describe('Authentication', () => {
   test('POST /authenticate with valid credentials returns token + user', async () => {
     const { status, data } = await POST('/odata/v4/user/authenticate', {
@@ -98,19 +186,24 @@ describe('Authentication', () => {
 describe('Ticket CRUD', () => {
   test('Consultant sees only tickets assigned to self', async () => {
     await ensureConsultantAuth();
+    const techId = requireSeedId('techId');
     const { status, data } = await GET('/odata/v4/ticket/Tickets', withConsultantAuth());
     expect(status).toBe(200);
     expect(data.value.length).toBeGreaterThan(0);
     data.value.forEach((ticket) => {
-      expect(ticket.assignedTo).toBe('u-tech');
+      expect(ticket.assignedTo).toBe(techId);
     });
   });
 
   test('Manager can still read tickets beyond own assignment', async () => {
-    const { status, data } = await GET('/odata/v4/ticket/Tickets?$filter=ID eq \x27tk-002\x27', withAuth());
+    const foncId = requireSeedId('foncId');
+    const { status, data } = await GET(
+      `/odata/v4/ticket/Tickets?$filter=assignedTo eq '${foncId}'&$top=1`,
+      withAuth()
+    );
     expect(status).toBe(200);
-    expect(data.value.length).toBe(1);
-    expect(data.value[0].assignedTo).toBe('u-fonc');
+    expect(data.value.length).toBeGreaterThanOrEqual(1);
+    expect(data.value[0].assignedTo).toBe(foncId);
   });
 
   test('GET /Tickets returns seed tickets', async () => {
@@ -127,9 +220,10 @@ describe('Ticket CRUD', () => {
   });
 
   test('GET /Tickets by ID returns a single ticket', async () => {
-    const { status, data } = await GET("/odata/v4/ticket/Tickets('tk-001')", withAuth());
+    const ticketId = requireSeedId('anyTicketId');
+    const { status, data } = await GET(`/odata/v4/ticket/Tickets('${ticketId}')`, withAuth());
     expect(status).toBe(200);
-    expect(data.ID).toBe('tk-001');
+    expect(data.ID).toBe(ticketId);
     expect(data.title).toBeTruthy();
   });
 
@@ -148,8 +242,8 @@ describe('Ticket CRUD', () => {
 
   test('POST /Tickets creates a new ticket', async () => {
     const payload = {
-      projectId: 'proj-1',
-      createdBy: 'u-manager',
+      projectId: requireSeedId('project1Id'),
+      createdBy: requireSeedId('managerId'),
       title: 'Test ticket from integration test',
       nature: 'PROGRAMME',
       priority: 'LOW',
@@ -163,6 +257,17 @@ describe('Ticket CRUD', () => {
     expect(data.status).toBe('NEW');
     expect(data.title).toBe(payload.title);
     createdTicketId = data.ID;
+  });
+
+  test('CREATE /Tickets writes an audit log entry', async () => {
+    expect(createdTicketId).toBeTruthy();
+    const auditRow = await cds.db.run(
+      SELECT.one
+        .from('sap.performance.dashboard.db.AuditLogs')
+        .where({ entityId: createdTicketId, action: 'CREATE' })
+    );
+    expect(auditRow).toBeTruthy();
+    expect(auditRow.entityName).toBe('TicketService.Tickets');
   });
 
   test('PATCH /Tickets updates ticket status', async () => {
@@ -191,7 +296,7 @@ describe('Ticket CRUD', () => {
         '/odata/v4/ticket/Tickets',
         {
           projectId: 'nonexistent-project',
-          createdBy: 'u-manager',
+          createdBy: requireSeedId('managerId'),
           title: 'Bad project test',
           nature: 'REPORT',
         },
@@ -212,7 +317,8 @@ describe('User entity', () => {
   });
 
   test('GET /Users by ID returns a single user', async () => {
-    const { status, data } = await GET("/odata/v4/user/Users('u-admin')", withAuth());
+    const adminId = requireSeedId('adminId');
+    const { status, data } = await GET(`/odata/v4/user/Users('${adminId}')`, withAuth());
     expect(status).toBe(200);
     expect(data.email).toBe('alice.admin@inetum.com');
   });
@@ -237,7 +343,7 @@ describe('Imputation state machine', () => {
       '/odata/v4/time/ImputationPeriods',
       {
         periodKey: `IT-${suffix}`,
-        consultantId: 'u-tech',
+        consultantId: requireSeedId('techId'),
         startDate: '2026-03-01',
         endDate: '2026-03-15',
       },
@@ -255,7 +361,7 @@ describe('Imputation state machine', () => {
     if (['DRAFT', 'SUBMITTED', 'REJECTED'].includes(imp.validationStatus)) {
       const { status, data } = await POST(
         `/odata/v4/time/Imputations('${imp.ID}')/validate`,
-        { validatedBy: 'u-manager' },
+        { validatedBy: requireSeedId('managerId') },
         withAuth()
       );
       expect(status).toBe(200);
@@ -280,7 +386,7 @@ describe('Imputation state machine', () => {
 
     const { status, data } = await POST(
       `/odata/v4/time/ImputationPeriods('${created.ID}')/validate`,
-      { validatedBy: 'u-manager' },
+      { validatedBy: requireSeedId('managerId') },
       withAuth()
     );
     expect(status).toBe(200);
@@ -322,7 +428,7 @@ describe('Validation and state-machine guards', () => {
 
   test('Ticket invalid status transition returns 409', async () => {
     try {
-      await PATCH("/odata/v4/ticket/Tickets('tk-002')", { status: 'DONE' }, withAuth());
+      await PATCH(`/odata/v4/ticket/Tickets('${requireSeedId('newStatusTicketId')}')`, { status: 'DONE' }, withAuth());
       fail('Should have thrown');
     } catch (err) {
       expect(err.response?.status ?? err.status).toBe(409);
@@ -332,7 +438,7 @@ describe('Validation and state-machine guards', () => {
   test('Project delete with children returns 409', async () => {
     await ensureAdminAuth();
     try {
-      await DELETE("/odata/v4/core/Projects('proj-1')", withAdminAuth());
+      await DELETE(`/odata/v4/core/Projects('${requireSeedId('project1Id')}')`, withAdminAuth());
       fail('Should have thrown');
     } catch (err) {
       expect(err.response?.status ?? err.status).toBe(409);
@@ -342,7 +448,7 @@ describe('Validation and state-machine guards', () => {
   test('User delete with references returns 409', async () => {
     await ensureAdminAuth();
     try {
-      await DELETE("/odata/v4/user/Users('u-manager')", withAdminAuth());
+      await DELETE(`/odata/v4/user/Users('${requireSeedId('managerId')}')`, withAdminAuth());
       fail('Should have thrown');
     } catch (err) {
       expect(err.response?.status ?? err.status).toBe(409);
@@ -352,7 +458,7 @@ describe('Validation and state-machine guards', () => {
   test('Imputation direct PATCH of validationStatus returns 403', async () => {
     try {
       await PATCH(
-        "/odata/v4/time/Imputations('imp-2')",
+        `/odata/v4/time/Imputations('${requireSeedId('draftImputationId')}')`,
         { validationStatus: 'VALIDATED' },
         withAuth()
       );
@@ -363,11 +469,12 @@ describe('Validation and state-machine guards', () => {
   });
 
   test('ImputationPeriod direct PATCH of status returns 403', async () => {
+    const periodSuffix = Math.random().toString(36).slice(2, 8).toUpperCase();
     const { data: createdPeriod } = await POST(
       '/odata/v4/time/ImputationPeriods',
       {
-        periodKey: '2026-03-H1',
-        consultantId: 'u-tech',
+        periodKey: `2026-03-GUARD-${periodSuffix}`,
+        consultantId: requireSeedId('techId'),
         startDate: '2026-03-01',
         endDate: '2026-03-15',
       },
@@ -389,7 +496,7 @@ describe('Validation and state-machine guards', () => {
   test('LeaveRequest invalid transition returns 409', async () => {
     try {
       await PATCH(
-        "/odata/v4/user/LeaveRequests('leave-1')",
+        `/odata/v4/user/LeaveRequests('${requireSeedId('approvedLeaveId')}')`,
         { status: 'PENDING' },
         withAuth()
       );
@@ -404,8 +511,8 @@ describe('Validation and state-machine guards', () => {
       await POST(
         '/odata/v4/user/Allocations',
         {
-          userId: 'u-tech',
-          projectId: 'proj-1',
+          userId: requireSeedId('techId'),
+          projectId: requireSeedId('project1Id'),
           allocationPercent: 120,
           startDate: '2026-02-01',
           endDate: '2026-03-01',
@@ -424,7 +531,7 @@ describe('Validation and state-machine guards', () => {
         '/odata/v4/user/Allocations',
         {
           userId: 'u-unknown',
-          projectId: 'proj-1',
+          projectId: requireSeedId('project1Id'),
           allocationPercent: 50,
           startDate: '2026-02-01',
           endDate: '2026-03-01',
@@ -441,7 +548,7 @@ describe('Validation and state-machine guards', () => {
     const { data: wricef } = await POST(
       '/odata/v4/core/Wricefs',
       {
-        projectId: 'proj-2',
+        projectId: requireSeedId('project2Id'),
         sourceFileName: 'cascade-test.xlsx',
       },
       withAuth()
@@ -452,7 +559,7 @@ describe('Validation and state-machine guards', () => {
       '/odata/v4/core/WricefObjects',
       {
         wricefId: wricef.ID,
-        projectId: 'proj-2',
+        projectId: requireSeedId('project2Id'),
         type: 'W',
         title: 'Cascade object 1',
       },
@@ -462,7 +569,7 @@ describe('Validation and state-machine guards', () => {
       '/odata/v4/core/WricefObjects',
       {
         wricefId: wricef.ID,
-        projectId: 'proj-2',
+        projectId: requireSeedId('project2Id'),
         type: 'R',
         title: 'Cascade object 2',
       },
@@ -510,8 +617,8 @@ describe('Validation and state-machine guards', () => {
         title: 'Doc update test',
         description: 'Before update',
         type: 'GENERAL',
-        projectId: 'proj-1',
-        authorId: 'u-tech',
+        projectId: requireSeedId('project1Id'),
+        authorId: requireSeedId('techId'),
       },
       withAuth()
     );

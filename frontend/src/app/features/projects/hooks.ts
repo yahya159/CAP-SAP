@@ -8,7 +8,6 @@ import { useAuth } from '../../context/AuthContext';
 import { getBaseRouteForRole } from '../../context/roleRouting';import { TicketsAPI } from '../../services/odata/ticketsApi';
 import { WricefObjectsAPI } from '../../services/odata/wricefObjectsApi';
 import { WricefsAPI } from '../../services/odata/wricefsApi';
-import { createTicketWithUnifiedFlow } from '../../services/ticketCreation';
 import {
   Allocation,
   Deliverable,
@@ -39,20 +38,16 @@ import {
   buildWricefObjectTicketStats,
   COMPLEXITY_BADGE_CLASS,
   computeEffortTotals,
-  computeEstimateConsumption,
   computeProjectKpis,
   countDocumentationByType,
   EMPTY_PROJECT_DOCUMENTATION_FORM,
-  EMPTY_PROJECT_TICKET_FORM,
   filterProjectObjects,
   filterProjectTickets,
   formatBytes,
-  getUsageBarClass,
   paginateItems,
   PROJECT_TABS,
   ProjectDocumentationFormState,
   ProjectTabKey,
-  ProjectTicketFormState,
   sortTicketHistoryByLatest,
   withProjectTabIcons,
   WRICEF_PRIORITY_COLOR,
@@ -85,8 +80,8 @@ const asArray = <T,>(value: T[] | null | undefined): T[] => (Array.isArray(value
 export const loadProjectDetailsBootstrap = async (
   projectId?: string,
   signal?: AbortSignal
-): Promise<ProjectDetailsBootstrapState> => {
-  if (!projectId) return { ...EMPTY_BOOTSTRAP_STATE };
+): Promise<ProjectDetailsBootstrapState & { error: string | null }> => {
+  if (!projectId) return { ...EMPTY_BOOTSTRAP_STATE, error: null };
 
   const data = await ProjectDetailsAPI.getBootstrapData(projectId, { signal });
   return {
@@ -97,6 +92,7 @@ export const loadProjectDetailsBootstrap = async (
     tickets: asArray(data.tickets),
     documentationObjects: asArray(data.documentationObjects),
     wricefObjects: asArray(data.wricefObjects),
+    error: data.errors.length > 0 ? data.errors.join(' ') : null,
   };
 };
 
@@ -130,6 +126,7 @@ export const useProjectDetailsBootstrap = (projectId?: string) => {
       setTickets(data.tickets);
       setDocumentationObjects(data.documentationObjects);
       setWricefObjects(data.wricefObjects);
+      setError(data.error);
     } catch (err) {
       if (!isAbortError(err)) {
         console.error('[useProjectDetailsBootstrap] Failed to load bootstrap data', err);
@@ -214,7 +211,8 @@ export interface ProjectDetailsViewModel {
   documentationVm: any;
   createTicketDialogVm: {
     open: boolean;
-    vm: any;
+    defaultWricefObjectId?: string;
+    onOpenChange: (open: boolean) => void;
   };
   createDocumentationDialogVm: {
     open: boolean;
@@ -247,7 +245,6 @@ export const useProjectDetailsViewModel = (): ProjectDetailsViewModel => {
   const [selectedTicketId, setSelectedTicketId] = useState('');
   const [docText, setDocText] = useState('');
   const [docSaving, setDocSaving] = useState(false);
-  const [abaqueSaving, setAbaqueSaving] = useState(false);
   const [projectEstimateSaving, setProjectEstimateSaving] = useState(false);
   const [forceEstimatorVisible, setForceEstimatorVisible] = useState(false);
   const [wricefImporting, setWricefImporting] = useState(false);
@@ -263,8 +260,7 @@ export const useProjectDetailsViewModel = (): ProjectDetailsViewModel => {
   const [ticketsPage, setTicketsPage] = useState(1);
   const [ticketsPageSize, setTicketsPageSize] = useState(10);
   const [showCreateTicket, setShowCreateTicket] = useState(false);
-  const [ticketForm, setTicketForm] = useState<ProjectTicketFormState>(EMPTY_PROJECT_TICKET_FORM);
-  const [isCreatingTicket, setIsCreatingTicket] = useState(false);
+  const [createTicketDialogDefaultWricefObjectId, setCreateTicketDialogDefaultWricefObjectId] = useState<string | undefined>(undefined);
   const [showCreateDoc, setShowCreateDoc] = useState(false);
   const [docForObjectId, setDocForObjectId] = useState<string | null>(null);
   const [docForm, setDocForm] = useState<ProjectDocumentationFormState>(
@@ -284,7 +280,7 @@ export const useProjectDetailsViewModel = (): ProjectDetailsViewModel => {
     [users]
   );
   const kpis = useMemo(() => computeProjectKpis(tickets), [tickets]);
-  const { totalActualHours, totalEstimatedHours, totalActualDays } = useMemo(
+  const { totalActualHours, totalEstimatedHours } = useMemo(
     () => computeEffortTotals(tickets),
     [tickets]
   );
@@ -451,22 +447,6 @@ export const useProjectDetailsViewModel = (): ProjectDetailsViewModel => {
     }
   };
 
-  const updateProjectAbaque = async (linkedAbaqueId: string) => {
-    if (!project) return;
-    try {
-      setAbaqueSaving(true);
-      const updated = await ProjectsAPI.update(project.id, {
-        linkedAbaqueId: linkedAbaqueId === '__none' ? undefined : linkedAbaqueId,
-      });
-      setProject(updated);
-      toast.success('Project abaque configuration updated');
-    } catch {
-      toast.error('Failed to update project configuration');
-    } finally {
-      setAbaqueSaving(false);
-    }
-  };
-
   const importWricefFile = async (event: React.ChangeEvent<HTMLInputElement>) => {
     if (!project) return;
     const file = event.target.files?.[0];
@@ -542,56 +522,14 @@ export const useProjectDetailsViewModel = (): ProjectDetailsViewModel => {
   };
 
   const openCreateTicketDialog = (wricefObjectId?: string) => {
-    setTicketForm({ ...EMPTY_PROJECT_TICKET_FORM, wricefObjectId: wricefObjectId ?? '' });
+    setCreateTicketDialogDefaultWricefObjectId(wricefObjectId);
     setShowCreateTicket(true);
   };
 
   const handleCreateTicketOpenChange = (open: boolean) => {
     setShowCreateTicket(open);
     if (!open) {
-      setTicketForm(EMPTY_PROJECT_TICKET_FORM);
-    }
-  };
-
-  const createProjectTicket = async () => {
-    if (!project || !currentUser) return;
-    if (!ticketForm.title.trim()) {
-      toast.error('Ticket title is required');
-      return;
-    }
-    if (ticketForm.effortHours <= 0) {
-      toast.error('Effort hours must be greater than 0');
-      return;
-    }
-    try {
-      setIsCreatingTicket(true);
-      const { ticket: created, updatedProject } = await createTicketWithUnifiedFlow({
-        project,
-        wricefObjects,
-        existingProjectTickets: tickets,
-        createdBy: currentUser.id,
-        priority: ticketForm.priority,
-        nature: ticketForm.nature,
-        title: ticketForm.title.trim(),
-        description: ticketForm.description.trim(),
-        dueDate: ticketForm.dueDate || undefined,
-        module: 'OTHER',
-        complexity: ticketForm.complexity,
-        estimationHours: ticketForm.effortHours,
-        estimatedViaAbaque: false,
-        selectedWricefObjectId: ticketForm.wricefObjectId || undefined,
-        creationComment: 'Ticket created with manual estimation',
-      });
-      setTickets((previous) => [created, ...previous]);
-      if (updatedProject) setProject(updatedProject);
-      setTicketForm(EMPTY_PROJECT_TICKET_FORM);
-      setShowCreateTicket(false);
-      setActiveTab('objects');
-      toast.success('Ticket created');
-    } catch {
-      toast.error('Failed to create ticket');
-    } finally {
-      setIsCreatingTicket(false);
+      setCreateTicketDialogDefaultWricefObjectId(undefined);
     }
   };
 
@@ -724,10 +662,6 @@ export const useProjectDetailsViewModel = (): ProjectDetailsViewModel => {
         wricefObjectCount: wricefObjects.length,
         blockedTicketsCount: kpis.blocked,
         criticalTicketsCount: kpis.critical,
-        abaqueSaving,
-        onLinkedAbaqueChange: (value: any) => {
-          void updateProjectAbaque(value);
-        },
         onOpenCreateTicket: () => openCreateTicketDialog(),
       }
     : null;
@@ -863,19 +797,6 @@ export const useProjectDetailsViewModel = (): ProjectDetailsViewModel => {
       }
     : null;
 
-  const createTicketDialogVm: any = {
-    projectName: project?.name ?? '',
-    wricefObjects,
-    form: ticketForm,
-    isCreatingTicket,
-    onOpenChange: handleCreateTicketOpenChange,
-    onFormChange: setTicketForm,
-    onSubmit: () => {
-      void createProjectTicket();
-    },
-    onCancel: () => handleCreateTicketOpenChange(false),
-  };
-
   const createDocumentationDialogVm: CreateDocumentationDialogViewModel = {
     docForObjectId,
     form: docForm,
@@ -919,7 +840,8 @@ export const useProjectDetailsViewModel = (): ProjectDetailsViewModel => {
     documentationVm,
     createTicketDialogVm: {
       open: showCreateTicket,
-      vm: createTicketDialogVm,
+      defaultWricefObjectId: createTicketDialogDefaultWricefObjectId,
+      onOpenChange: handleCreateTicketOpenChange,
     },
     createDocumentationDialogVm: {
       open: showCreateDoc,

@@ -23,7 +23,18 @@ export const ProjectDetailsView: React.FC = () => {
       </div>
     );
   }
-  if (!vm.project) return null;
+  if (!vm.project) {
+    return (
+      <div className="min-h-screen bg-background">
+        <div className="p-8 space-y-3">
+          <h1 className="text-2xl font-semibold text-foreground">Project unavailable</h1>
+          <p className="text-sm text-muted-foreground">
+            {vm.error ?? 'The requested project could not be loaded.'}
+          </p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-background">
@@ -43,26 +54,21 @@ export const ProjectDetailsView: React.FC = () => {
         <OverviewPanel active={vm.activeTab === 'overview'} vm={vm.overviewVm!} />
         <AbaquesPanel active={vm.activeTab === 'abaques'} vm={vm.abaquesVm!} />
         <TicketsPanel 
-          projectId={vm.project.id}
           active={vm.activeTab === 'tickets'} 
-          onOpenCreateTicket={() => vm.createTicketDialogVm.vm.onOpenChange(true)}
-          onOpenTicketDetails={vm.ticketsVm.onOpenTicketDetails} 
+          vm={vm.ticketsVm}
         />
         <TeamPanel active={vm.activeTab === 'team'} {...vm.teamVm} />
         <WricefPanel 
-          projectId={vm.project.id}
           active={vm.activeTab === 'objects'} 
-          onOpenCreateTicket={(id) => vm.createTicketDialogVm.vm.onOpenChange(true)}
-          onOpenCreateDocument={() => {}}
-          onOpenTicketDetails={vm.ticketsVm.onOpenTicketDetails}
-          onViewDocument={() => {}}
+          vm={vm.wricefVm}
         />
         <ProjectKpis {...vm.kpisVm} />
         <DocumentationPanel active={vm.activeTab === 'docs'} vm={vm.documentationVm!} />
         <CreateProjectTicketDialog
           projectId={vm.project.id}
           open={vm.createTicketDialogVm.open}
-          onOpenChange={(open) => vm.createTicketDialogVm.vm.onOpenChange(open)}
+          onOpenChange={vm.createTicketDialogVm.onOpenChange}
+          defaultWricefObjectId={vm.createTicketDialogVm.defaultWricefObjectId}
         />
         <CreateDocumentationDialog
           open={vm.createDocumentationDialogVm.open}

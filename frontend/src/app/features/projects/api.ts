@@ -24,23 +24,43 @@ export interface ProjectDetailsBootstrapData {
   tickets: Ticket[];
   documentationObjects: DocumentationObject[];
   wricefObjects: WricefObject[];
+  errors: string[];
 }
+
+const toErrorMessage = (label: string, reason: unknown): string => {
+  const message = reason instanceof Error ? reason.message : String(reason ?? 'Unknown error');
+  return `Failed to load ${label}: ${message}`;
+};
 
 export const ProjectDetailsAPI = {
   async getBootstrapData(
     projectId: string,
     requestOptions?: ODataRequestOptions
   ): Promise<ProjectDetailsBootstrapData> {
-    const [project, allocations, users, deliverables, tickets, documentationObjects, wricefObjects] =
-      await Promise.all([
-        ODataProjectsAPI.getById(projectId, requestOptions),
-        ODataAllocationsAPI.getByProject(projectId, requestOptions),
-        ODataUsersAPI.getActive(requestOptions),
-        ODataDeliverablesAPI.getByProject(projectId, requestOptions),
-        ODataTicketsAPI.getByProject(projectId, requestOptions),
-        ODataDocumentationAPI.getByProject(projectId, requestOptions),
-        ODataWricefObjectsAPI.getByProject(projectId, requestOptions),
-      ]);
+    const project = await ODataProjectsAPI.getById(projectId, requestOptions);
+    const results = await Promise.allSettled([
+      ODataAllocationsAPI.getByProject(projectId, requestOptions),
+      ODataUsersAPI.getActive(requestOptions),
+      ODataDeliverablesAPI.getByProject(projectId, requestOptions),
+      ODataTicketsAPI.getByProject(projectId, requestOptions),
+      ODataDocumentationAPI.getByProject(projectId, requestOptions),
+      ODataWricefObjectsAPI.getByProject(projectId, requestOptions),
+    ]);
+
+    const allocations = results[0].status === 'fulfilled' ? results[0].value : [];
+    const users = results[1].status === 'fulfilled' ? results[1].value : [];
+    const deliverables = results[2].status === 'fulfilled' ? results[2].value : [];
+    const tickets = results[3].status === 'fulfilled' ? results[3].value : [];
+    const documentationObjects = results[4].status === 'fulfilled' ? results[4].value : [];
+    const wricefObjects = results[5].status === 'fulfilled' ? results[5].value : [];
+    const errors = [
+      results[0].status === 'rejected' ? toErrorMessage('allocations', results[0].reason) : null,
+      results[1].status === 'rejected' ? toErrorMessage('users', results[1].reason) : null,
+      results[2].status === 'rejected' ? toErrorMessage('deliverables', results[2].reason) : null,
+      results[3].status === 'rejected' ? toErrorMessage('tickets', results[3].reason) : null,
+      results[4].status === 'rejected' ? toErrorMessage('documentation', results[4].reason) : null,
+      results[5].status === 'rejected' ? toErrorMessage('WRICEF objects', results[5].reason) : null,
+    ].filter((entry): entry is string => Boolean(entry));
 
     return {
       project,
@@ -50,6 +70,7 @@ export const ProjectDetailsAPI = {
       tickets,
       documentationObjects,
       wricefObjects,
+      errors,
     };
   },
 

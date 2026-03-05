@@ -4,6 +4,7 @@ import { toast } from 'sonner';
 import { useAuth } from '../../context/AuthContext';
 import { getBaseRouteForRole } from '../../context/roleRouting';
 import { createTicketWithUnifiedFlow } from '../../services/ticketCreation';
+import { getProjectAbaqueEstimate } from '../../utils/projectAbaque';
 import {
   Project,
   SAPModule,
@@ -46,6 +47,7 @@ export const useManagerTicketsBootstrap = () => {
       setProjects(data.projects);
       setUsers(data.users);
       setTickets(data.tickets);
+      setError(data.errors.length > 0 ? data.errors.join(' ') : null);
     } catch (err) {
       if (!isAbortError(err)) {
         console.error('[useManagerTicketsBootstrap] Failed to load bootstrap data', err);
@@ -93,6 +95,7 @@ export interface ManagerTicketsViewModel {
   currentUserRole?: UserRole;
   roleBasePath: string;
   loading: boolean;
+  error: string | null;
   isViewOnly: boolean;
   projects: Project[];
   users: User[];
@@ -109,6 +112,8 @@ export interface ManagerTicketsViewModel {
   selectedProject: Project | undefined;
   wricefObjects: WricefObject[];
   isManualWricef: boolean;
+  abaqueSuggestedHours: number | null;
+  isEstimatedByAbaque: boolean;
   isSubmitting: boolean;
   searchQuery: string;
   statusFilter: Ticket['status'] | 'ALL';
@@ -134,6 +139,8 @@ export interface ManagerTicketsViewModel {
   setDateFrom: React.Dispatch<React.SetStateAction<string>>;
   setDateTo: React.Dispatch<React.SetStateAction<string>>;
   setWricefFilter: React.Dispatch<React.SetStateAction<string>>;
+  onEstimatedByAbaqueChange: (value: boolean) => void;
+  onApplyAbaqueEstimate: () => void;
   submitTicket: (event: React.FormEvent) => Promise<void>;
   changeStatus: (ticket: Ticket, newStatus: TicketStatus) => Promise<void>;
   updateTicketDueDate: (ticketId: string, dueDate: string) => Promise<void>;
@@ -149,7 +156,7 @@ export interface ManagerTicketsViewModel {
 export const useManagerTicketsViewModel = (): ManagerTicketsViewModel => {
   const { currentUser } = useAuth();
   const navigate = useNavigate();
-  const { projects, setProjects, users, tickets, setTickets, loading } = useManagerTicketsBootstrap();
+  const { projects, setProjects, users, tickets, setTickets, loading, error } = useManagerTicketsBootstrap();
   const { updateTicket } = useManagerTicketsMutations();
 
   const isViewOnly = currentUser?.role === 'CONSULTANT_TECHNIQUE';
@@ -173,6 +180,7 @@ export const useManagerTicketsViewModel = (): ManagerTicketsViewModel => {
     return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}`;
   });
   const [isManualWricef, setIsManualWricef] = useState(true);
+  const [isEstimatedByAbaque, setIsEstimatedByAbaque] = useState(false);
   const [wricefObjects, setWricefObjects] = useState<WricefObject[]>([]);
 
   const roleBasePath = currentUser ? getBaseRouteForRole(currentUser.role) : '/manager';
@@ -228,6 +236,20 @@ export const useManagerTicketsViewModel = (): ManagerTicketsViewModel => {
   useEffect(() => {
     setIsManualWricef(!hasWricefObjects);
   }, [hasWricefObjects, form.projectId]);
+
+  useEffect(() => {
+    setIsEstimatedByAbaque(false);
+  }, [form.projectId, form.nature, form.complexity]);
+
+  const abaqueSuggestedHours = useMemo(
+    () =>
+      getProjectAbaqueEstimate(
+        selectedProject?.abaqueEstimate,
+        form.nature,
+        form.complexity
+      ),
+    [form.complexity, form.nature, selectedProject?.abaqueEstimate]
+  );
 
   const filteredTickets = useMemo(
     () =>
@@ -300,10 +322,12 @@ export const useManagerTicketsViewModel = (): ManagerTicketsViewModel => {
         module: form.module,
         complexity: form.complexity,
         estimationHours: form.estimationHours,
-        estimatedViaAbaque: false,
+        estimatedViaAbaque: isEstimatedByAbaque,
         selectedWricefObjectId: !isManualWricef ? form.wricefId.trim() || undefined : undefined,
         manualWricefId: isManualWricef ? form.wricefId.trim() || undefined : undefined,
-        creationComment: 'Ticket created',
+        creationComment: isEstimatedByAbaque
+          ? 'Ticket created with project matrix estimation'
+          : 'Ticket created',
       });
 
       setTickets((previous) => [created, ...previous]);
@@ -399,6 +423,7 @@ export const useManagerTicketsViewModel = (): ManagerTicketsViewModel => {
     currentUserRole: currentUser?.role,
     roleBasePath,
     loading,
+    error,
     isViewOnly,
     projects,
     users,
@@ -415,6 +440,8 @@ export const useManagerTicketsViewModel = (): ManagerTicketsViewModel => {
     selectedProject,
     wricefObjects,
     isManualWricef,
+    abaqueSuggestedHours,
+    isEstimatedByAbaque,
     isSubmitting,
     searchQuery,
     statusFilter,
@@ -440,6 +467,12 @@ export const useManagerTicketsViewModel = (): ManagerTicketsViewModel => {
     setDateFrom,
     setDateTo,
     setWricefFilter,
+    onEstimatedByAbaqueChange: setIsEstimatedByAbaque,
+    onApplyAbaqueEstimate: () => {
+      if (abaqueSuggestedHours === null) return;
+      setForm((previous) => ({ ...previous, estimationHours: abaqueSuggestedHours }));
+      setIsEstimatedByAbaque(true);
+    },
     submitTicket,
     changeStatus,
     updateTicketDueDate,
