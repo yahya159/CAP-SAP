@@ -170,61 +170,13 @@ export interface TicketComment {
 // Abaques de Chiffrage
 // ---------------------------------------------------------------------------
 
-export type AbaqueTicketNature =
-  | TicketNature
-  | 'BUG'
-  | 'FEATURE'
-  | 'DOCUMENTATION'
-  | 'SUPPORT';
-
-export const ABAQUE_TICKET_NATURE_LABELS: Record<AbaqueTicketNature, string> = {
-  WORKFLOW: 'Workflow',
-  FORMULAIRE: 'Formulaire',
-  PROGRAMME: 'Programme',
-  ENHANCEMENT: 'Enhancement',
-  MODULE: 'Module',
-  REPORT: 'Report',
-  BUG: 'Bug',
-  FEATURE: 'Feature',
-  DOCUMENTATION: 'Documentation',
-  SUPPORT: 'Support',
-};
-
-export type AbaqueComplexity = 'LOW' | 'MEDIUM' | 'HIGH';
-
-export interface AbaqueEntry {
-  ticketNature: AbaqueTicketNature;
-  complexity: AbaqueComplexity;
-  standardHours: number;
-}
-
-export interface Abaque {
+export interface ProjectAbaqueRow {
   id: string;
-  name: string;
-  entries: AbaqueEntry[];
+  nature: TicketNature;
+  complexity: TicketComplexity;
+  hours: number;
 }
 
-export type ProjectAbaqueUsersRange = '1-50' | '51-200' | '200+';
-export type ProjectCustomizationLevel = 'STANDARD' | 'MEDIUM' | 'HIGH_CUSTOM';
-export type ProjectAbaqueRiskLevel = 'LOW' | 'MEDIUM' | 'HIGH';
-
-export interface ProjectAbaqueCriteria {
-  customizationLevel: ProjectCustomizationLevel;
-}
-
-export interface AbaqueEstimateResult {
-  complexity: AbaqueComplexity;
-  estimatedConsultingDays: number;
-  riskLevel: ProjectAbaqueRiskLevel;
-  recommendedTeamSize: number;
-}
-
-export interface ProjectAbaqueEstimate {
-  criteria: ProjectAbaqueCriteria;
-  result: AbaqueEstimateResult;
-  estimatedAt: string;
-  estimatedBy?: string;
-}
 
 // ---------------------------------------------------------------------------
 // WRICEF imported model (1 WRICEF file per project)
@@ -383,8 +335,8 @@ export interface Project {
   documentation?: string;
   /** Optional linked estimation matrix (Abaque de chiffrage) */
   linkedAbaqueId?: string;
-  /** Optional project scoping estimate generated from abaque criteria */
-  abaqueEstimate?: ProjectAbaqueEstimate;
+  /** Manual project matrix mapping Ticket Nature + Complexity -> Hours */
+  abaqueEstimate?: ProjectAbaqueRow[];
   /** Deprecated: Moved to standalone Wricef table */
   wricef?: never;
 }

@@ -23,7 +23,6 @@ export type {
   DocumentationObject,
   Wricef,
   WricefObject,
-  Abaque,
   ODataClientConfig,
   ODataQueryOptions,
   ODataResponse,
@@ -62,7 +61,6 @@ export {
 export type { AuthSession, QuickAccessAccount } from './odata/authApi';
 export { AuthAPI } from './odata/authApi';
 
-export { AbaquesAPI } from './odata/abaquesApi';
 export { AllocationsAPI } from './odata/allocationsApi';
 export { DeliverablesAPI } from './odata/deliverablesApi';
 export { DocumentationAPI } from './odata/documentationApi';

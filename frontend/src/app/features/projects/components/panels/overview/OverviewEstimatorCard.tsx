@@ -15,14 +15,8 @@ export const OverviewEstimatorCard: React.FC<OverviewEstimatorCardProps> = ({ vm
         <h3 className="text-lg font-semibold text-foreground">Smart Ticket Estimation</h3>
       </div>
       <p className="text-sm text-muted-foreground">
-        Create project tickets with standardized effort using the linked abaque matrix.
+        Create project tickets and log hours directly against them to track project progress.
       </p>
-      <div className="rounded border border-border p-3 text-sm space-y-1">
-        <div className="text-muted-foreground">Current Abaque</div>
-        <div className="font-medium text-foreground">
-          {vm.selectedAbaque?.name ?? 'No linked abaque'}
-        </div>
-      </div>
       <Button onClick={vm.onOpenCreateTicket} className="w-full">
         <Calculator className="h-4 w-4 mr-1" />
         Create Ticket

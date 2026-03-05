@@ -11,7 +11,6 @@ export const projectKeys = {
   deliverables: (id: string) => [...projectKeys.details(id), 'deliverables'] as const,
   allocations: (id: string) => [...projectKeys.details(id), 'allocations'] as const,
   users: ['users', 'active'] as const,
-  abaques: ['abaques'] as const,
 };
 
 export const useProjectDetails = (projectId?: string) => {
@@ -76,10 +75,3 @@ export const useActiveUsers = () => {
   });
 };
 
-export const useAbaques = () => {
-  return useQuery({
-    queryKey: projectKeys.abaques,
-    queryFn: ({ signal }) => ProjectDetailsAPI.AbaquesAPI.getAll({ signal }),
-    staleTime: 60 * 60 * 1000, // 1 hour
-  });
-};

@@ -21,9 +21,6 @@ export const CreateProjectTicketContextBlock: React.FC<CreateProjectTicketContex
         <p>
           <span className="text-muted-foreground">Project:</span> {vm.projectName}
         </p>
-        <p>
-          <span className="text-muted-foreground">Abaque:</span> {vm.selectedAbaque?.name ?? 'No linked abaque'}
-        </p>
       </div>
 
       {vm.wricefObjects.length > 0 && (

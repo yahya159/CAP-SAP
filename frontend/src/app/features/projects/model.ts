@@ -1,7 +1,4 @@
 import {
-  Abaque,
-  AbaqueComplexity,
-  AbaqueTicketNature,
   DocumentationObject,
   DocumentationObjectType,
   DocumentationAttachment,
@@ -31,7 +28,7 @@ export interface ProjectTicketFormState {
   description: string;
   nature: TicketNature;
   priority: Ticket['priority'];
-  complexity: AbaqueComplexity;
+  complexity: TicketComplexity;
   effortHours: number;
   dueDate: string;
   wricefObjectId: string;
@@ -56,7 +53,7 @@ export const EMPTY_PROJECT_TICKET_FORM: ProjectTicketFormState = {
   description: '',
   nature: 'PROGRAMME',
   priority: 'MEDIUM',
-  complexity: 'MEDIUM',
+  complexity: 'MOYEN',
   effortHours: 0,
   dueDate: '',
   wricefObjectId: '',
@@ -67,12 +64,6 @@ export const EMPTY_PROJECT_DOCUMENTATION_FORM: ProjectDocumentationFormState = {
   description: '',
   type: 'SFD',
   content: '',
-};
-
-export const TICKET_COMPLEXITY_BY_ABAQUE: Record<AbaqueComplexity, Ticket['complexity']> = {
-  LOW: 'SIMPLE',
-  MEDIUM: 'MOYEN',
-  HIGH: 'COMPLEXE',
 };
 
 export const PROJECT_TABS: ProjectTabDefinition<ProjectTabKey>[] = [
@@ -332,12 +323,6 @@ export const withProjectTabIcons = (
   });
 };
 
-export const buildAbaqueTicketNatures = (selectedAbaque: Abaque | null): AbaqueTicketNature[] => {
-  if (!selectedAbaque) return [];
-  const entries = Array.isArray(selectedAbaque.entries) ? selectedAbaque.entries : [];
-  return [...new Set(entries.map((entry) => entry?.ticketNature).filter(Boolean))] as AbaqueTicketNature[];
-};
-
 export const getUsageBarClass = (estimateConsumptionPercent: number): string => {
   if (estimateConsumptionPercent > 100) return 'bg-destructive';
   if (estimateConsumptionPercent > 80) return 'bg-amber-500';
@@ -347,33 +332,6 @@ export const getUsageBarClass = (estimateConsumptionPercent: number): string => 
 export const sortTicketHistoryByLatest = (history: Ticket['history'] = []): Ticket['history'] => {
   return [...history].sort(
     (a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime()
-  );
-};
-
-export const getAbaqueEstimateForNature = (
-  abaque: Abaque,
-  ticketNature: TicketNature,
-  complexity: AbaqueComplexity
-): number | null => {
-  const entries = Array.isArray(abaque.entries) ? abaque.entries : [];
-  const direct = entries.find(
-    (entry) => entry.ticketNature === ticketNature && entry.complexity === complexity
-  );
-  if (direct) return direct.standardHours;
-
-  const fallbackByNature: Record<TicketNature, 'FEATURE' | 'DOCUMENTATION' | 'SUPPORT'> = {
-    PROGRAMME: 'FEATURE',
-    MODULE: 'FEATURE',
-    ENHANCEMENT: 'FEATURE',
-    FORMULAIRE: 'DOCUMENTATION',
-    REPORT: 'DOCUMENTATION',
-    WORKFLOW: 'SUPPORT',
-  };
-  return (
-    entries.find(
-      (entry) =>
-        entry.ticketNature === fallbackByNature[ticketNature] && entry.complexity === complexity
-    )?.standardHours ?? null
   );
 };
 

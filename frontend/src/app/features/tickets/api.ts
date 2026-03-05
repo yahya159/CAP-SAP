@@ -1,10 +1,9 @@
-import { AbaquesAPI as ODataAbaquesAPI } from '../../services/odata/abaquesApi';
 import type { ODataRequestOptions } from '../../services/odata/core';
 import { NotificationsAPI as ODataNotificationsAPI } from '../../services/odata/notificationsApi';
 import { ProjectsAPI as ODataProjectsAPI } from '../../services/odata/projectsApi';
 import { TicketsAPI as ODataTicketsAPI } from '../../services/odata/ticketsApi';
 import { UsersAPI as ODataUsersAPI } from '../../services/odata/usersApi';
-import { Abaque, Notification, Project, Ticket, User } from '../../types/entities';
+import { Notification, Project, Ticket, User } from '../../types/entities';
 
 export interface ManagerTicketsBootstrapData {
   projects: Project[];
@@ -27,9 +26,6 @@ export const ManagerTicketsAPI = {
     };
   },
 
-  async getAbaqueById(abaqueId: string): Promise<Abaque | null> {
-    return await ODataAbaquesAPI.getById(abaqueId);
-  },
 
   async updateTicket(id: string, payload: Partial<Ticket>): Promise<Ticket> {
     return await ODataTicketsAPI.update(id, payload);

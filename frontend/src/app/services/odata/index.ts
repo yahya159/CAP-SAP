@@ -34,7 +34,6 @@ export { EvaluationsAPI } from './evaluationsApi';
 export { DeliverablesAPI } from './deliverablesApi';
 export { TicketsAPI } from './ticketsApi';
 export { TicketCommentsAPI } from './ticketCommentsApi';
-export { AbaquesAPI } from './abaquesApi';
 export { DocumentationAPI } from './documentationApi';
 export { WricefsAPI } from './wricefsApi';
 export { WricefObjectsAPI } from './wricefObjectsApi';

@@ -1,13 +1,12 @@
-import { useProjectDetails, useProjectTickets, useProjectDeliverables, useProjectWricefObjects, useAbaques, useActiveUsers } from '../queries';
+import { useProjectDetails, useProjectTickets, useProjectDeliverables, useProjectWricefObjects, useActiveUsers } from '../queries';
 import { useMemo } from 'react';
-import { computeProjectKpis, buildAbaqueTicketNatures } from '../model';
+import { computeProjectKpis } from '../model';
 
 export const useOverviewPanel = (projectId: string) => {
   const { data: project } = useProjectDetails(projectId);
   const { data: tickets = [] } = useProjectTickets(projectId);
   const { data: deliverables = [] } = useProjectDeliverables(projectId);
   const { data: wricefObjects = [] } = useProjectWricefObjects(projectId);
-  const { data: abaques = [] } = useAbaques();
   const { data: users = [] } = useActiveUsers();
 
   const manager = useMemo(
@@ -16,16 +15,6 @@ export const useOverviewPanel = (projectId: string) => {
   );
 
   const kpis = useMemo(() => computeProjectKpis(tickets), [tickets]);
-
-  const selectedAbaque = useMemo(
-    () => abaques.find((a) => a.id === project?.linkedAbaqueId) ?? null,
-    [abaques, project?.linkedAbaqueId]
-  );
-
-  const abaqueTicketNatures = useMemo(
-    () => buildAbaqueTicketNatures(selectedAbaque),
-    [selectedAbaque]
-  );
 
   return {
     project: project!,
@@ -36,10 +25,5 @@ export const useOverviewPanel = (projectId: string) => {
     wricefObjectCount: wricefObjects.length,
     blockedTicketsCount: kpis.blocked,
     criticalTicketsCount: kpis.critical,
-    abaques,
-    selectedAbaque,
-    abaqueTicketNatures,
-    abaqueSaving: false,
-    onLinkedAbaqueChange: async (value: string) => { /* To be implemented in component or hook */ },
   };
 };

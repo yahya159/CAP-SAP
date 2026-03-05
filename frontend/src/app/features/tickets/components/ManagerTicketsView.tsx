@@ -84,27 +84,19 @@ export const ManagerTicketsView: React.FC = () => {
           users: vm.users,
           selectedProject: vm.selectedProject,
           wricefObjects: vm.wricefObjects,
-          linkedAbaque: vm.linkedAbaque,
-          abaqueTicketNatures: vm.abaqueTicketNatures,
-          abaqueEntry: vm.abaqueEntry,
           form: vm.form,
           isManualWricef: vm.isManualWricef,
-          isEstimatedByAbaque: vm.isEstimatedByAbaque,
           isSubmitting: vm.isSubmitting,
           onOpenChange: (open) => {
             vm.setShowCreate(open);
-            if (!open) vm.setIsEstimatedByAbaque(false);
           },
           onSubmit: (event) => {
             void vm.submitTicket(event);
           },
           onFormChange: vm.setForm,
           onManualWricefChange: vm.setIsManualWricef,
-          onEstimatedByAbaqueChange: vm.setIsEstimatedByAbaque,
-          onApplyAbaqueEstimate: vm.applyAbaqueEstimate,
           onCancel: () => {
             vm.setShowCreate(false);
-            vm.setIsEstimatedByAbaque(false);
           },
         }}
       />

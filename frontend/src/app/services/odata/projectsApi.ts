@@ -45,23 +45,26 @@ const normalizeTechKeywords = (value: unknown): string[] =>
 const normalizeAbaqueEstimate = (value: unknown): Project['abaqueEstimate'] | undefined => {
   const parsed = parseJsonIfString(value);
 
-  const directRecord = asRecord(parsed);
-  if (directRecord?.criteria && directRecord?.result) {
-    return directRecord as unknown as Project['abaqueEstimate'];
+  // Read direct array if passed directly via payload
+  if (Array.isArray(parsed) && parsed.length > 0 && parsed[0]?.nature) {
+    return parsed as Project['abaqueEstimate'];
   }
 
+  // Parse OData Composition (array of rows with details field)
   const rows = asRows(parsed);
   if (!rows.length) return undefined;
 
+  // Since we overwrite the entire matrix as a single details JSON object inside the array, we get the last one
   const candidates: Array<Project['abaqueEstimate']> = rows
     .map((row) => {
       const record = asRecord(row);
       if (!record) return null;
 
       const details = parseJsonIfString(record.details ?? record.value ?? record);
-      const detailsRecord = asRecord(details);
-      if (!detailsRecord?.criteria || !detailsRecord?.result) return null;
-      return detailsRecord as unknown as Project['abaqueEstimate'];
+      if (Array.isArray(details)) {
+        return details as Project['abaqueEstimate'];
+      }
+      return null;
     })
     .filter((entry): entry is Project['abaqueEstimate'] => Boolean(entry));
 
@@ -75,6 +78,7 @@ const toKeywordRows = (value: unknown): Array<{ keyword: string }> =>
 const toAbaqueEstimateRows = (value: unknown): Array<{ details: string }> => {
   const estimate = normalizeAbaqueEstimate(value);
   if (!estimate) return [];
+  // Store the entire array in a single composition row for simplicity
   return [{ details: JSON.stringify(estimate) }];
 };
 

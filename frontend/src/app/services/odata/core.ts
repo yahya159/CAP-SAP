@@ -19,7 +19,6 @@ import type {
   DocumentationObject,
   Wricef,
   WricefObject,
-  Abaque,
 } from '../../types/entities';
 
 // Re-export entity types so per-API modules need only import from core
@@ -42,7 +41,6 @@ export type {
   DocumentationObject,
   Wricef,
   WricefObject,
-  Abaque,
 };
 
 // ---------------------------------------------------------------------------

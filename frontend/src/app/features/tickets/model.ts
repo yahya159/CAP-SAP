@@ -1,11 +1,8 @@
 import {
-  Abaque,
-  AbaqueComplexity,
   Project,
   SAPModule,
   Ticket,
   TicketComplexity,
-  TicketNature,
 } from '../../types/entities';
 
 export interface TicketFilters {
@@ -73,47 +70,6 @@ export const buildTicketsByDate = (tickets: Ticket[]): Record<string, Ticket[]> 
 
 export const sortProjectsByName = (projects: Project[]): Project[] =>
   [...projects].sort((a, b) => a.name.localeCompare(b.name));
-
-export const mapTicketComplexityToAbaque = (
-  complexity: TicketComplexity
-): AbaqueComplexity => {
-  switch (complexity) {
-    case 'SIMPLE':
-      return 'LOW';
-    case 'MOYEN':
-      return 'MEDIUM';
-    case 'COMPLEXE':
-    case 'TRES_COMPLEXE':
-      return 'HIGH';
-  }
-};
-
-export const getAbaqueEstimateForTicket = (
-  abaque: Abaque,
-  ticketNature: TicketNature,
-  complexity: AbaqueComplexity
-): number | null => {
-  const direct = abaque.entries.find(
-    (entry) => entry.ticketNature === ticketNature && entry.complexity === complexity
-  );
-  if (direct) return direct.standardHours;
-
-  const fallbackByNature: Record<TicketNature, 'FEATURE' | 'DOCUMENTATION' | 'SUPPORT'> = {
-    PROGRAMME: 'FEATURE',
-    MODULE: 'FEATURE',
-    ENHANCEMENT: 'FEATURE',
-    FORMULAIRE: 'DOCUMENTATION',
-    REPORT: 'DOCUMENTATION',
-    WORKFLOW: 'SUPPORT',
-  };
-
-  return (
-    abaque.entries.find(
-      (entry) =>
-        entry.ticketNature === fallbackByNature[ticketNature] && entry.complexity === complexity
-    )?.standardHours ?? null
-  );
-};
 
 export interface CalendarDayCell {
   date: string;

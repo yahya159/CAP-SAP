@@ -1,6 +1,4 @@
 import React from 'react';
-import { Calculator, Scale } from 'lucide-react';
-import { Badge } from '@/app/components/ui/badge';
 import { Button } from '@/app/components/ui/button';
 import { Input } from '@/app/components/ui/input';
 import { Label } from '@/app/components/ui/label';
@@ -29,17 +27,20 @@ export const CreateProjectTicketForm: React.FC<CreateProjectTicketFormProps> = (
       <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
         <div className="space-y-1.5 sm:col-span-2">
           <Label htmlFor="project-ticket-title">Title *</Label>
-          <Input id="project-ticket-title" {...vm.register('title')} placeholder="Ticket title" />
+          <Input
+            id="project-ticket-title"
+            name={vm.register('title').name}
+            onChange={vm.register('title').onChange}
+            onBlur={vm.register('title').onBlur}
+            placeholder="Ticket title"
+          />
           {vm.errors.title && <span className="text-xs text-destructive">{vm.errors.title.message}</span>}
         </div>
         <div className="space-y-1.5">
           <Label>Ticket Nature</Label>
           <Select
             value={vm.formValues.nature}
-            onValueChange={(value) => {
-              vm.setValue('nature', value);
-              vm.onEstimatedByAbaqueChange(false);
-            }}
+            onValueChange={(value) => vm.setValue('nature', value)}
           >
             <SelectTrigger>
               <SelectValue />
@@ -57,10 +58,7 @@ export const CreateProjectTicketForm: React.FC<CreateProjectTicketFormProps> = (
           <Label>Complexity</Label>
           <Select
             value={vm.formValues.complexity}
-            onValueChange={(value) => {
-              vm.setValue('complexity', value);
-              vm.onEstimatedByAbaqueChange(false);
-            }}
+            onValueChange={(value) => vm.setValue('complexity', value)}
           >
             <SelectTrigger>
               <SelectValue />
@@ -88,38 +86,35 @@ export const CreateProjectTicketForm: React.FC<CreateProjectTicketFormProps> = (
         </div>
         <div className="space-y-1.5">
           <Label htmlFor="project-ticket-due-date">Due Date</Label>
-          <Input id="project-ticket-due-date" type="date" {...vm.register('dueDate')} />
+          <Input
+            id="project-ticket-due-date"
+            type="date"
+            name={vm.register('dueDate').name}
+            onChange={vm.register('dueDate').onChange}
+            onBlur={vm.register('dueDate').onBlur}
+          />
         </div>
         <div className="space-y-1.5 sm:col-span-2">
-          <div className="flex items-center justify-between gap-2">
-            <Label htmlFor="project-ticket-effort">Effort (Hours)</Label>
-            <Button type="button" size="sm" variant="outline" onClick={vm.onApplyAbaqueEstimate} disabled={!vm.selectedAbaque}>
-              <Calculator className="h-3.5 w-3.5 mr-1" />
-              Use Abaque Estimate
-            </Button>
-          </div>
+          <Label htmlFor="project-ticket-effort">Effort (Hours)</Label>
           <Input
             id="project-ticket-effort"
             type="number"
             min={0}
-            step={0.5}
-            {...vm.register('effortHours', { valueAsNumber: true })}
-            onChange={(e) => {
-              vm.setValue('effortHours', parseFloat(e.target.value) || 0);
-              vm.onEstimatedByAbaqueChange(false);
-            }}
+            name={vm.register('effortHours', { valueAsNumber: true }).name}
+            onChange={vm.register('effortHours', { valueAsNumber: true }).onChange}
+            onBlur={vm.register('effortHours', { valueAsNumber: true }).onBlur}
           />
           {vm.errors.effortHours && <span className="text-xs text-destructive">{vm.errors.effortHours.message}</span>}
-          {vm.isEstimatedByAbaque && (
-            <Badge variant="secondary" className="inline-flex items-center gap-1">
-              <Scale className="h-3 w-3" />
-              Standard guideline match
-            </Badge>
-          )}
         </div>
         <div className="space-y-1.5 sm:col-span-2">
           <Label htmlFor="project-ticket-description">Description</Label>
-          <Textarea id="project-ticket-description" {...vm.register('description')} rows={4} />
+          <Textarea
+            id="project-ticket-description"
+            name={vm.register('description').name}
+            onChange={vm.register('description').onChange}
+            onBlur={vm.register('description').onBlur}
+            rows={4}
+          />
         </div>
       </div>
     </div>

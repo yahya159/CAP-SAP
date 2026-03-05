@@ -1,6 +1,5 @@
 ﻿import { describe, expect, it } from 'vitest';
 import type {
-  Abaque,
   DocumentationAttachment,
   DocumentationObject,
   Ticket,
@@ -13,7 +12,6 @@ import type { ProjectTabDefinition } from '@/app/features/projects/components/Pr
 import type { ParsedWricefResult } from '@/app/utils/wricefExcel';
 import {
   appendFilesAsDocumentationAttachments,
-  buildAbaqueTicketNatures,
   buildDocumentationDraft,
   buildObjectTicketRows,
   buildWricefImportPlan,
@@ -26,7 +24,6 @@ import {
   filterProjectObjects,
   filterProjectTickets,
   formatBytes,
-  getAbaqueEstimateForNature,
   getUsageBarClass,
   isTicketLinkedToObject,
   normalizeWricefRef,
@@ -91,18 +88,6 @@ const createDoc = (overrides: Partial<DocumentationObject> = {}): DocumentationO
   sourceSystem: 'MANUAL',
   ...overrides,
 });
-
-const abaqueFixture: Abaque = {
-  id: 'ABAQUE-CORE-001',
-  name: 'Abaque S4 Delivery',
-  entries: [
-    { ticketNature: 'PROGRAMME', complexity: 'LOW', standardHours: 8 },
-    { ticketNature: 'PROGRAMME', complexity: 'MEDIUM', standardHours: 18 },
-    { ticketNature: 'FORMULAIRE', complexity: 'LOW', standardHours: 6 },
-    { ticketNature: 'FEATURE', complexity: 'MEDIUM', standardHours: 14 },
-    { ticketNature: 'SUPPORT', complexity: 'HIGH', standardHours: 28 },
-  ],
-};
 
 const attachmentFixture: DocumentationAttachment = {
   filename: 'Architecture_Validation_Facture_SD_v1.3.pdf',
@@ -557,41 +542,6 @@ describe('withProjectTabIcons', () => {
   });
 });
 
-describe('buildAbaqueTicketNatures', () => {
-  it('returns expected output for typical input', () => {
-    const result = buildAbaqueTicketNatures({
-      ...abaqueFixture,
-      entries: [
-        { ticketNature: 'PROGRAMME', complexity: 'LOW', standardHours: 8 },
-        { ticketNature: 'PROGRAMME', complexity: 'MEDIUM', standardHours: 16 },
-        { ticketNature: 'FORMULAIRE', complexity: 'LOW', standardHours: 6 },
-      ],
-    });
-
-    expect(result).toEqual(['PROGRAMME', 'FORMULAIRE']);
-  });
-
-  it('handles empty input without throwing', () => {
-    expect(buildAbaqueTicketNatures(null)).toEqual([]);
-  });
-
-  it('handles null/undefined fields gracefully', () => {
-    const result = buildAbaqueTicketNatures({ ...abaqueFixture, entries: undefined as unknown as Abaque['entries'] });
-    expect(result).toEqual([]);
-  });
-
-  it('handles malformed entry edge case', () => {
-    const result = buildAbaqueTicketNatures({
-      ...abaqueFixture,
-      entries: [
-        { ticketNature: 'SUPPORT', complexity: 'HIGH', standardHours: 20 },
-        undefined as unknown as Abaque['entries'][number],
-      ],
-    });
-    expect(result).toEqual(['SUPPORT']);
-  });
-});
-
 describe('getUsageBarClass', () => {
   it('returns expected output for typical input', () => {
     expect(getUsageBarClass(65)).toBe('bg-emerald-600');
@@ -639,31 +589,6 @@ describe('sortTicketHistoryByLatest', () => {
     ];
 
     expect(sortTicketHistoryByLatest(history).map((event) => event.id)).toEqual(['B', 'A']);
-  });
-});
-
-describe('getAbaqueEstimateForNature', () => {
-  it('returns expected output for typical input', () => {
-    expect(getAbaqueEstimateForNature(abaqueFixture, 'PROGRAMME', 'MEDIUM')).toBe(18);
-  });
-
-  it('handles empty input without throwing', () => {
-    const emptyAbaque: Abaque = { id: 'EMPTY', name: 'Empty', entries: [] };
-    expect(getAbaqueEstimateForNature(emptyAbaque, 'REPORT', 'LOW')).toBeNull();
-  });
-
-  it('handles null/undefined fields gracefully', () => {
-    const looseAbaque = { ...abaqueFixture, entries: undefined as unknown as Abaque['entries'] };
-    expect(getAbaqueEstimateForNature(looseAbaque, 'MODULE', 'LOW')).toBeNull();
-  });
-
-  it('handles fallback mapping edge case', () => {
-    const fallbackAbaque: Abaque = {
-      id: 'AB-FALLBACK',
-      name: 'Fallback',
-      entries: [{ ticketNature: 'FEATURE', complexity: 'MEDIUM', standardHours: 22 }],
-    };
-    expect(getAbaqueEstimateForNature(fallbackAbaque, 'PROGRAMME', 'MEDIUM')).toBe(22);
   });
 });
 

@@ -1,8 +1,4 @@
 import React from 'react';
-import { Calculator, Scale } from 'lucide-react';
-import { Badge } from '@/app/components/ui/badge';
-import { Button } from '@/app/components/ui/button';
-import { Input } from '@/app/components/ui/input';
 import { Label } from '@/app/components/ui/label';
 import {
   Select,
@@ -12,12 +8,9 @@ import {
   SelectValue,
 } from '@/app/components/ui/select';
 import { Textarea } from '@/app/components/ui/textarea';
-import {
-  Ticket,
-  TicketComplexity,
-  TICKET_COMPLEXITY_LABELS,
-  TICKET_NATURE_LABELS,
-} from '@/app/types/entities';
+import { Ticket, TicketComplexity, TICKET_COMPLEXITY_LABELS } from '@/app/types/entities';
+import { Button } from '@/app/components/ui/button';
+import { Input } from '@/app/components/ui/input';
 import type { TicketCreateDialogViewModel } from '../../TicketCreateDialog';
 
 interface TicketCreateEffortFieldsProps {
@@ -43,13 +36,7 @@ export const TicketCreateEffortFields: React.FC<TicketCreateEffortFieldsProps> =
         </Select>
       </div>
       <div className="space-y-1.5 sm:col-span-2">
-        <div className="flex items-center justify-between gap-2">
-          <Label>Estimation (hours)</Label>
-          <Button type="button" size="sm" variant="outline" onClick={vm.onApplyAbaqueEstimate} disabled={!vm.linkedAbaque}>
-            <Calculator className="h-3.5 w-3.5 mr-1" />
-            Use Abaque Estimate
-          </Button>
-        </div>
+        <Label>Estimation (hours)</Label>
         <Input
           type="number"
           min={0}
@@ -57,33 +44,8 @@ export const TicketCreateEffortFields: React.FC<TicketCreateEffortFieldsProps> =
           value={vm.form.estimationHours}
           onChange={(event) => {
             vm.onFormChange({ ...vm.form, estimationHours: Number(event.target.value) });
-            vm.onEstimatedByAbaqueChange(false);
           }}
         />
-        {vm.isEstimatedByAbaque && (
-          <Badge variant="secondary" className="inline-flex items-center gap-1">
-            <Scale className="h-3 w-3" />
-            Standard guideline match
-          </Badge>
-        )}
-        {vm.abaqueEntry && !vm.isEstimatedByAbaque && (
-          <div className="flex items-center gap-2 rounded-md border border-primary/30 bg-primary/5 px-3 py-1.5 text-xs">
-            <Calculator className="h-3.5 w-3.5 text-primary shrink-0" />
-            <span className="text-muted-foreground">
-              Abaque suggests <span className="font-semibold text-foreground">{vm.abaqueEntry.standardHours}h</span> for {TICKET_NATURE_LABELS[vm.form.nature]} x {TICKET_COMPLEXITY_LABELS[vm.form.complexity]}
-            </span>
-            {vm.form.estimationHours !== vm.abaqueEntry.standardHours && (
-              <button type="button" onClick={() => { vm.onFormChange({ ...vm.form, estimationHours: vm.abaqueEntry!.standardHours }); vm.onEstimatedByAbaqueChange(true); }} className="ml-auto text-[10px] font-medium text-primary hover:underline whitespace-nowrap">
-                Apply
-              </button>
-            )}
-          </div>
-        )}
-        {vm.linkedAbaque && !vm.abaqueEntry && !vm.isEstimatedByAbaque && (
-          <p className="text-[10px] text-muted-foreground">
-            No abaque entry for {TICKET_NATURE_LABELS[vm.form.nature]} x {TICKET_COMPLEXITY_LABELS[vm.form.complexity]} in "{vm.linkedAbaque.name}"
-          </p>
-        )}
       </div>
       <div className="space-y-1.5">
         <Label>Priority</Label>

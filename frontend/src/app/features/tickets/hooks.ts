@@ -5,8 +5,6 @@ import { useAuth } from '../../context/AuthContext';
 import { getBaseRouteForRole } from '../../context/roleRouting';
 import { createTicketWithUnifiedFlow } from '../../services/ticketCreation';
 import {
-  Abaque,
-  AbaqueEntry,
   Project,
   SAPModule,
   Ticket,
@@ -22,8 +20,6 @@ import {
   buildCalendarDays,
   buildTicketsByDate,
   filterTickets,
-  getAbaqueEstimateForTicket,
-  mapTicketComplexityToAbaque,
 } from './model';
 import { ManagerTicketsAPI } from './api';
 import { EMPTY_FORM, TicketForm, ViewMode } from './components/types';
@@ -88,7 +84,6 @@ export const useManagerTicketsBootstrap = () => {
 export const useManagerTicketsMutations = () => {
   return {
     updateTicket: ManagerTicketsAPI.updateTicket,
-    getAbaqueById: ManagerTicketsAPI.getAbaqueById,
     createNotification: ManagerTicketsAPI.createNotification,
   };
 };
@@ -113,11 +108,7 @@ export interface ManagerTicketsViewModel {
   form: TicketForm;
   selectedProject: Project | undefined;
   wricefObjects: WricefObject[];
-  linkedAbaque: Abaque | null;
-  abaqueTicketNatures: string[];
-  abaqueEntry: AbaqueEntry | null;
   isManualWricef: boolean;
-  isEstimatedByAbaque: boolean;
   isSubmitting: boolean;
   searchQuery: string;
   statusFilter: Ticket['status'] | 'ALL';
@@ -134,7 +125,6 @@ export interface ManagerTicketsViewModel {
   setSelectedTicket: React.Dispatch<React.SetStateAction<Ticket | null>>;
   setForm: React.Dispatch<React.SetStateAction<TicketForm>>;
   setIsManualWricef: React.Dispatch<React.SetStateAction<boolean>>;
-  setIsEstimatedByAbaque: React.Dispatch<React.SetStateAction<boolean>>;
   setSearchQuery: React.Dispatch<React.SetStateAction<string>>;
   setStatusFilter: React.Dispatch<React.SetStateAction<Ticket['status'] | 'ALL'>>;
   setModuleFilter: React.Dispatch<React.SetStateAction<SAPModule | 'ALL'>>;
@@ -144,7 +134,6 @@ export interface ManagerTicketsViewModel {
   setDateFrom: React.Dispatch<React.SetStateAction<string>>;
   setDateTo: React.Dispatch<React.SetStateAction<string>>;
   setWricefFilter: React.Dispatch<React.SetStateAction<string>>;
-  applyAbaqueEstimate: () => void;
   submitTicket: (event: React.FormEvent) => Promise<void>;
   changeStatus: (ticket: Ticket, newStatus: TicketStatus) => Promise<void>;
   updateTicketDueDate: (ticketId: string, dueDate: string) => Promise<void>;
@@ -161,7 +150,7 @@ export const useManagerTicketsViewModel = (): ManagerTicketsViewModel => {
   const { currentUser } = useAuth();
   const navigate = useNavigate();
   const { projects, setProjects, users, tickets, setTickets, loading } = useManagerTicketsBootstrap();
-  const { updateTicket, getAbaqueById } = useManagerTicketsMutations();
+  const { updateTicket } = useManagerTicketsMutations();
 
   const isViewOnly = currentUser?.role === 'CONSULTANT_TECHNIQUE';
   const [form, setForm] = useState<TicketForm>(EMPTY_FORM);
@@ -185,8 +174,6 @@ export const useManagerTicketsViewModel = (): ManagerTicketsViewModel => {
   });
   const [isManualWricef, setIsManualWricef] = useState(true);
   const [wricefObjects, setWricefObjects] = useState<WricefObject[]>([]);
-  const [linkedAbaque, setLinkedAbaque] = useState<Abaque | null>(null);
-  const [isEstimatedByAbaque, setIsEstimatedByAbaque] = useState(false);
 
   const roleBasePath = currentUser ? getBaseRouteForRole(currentUser.role) : '/manager';
 
@@ -241,53 +228,6 @@ export const useManagerTicketsViewModel = (): ManagerTicketsViewModel => {
   useEffect(() => {
     setIsManualWricef(!hasWricefObjects);
   }, [hasWricefObjects, form.projectId]);
-
-  useEffect(() => {
-    const loadAbaque = async () => {
-      if (selectedProject?.linkedAbaqueId) {
-        const abaque = await getAbaqueById(selectedProject.linkedAbaqueId);
-        setLinkedAbaque(abaque);
-      } else {
-        setLinkedAbaque(null);
-      }
-    };
-
-    void loadAbaque();
-  }, [getAbaqueById, selectedProject?.linkedAbaqueId]);
-
-  const abaqueEntry = useMemo<AbaqueEntry | null>(() => {
-    if (!linkedAbaque) return null;
-    const abaqueComplexity = mapTicketComplexityToAbaque(form.complexity);
-    return (
-      linkedAbaque.entries.find(
-        (entry) => entry.ticketNature === form.nature && entry.complexity === abaqueComplexity
-      ) ?? null
-    );
-  }, [linkedAbaque, form.complexity, form.nature]);
-
-  const abaqueTicketNatures = useMemo(() => {
-    if (!linkedAbaque) return [];
-    return [...new Set(linkedAbaque.entries.map((entry) => entry.ticketNature))];
-  }, [linkedAbaque]);
-
-  const applyAbaqueEstimate = () => {
-    if (!linkedAbaque) {
-      toast.error('No abaque linked to this project');
-      return;
-    }
-
-    const abaqueComplexity = mapTicketComplexityToAbaque(form.complexity);
-    const estimate = getAbaqueEstimateForTicket(linkedAbaque, form.nature, abaqueComplexity);
-
-    if (estimate === null) {
-      toast.error('No matching abaque entry for selected nature and complexity');
-      return;
-    }
-
-    setForm((previous) => ({ ...previous, estimationHours: estimate }));
-    setIsEstimatedByAbaque(true);
-    toast.success('Effort pre-filled from project abaque');
-  };
 
   const filteredTickets = useMemo(
     () =>
@@ -360,7 +300,7 @@ export const useManagerTicketsViewModel = (): ManagerTicketsViewModel => {
         module: form.module,
         complexity: form.complexity,
         estimationHours: form.estimationHours,
-        estimatedViaAbaque: Boolean(abaqueEntry && form.estimationHours === abaqueEntry.standardHours),
+        estimatedViaAbaque: false,
         selectedWricefObjectId: !isManualWricef ? form.wricefId.trim() || undefined : undefined,
         manualWricefId: isManualWricef ? form.wricefId.trim() || undefined : undefined,
         creationComment: 'Ticket created',
@@ -474,11 +414,7 @@ export const useManagerTicketsViewModel = (): ManagerTicketsViewModel => {
     form,
     selectedProject,
     wricefObjects,
-    linkedAbaque,
-    abaqueTicketNatures,
-    abaqueEntry,
     isManualWricef,
-    isEstimatedByAbaque,
     isSubmitting,
     searchQuery,
     statusFilter,
@@ -495,7 +431,6 @@ export const useManagerTicketsViewModel = (): ManagerTicketsViewModel => {
     setSelectedTicket,
     setForm,
     setIsManualWricef,
-    setIsEstimatedByAbaque,
     setSearchQuery,
     setStatusFilter,
     setModuleFilter,
@@ -505,7 +440,6 @@ export const useManagerTicketsViewModel = (): ManagerTicketsViewModel => {
     setDateFrom,
     setDateTo,
     setWricefFilter,
-    applyAbaqueEstimate,
     submitTicket,
     changeStatus,
     updateTicketDueDate,

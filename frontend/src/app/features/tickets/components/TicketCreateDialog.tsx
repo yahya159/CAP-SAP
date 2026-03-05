@@ -7,14 +7,11 @@ import {
   DialogTitle,
 } from '@/app/components/ui/dialog';
 import {
-  Abaque,
-  AbaqueEntry,
   Project,
   User,
   UserRole,
   WricefObject,
 } from '@/app/types/entities';
-import { TicketCreateAbaqueReference } from './dialogs/create-ticket/TicketCreateAbaqueReference';
 import { TicketCreateCoreFields } from './dialogs/create-ticket/TicketCreateCoreFields';
 import { TicketCreateEffortFields } from './dialogs/create-ticket/TicketCreateEffortFields';
 import { TicketForm } from './types';
@@ -25,19 +22,13 @@ export interface TicketCreateDialogViewModel {
   users: User[];
   selectedProject: Project | undefined;
   wricefObjects: WricefObject[];
-  linkedAbaque: Abaque | null;
-  abaqueTicketNatures: string[];
-  abaqueEntry: AbaqueEntry | null;
   form: TicketForm;
   isManualWricef: boolean;
-  isEstimatedByAbaque: boolean;
   isSubmitting: boolean;
   onOpenChange: (open: boolean) => void;
   onSubmit: (event: React.FormEvent) => void;
   onFormChange: (form: TicketForm) => void;
   onManualWricefChange: (value: boolean) => void;
-  onEstimatedByAbaqueChange: (value: boolean) => void;
-  onApplyAbaqueEstimate: () => void;
   onCancel: () => void;
 }
 
@@ -56,28 +47,10 @@ export const TicketCreateDialog: React.FC<TicketCreateDialogProps> = ({ open, vm
             New Ticket
           </DialogTitle>
         </DialogHeader>
-        <div className="grid gap-5 lg:grid-cols-[minmax(0,1fr)_340px]">
-          <form onSubmit={vm.onSubmit} className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-            <TicketCreateCoreFields vm={vm} />
-            <TicketCreateEffortFields vm={vm} />
-          </form>
-
-          <div className="space-y-3">
-            <div className="text-sm font-medium text-foreground">Abaque Reference</div>
-            {vm.selectedProject && (
-              <div className="rounded border border-border/70 bg-muted/30 p-3 text-sm">
-                <p>
-                  <span className="text-muted-foreground">Project:</span> {vm.selectedProject.name}
-                </p>
-                <p>
-                  <span className="text-muted-foreground">Abaque:</span>{' '}
-                  {vm.linkedAbaque?.name ?? 'No linked abaque'}
-                </p>
-              </div>
-            )}
-            <TicketCreateAbaqueReference vm={vm} />
-          </div>
-        </div>
+        <form onSubmit={vm.onSubmit} className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+          <TicketCreateCoreFields vm={vm} />
+          <TicketCreateEffortFields vm={vm} />
+        </form>
       </DialogContent>
     </Dialog>
   );

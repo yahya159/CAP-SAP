@@ -10,15 +10,13 @@ import { WricefObjectsAPI } from '../../services/odata/wricefObjectsApi';
 import { WricefsAPI } from '../../services/odata/wricefsApi';
 import { createTicketWithUnifiedFlow } from '../../services/ticketCreation';
 import {
-  Abaque,
-  AbaqueEstimateResult,
   Allocation,
   Deliverable,
   DocumentationAttachment,
   DocumentationObject,
   DocumentationObjectType,
   Project,
-  ProjectAbaqueCriteria,
+  ProjectAbaqueRow,
   SAPModule,
   Ticket,
   TicketComplexity,
@@ -35,7 +33,6 @@ import type { CreateDocumentationDialogViewModel } from './components/dialogs/Cr
 // Imports removed
 import {
   appendFilesAsDocumentationAttachments,
-  buildAbaqueTicketNatures,
   buildDocumentationDraft,
   buildObjectTicketRows,
   buildWricefImportPlan,
@@ -50,7 +47,6 @@ import {
   filterProjectObjects,
   filterProjectTickets,
   formatBytes,
-  getAbaqueEstimateForNature,
   getUsageBarClass,
   paginateItems,
   PROJECT_TABS,
@@ -58,7 +54,6 @@ import {
   ProjectTabKey,
   ProjectTicketFormState,
   sortTicketHistoryByLatest,
-  TICKET_COMPLEXITY_BY_ABAQUE,
   withProjectTabIcons,
   WRICEF_PRIORITY_COLOR,
   WRICEF_STATUS_COLOR,
@@ -67,7 +62,6 @@ import {
 
 export interface ProjectDetailsBootstrapState {
   project: Project | null;
-  abaques: Abaque[];
   allocations: Allocation[];
   users: User[];
   deliverables: Deliverable[];
@@ -78,7 +72,6 @@ export interface ProjectDetailsBootstrapState {
 
 const EMPTY_BOOTSTRAP_STATE: ProjectDetailsBootstrapState = {
   project: null,
-  abaques: [],
   allocations: [],
   users: [],
   deliverables: [],
@@ -102,7 +95,6 @@ export const loadProjectDetailsBootstrap = async (
     users: asArray(data.users),
     deliverables: asArray(data.deliverables),
     tickets: asArray(data.tickets),
-    abaques: asArray(data.abaques),
     documentationObjects: asArray(data.documentationObjects),
     wricefObjects: asArray(data.wricefObjects),
   };
@@ -110,7 +102,6 @@ export const loadProjectDetailsBootstrap = async (
 
 export const useProjectDetailsBootstrap = (projectId?: string) => {
   const [project, setProject] = useState<Project | null>(null);
-  const [abaques, setAbaques] = useState<Abaque[]>([]);
   const [allocations, setAllocations] = useState<Allocation[]>([]);
   const [users, setUsers] = useState<User[]>([]);
   const [deliverables, setDeliverables] = useState<Deliverable[]>([]);
@@ -137,7 +128,6 @@ export const useProjectDetailsBootstrap = (projectId?: string) => {
       setUsers(data.users);
       setDeliverables(data.deliverables);
       setTickets(data.tickets);
-      setAbaques(data.abaques);
       setDocumentationObjects(data.documentationObjects);
       setWricefObjects(data.wricefObjects);
     } catch (err) {
@@ -165,8 +155,6 @@ export const useProjectDetailsBootstrap = (projectId?: string) => {
   return {
     project,
     setProject,
-    abaques,
-    setAbaques,
     allocations,
     setAllocations,
     users,
@@ -208,16 +196,7 @@ export interface ProjectDetailsViewModel {
     hasAbaqueEstimate: boolean;
     forceEstimatorVisible: boolean;
     projectEstimateSaving: boolean;
-    estimatedDays: number;
-    totalActualDays: number;
-    totalActualHours: number;
-    estimateConsumptionPercent: number;
-    estimateDeltaDays: number;
-    usageBarClass: string;
-    onApplyEstimate: (
-      criteria: ProjectAbaqueCriteria,
-      result: AbaqueEstimateResult
-    ) => Promise<void>;
+    onApplyEstimate: (matrix: ProjectAbaqueRow[]) => Promise<void>;
     onRerunEstimate: () => void;
   } | null;
   ticketsVm: any;
@@ -251,7 +230,6 @@ export const useProjectDetailsViewModel = (): ProjectDetailsViewModel => {
   const {
     project,
     setProject,
-    abaques,
     allocations,
     users,
     deliverables,
@@ -287,7 +265,6 @@ export const useProjectDetailsViewModel = (): ProjectDetailsViewModel => {
   const [showCreateTicket, setShowCreateTicket] = useState(false);
   const [ticketForm, setTicketForm] = useState<ProjectTicketFormState>(EMPTY_PROJECT_TICKET_FORM);
   const [isCreatingTicket, setIsCreatingTicket] = useState(false);
-  const [isEstimatedByAbaque, setIsEstimatedByAbaque] = useState(false);
   const [showCreateDoc, setShowCreateDoc] = useState(false);
   const [docForObjectId, setDocForObjectId] = useState<string | null>(null);
   const [docForm, setDocForm] = useState<ProjectDocumentationFormState>(
@@ -306,26 +283,12 @@ export const useProjectDetailsViewModel = (): ProjectDetailsViewModel => {
     (uid?: string) => users.find((user) => user.id === uid)?.name ?? '-',
     [users]
   );
-  const selectedAbaque = useMemo(
-    () => abaques.find((item) => item.id === project?.linkedAbaqueId) ?? null,
-    [abaques, project?.linkedAbaqueId]
-  );
-  const abaqueTicketNatures = useMemo(
-    () => buildAbaqueTicketNatures(selectedAbaque),
-    [selectedAbaque]
-  );
   const kpis = useMemo(() => computeProjectKpis(tickets), [tickets]);
   const { totalActualHours, totalEstimatedHours, totalActualDays } = useMemo(
     () => computeEffortTotals(tickets),
     [tickets]
   );
-  const hasAbaqueEstimate = Boolean(project?.abaqueEstimate);
-  const estimatedDays = project?.abaqueEstimate?.result.estimatedConsultingDays ?? 0;
-  const { estimateConsumptionPercent, estimateDeltaDays } = useMemo(
-    () => computeEstimateConsumption(estimatedDays, totalActualDays),
-    [estimatedDays, totalActualDays]
-  );
-  const usageBarClass = getUsageBarClass(estimateConsumptionPercent);
+  const hasAbaqueEstimate = Boolean(project?.abaqueEstimate && project.abaqueEstimate.length > 0);
   const wricefTotalTickets = useMemo(
     () => tickets.filter((ticket) => wricefObjects.some((object) => object.id === ticket.wricefId)).length,
     [wricefObjects, tickets]
@@ -471,18 +434,12 @@ export const useProjectDetailsViewModel = (): ProjectDetailsViewModel => {
     });
   }, []);
 
-  const applyProjectEstimate = async (criteria: ProjectAbaqueCriteria, result: AbaqueEstimateResult) => {
+  const applyProjectEstimate = async (matrix: ProjectAbaqueRow[]) => {
     if (!project || !currentUser) return;
     try {
       setProjectEstimateSaving(true);
       const updated = await ProjectsAPI.update(project.id, {
-        complexity: result.complexity,
-        abaqueEstimate: {
-          criteria,
-          result,
-          estimatedAt: new Date().toISOString(),
-          estimatedBy: currentUser.id,
-        },
+        abaqueEstimate: matrix,
       });
       setProject(updated);
       setForceEstimatorVisible(false);
@@ -584,24 +541,8 @@ export const useProjectDetailsViewModel = (): ProjectDetailsViewModel => {
     }
   };
 
-  const applyAbaqueEstimate = () => {
-    if (!selectedAbaque) {
-      toast.error('No abaque linked to this project');
-      return;
-    }
-    const estimate = getAbaqueEstimateForNature(selectedAbaque, ticketForm.nature, ticketForm.complexity);
-    if (estimate === null) {
-      toast.error('No matching abaque entry for selected nature and complexity');
-      return;
-    }
-    setTicketForm((previous) => ({ ...previous, effortHours: estimate }));
-    setIsEstimatedByAbaque(true);
-    toast.success('Effort pre-filled from project abaque');
-  };
-
   const openCreateTicketDialog = (wricefObjectId?: string) => {
     setTicketForm({ ...EMPTY_PROJECT_TICKET_FORM, wricefObjectId: wricefObjectId ?? '' });
-    setIsEstimatedByAbaque(false);
     setShowCreateTicket(true);
   };
 
@@ -609,7 +550,6 @@ export const useProjectDetailsViewModel = (): ProjectDetailsViewModel => {
     setShowCreateTicket(open);
     if (!open) {
       setTicketForm(EMPTY_PROJECT_TICKET_FORM);
-      setIsEstimatedByAbaque(false);
     }
   };
 
@@ -636,18 +576,15 @@ export const useProjectDetailsViewModel = (): ProjectDetailsViewModel => {
         description: ticketForm.description.trim(),
         dueDate: ticketForm.dueDate || undefined,
         module: 'OTHER',
-        complexity: TICKET_COMPLEXITY_BY_ABAQUE[ticketForm.complexity],
+        complexity: ticketForm.complexity,
         estimationHours: ticketForm.effortHours,
-        estimatedViaAbaque: isEstimatedByAbaque,
+        estimatedViaAbaque: false,
         selectedWricefObjectId: ticketForm.wricefObjectId || undefined,
-        creationComment: isEstimatedByAbaque
-          ? 'Ticket created with abaque-based estimation'
-          : 'Ticket created with manual estimation',
+        creationComment: 'Ticket created with manual estimation',
       });
       setTickets((previous) => [created, ...previous]);
       if (updatedProject) setProject(updatedProject);
       setTicketForm(EMPTY_PROJECT_TICKET_FORM);
-      setIsEstimatedByAbaque(false);
       setShowCreateTicket(false);
       setActiveTab('objects');
       toast.success('Ticket created');
@@ -787,9 +724,6 @@ export const useProjectDetailsViewModel = (): ProjectDetailsViewModel => {
         wricefObjectCount: wricefObjects.length,
         blockedTicketsCount: kpis.blocked,
         criticalTicketsCount: kpis.critical,
-        abaques,
-        selectedAbaque,
-        abaqueTicketNatures,
         abaqueSaving,
         onLinkedAbaqueChange: (value: any) => {
           void updateProjectAbaque(value);
@@ -804,12 +738,6 @@ export const useProjectDetailsViewModel = (): ProjectDetailsViewModel => {
         hasAbaqueEstimate,
         forceEstimatorVisible,
         projectEstimateSaving,
-        estimatedDays,
-        totalActualDays,
-        totalActualHours,
-        estimateConsumptionPercent,
-        estimateDeltaDays,
-        usageBarClass,
         onApplyEstimate: applyProjectEstimate,
         onRerunEstimate: () => setForceEstimatorVisible(true),
       }
@@ -938,15 +866,10 @@ export const useProjectDetailsViewModel = (): ProjectDetailsViewModel => {
   const createTicketDialogVm: any = {
     projectName: project?.name ?? '',
     wricefObjects,
-    selectedAbaque,
-    abaqueTicketNatures,
     form: ticketForm,
-    isEstimatedByAbaque,
     isCreatingTicket,
     onOpenChange: handleCreateTicketOpenChange,
     onFormChange: setTicketForm,
-    onEstimatedByAbaqueChange: setIsEstimatedByAbaque,
-    onApplyAbaqueEstimate: applyAbaqueEstimate,
     onSubmit: () => {
       void createProjectTicket();
     },

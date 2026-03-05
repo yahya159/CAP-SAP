@@ -355,21 +355,8 @@ entity ImputationPeriods : cuid, managed {
 }
 
 // ---------------------------------------------------------------------------
-// Abaques (estimation matrices)
 // ---------------------------------------------------------------------------
-entity Abaques : cuid, managed {
-  name    : String(200) not null;
-  entries : Composition of many AbaqueEntries on entries.abaque = $self;
-}
 
-entity AbaqueEntries : cuid {
-  abaque : Association to Abaques;
-  type   : String(50);
-  field  : String(100);
-  value  : Decimal(6,2);
-}
-
-// ---------------------------------------------------------------------------
 // DocumentationObjects
 // ---------------------------------------------------------------------------
 entity DocumentationObjects : cuid, managed {

@@ -6,15 +6,15 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import {
   Dialog,
   DialogContent,
+  DialogDescription,
   DialogFooter,
   DialogHeader,
   DialogTitle,
 } from '@/app/components/ui/dialog';
-import { CreateProjectTicketAbaqueReference } from './project-ticket/CreateProjectTicketAbaqueReference';
+import { VisuallyHidden } from '@radix-ui/react-visually-hidden';
 import { CreateProjectTicketForm } from './project-ticket/CreateProjectTicketForm';
 import { ticketSchema, TicketFormValues } from './project-ticket/schema';
-import { useProjectDetails, useProjectWricefObjects, useAbaques, useProjectTickets, projectKeys } from '../../queries';
-import { buildAbaqueTicketNatures, TICKET_COMPLEXITY_BY_ABAQUE, getAbaqueEstimateForNature } from '../../model';
+import { useProjectDetails, useProjectWricefObjects, useProjectTickets, projectKeys } from '../../queries';
 import { toast } from 'sonner';
 import { useAuth } from '@/app/context/AuthContext';
 import { createTicketWithUnifiedFlow } from '@/app/services/ticketCreation';
@@ -36,15 +36,10 @@ export const CreateProjectTicketDialog: React.FC<CreateProjectTicketDialogProps>
   const { data: project } = useProjectDetails(projectId);
   const { data: wricefObjects = [] } = useProjectWricefObjects(projectId);
   const { data: tickets = [] } = useProjectTickets(projectId);
-  const { data: abaques = [] } = useAbaques();
   const { currentUser } = useAuth();
   const queryClient = useQueryClient();
 
-  const [isEstimatedByAbaque, setIsEstimatedByAbaque] = useState(false);
   const [isCreatingTicket, setIsCreatingTicket] = useState(false);
-
-  const selectedAbaque = abaques.find((a) => a.id === project?.linkedAbaqueId) ?? null;
-  const abaqueTicketNatures = buildAbaqueTicketNatures(selectedAbaque);
 
   const form = useForm<TicketFormValues>({
     resolver: zodResolver(ticketSchema as any),
@@ -75,20 +70,17 @@ export const CreateProjectTicketDialog: React.FC<CreateProjectTicketDialogProps>
         description: values.description.trim(),
         dueDate: values.dueDate || undefined,
         module: 'OTHER',
-        complexity: TICKET_COMPLEXITY_BY_ABAQUE[values.complexity as keyof typeof TICKET_COMPLEXITY_BY_ABAQUE],
+        complexity: values.complexity === 'HIGH' || values.complexity === 'CRITICAL' ? 'COMPLEXE' : values.complexity === 'MEDIUM' ? 'MOYEN' : 'SIMPLE',
         estimationHours: values.effortHours,
-        estimatedViaAbaque: isEstimatedByAbaque,
+        estimatedViaAbaque: false,
         selectedWricefObjectId: values.wricefObjectId || undefined,
-        creationComment: isEstimatedByAbaque
-          ? 'Ticket created with abaque-based estimation'
-          : 'Ticket created with manual estimation',
+        creationComment: 'Ticket created with manual estimation',
       });
       
       queryClient.invalidateQueries({ queryKey: projectKeys.tickets(projectId) });
       queryClient.invalidateQueries({ queryKey: projectKeys.details(projectId) });
       
       form.reset();
-      setIsEstimatedByAbaque(false);
       onOpenChange(false);
       toast.success('Ticket created successfully');
     } catch {
@@ -98,35 +90,11 @@ export const CreateProjectTicketDialog: React.FC<CreateProjectTicketDialogProps>
     }
   };
 
-  const applyAbaqueEstimate = () => {
-    if (!selectedAbaque) {
-      toast.error('No abaque linked to this project');
-      return;
-    }
-    const currentNature = form.getValues('nature');
-    const currentComplexity = form.getValues('complexity');
-    const estimate = getAbaqueEstimateForNature(selectedAbaque, currentNature, currentComplexity);
-    
-    if (estimate === null) {
-      toast.error('No matching abaque entry for selected nature and complexity');
-      return;
-    }
-    form.setValue('effortHours', estimate);
-    setIsEstimatedByAbaque(true);
-    toast.success('Effort pre-filled from project abaque');
-  };
-
-  // We pass a vm object down to children just to avoid massive refactoring of form children
   const vm = {
     projectName: project?.name ?? '',
     wricefObjects,
-    selectedAbaque,
-    abaqueTicketNatures,
     formValues: form.watch(),
     setValue: form.setValue,
-    isEstimatedByAbaque,
-    onEstimatedByAbaqueChange: setIsEstimatedByAbaque,
-    onApplyAbaqueEstimate: applyAbaqueEstimate,
     register: form.register,
     errors: form.formState.errors,
   };
@@ -139,14 +107,15 @@ export const CreateProjectTicketDialog: React.FC<CreateProjectTicketDialogProps>
             <Calculator className="h-5 w-5 text-primary" />
             Create Project Ticket
           </DialogTitle>
+          <VisuallyHidden>
+            <DialogDescription>
+              Create a new ticket manually mapping estimation, priority, and complexity.
+            </DialogDescription>
+          </VisuallyHidden>
         </DialogHeader>
         <form onSubmit={form.handleSubmit(onSubmit)}>
-          <div className="grid gap-5 lg:grid-cols-[minmax(0,1fr)_360px]">
+          <div className="grid gap-5">
             <CreateProjectTicketForm vm={vm} />
-            <div className="space-y-3">
-              <div className="text-sm font-medium text-foreground">Abaque Reference</div>
-              <CreateProjectTicketAbaqueReference vm={vm} />
-            </div>
           </div>
           <DialogFooter className="mt-4 pt-4 sm:justify-end">
             <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>

@@ -1,4 +1,3 @@
-import { AbaquesAPI as ODataAbaquesAPI } from '../../services/odata/abaquesApi';
 import { AllocationsAPI as ODataAllocationsAPI } from '../../services/odata/allocationsApi';
 import type { ODataRequestOptions } from '../../services/odata/core';
 import { DeliverablesAPI as ODataDeliverablesAPI } from '../../services/odata/deliverablesApi';
@@ -8,7 +7,6 @@ import { TicketsAPI as ODataTicketsAPI } from '../../services/odata/ticketsApi';
 import { UsersAPI as ODataUsersAPI } from '../../services/odata/usersApi';
 import { WricefObjectsAPI as ODataWricefObjectsAPI } from '../../services/odata/wricefObjectsApi';
 import {
-  Abaque,
   Allocation,
   Deliverable,
   DocumentationObject,
@@ -24,7 +22,6 @@ export interface ProjectDetailsBootstrapData {
   users: User[];
   deliverables: Deliverable[];
   tickets: Ticket[];
-  abaques: Abaque[];
   documentationObjects: DocumentationObject[];
   wricefObjects: WricefObject[];
 }
@@ -34,14 +31,13 @@ export const ProjectDetailsAPI = {
     projectId: string,
     requestOptions?: ODataRequestOptions
   ): Promise<ProjectDetailsBootstrapData> {
-    const [project, allocations, users, deliverables, tickets, abaques, documentationObjects, wricefObjects] =
+    const [project, allocations, users, deliverables, tickets, documentationObjects, wricefObjects] =
       await Promise.all([
         ODataProjectsAPI.getById(projectId, requestOptions),
         ODataAllocationsAPI.getByProject(projectId, requestOptions),
         ODataUsersAPI.getActive(requestOptions),
         ODataDeliverablesAPI.getByProject(projectId, requestOptions),
         ODataTicketsAPI.getByProject(projectId, requestOptions),
-        ODataAbaquesAPI.getAll(requestOptions),
         ODataDocumentationAPI.getByProject(projectId, requestOptions),
         ODataWricefObjectsAPI.getByProject(projectId, requestOptions),
       ]);
@@ -52,7 +48,6 @@ export const ProjectDetailsAPI = {
       users,
       deliverables,
       tickets,
-      abaques,
       documentationObjects,
       wricefObjects,
     };
@@ -79,9 +74,6 @@ export const ProjectDetailsAPI = {
     getByProject: ODataTicketsAPI.getByProject,
     update: ODataTicketsAPI.update,
   },
-  AbaquesAPI: {
-    getAll: ODataAbaquesAPI.getAll,
-  },
   DocumentationAPI: {
     getAll: ODataDocumentationAPI.getAll,
     getByProject: ODataDocumentationAPI.getByProject,
@@ -105,7 +97,6 @@ export const {
   UsersAPI,
   DeliverablesAPI,
   TicketsAPI,
-  AbaquesAPI,
   DocumentationAPI,
   WricefObjectsAPI,
 } = ProjectDetailsAPI;

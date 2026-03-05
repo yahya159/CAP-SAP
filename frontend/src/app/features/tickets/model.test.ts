@@ -1,11 +1,9 @@
 ﻿import { describe, expect, it } from 'vitest';
-import type { Abaque, Project, Ticket } from '@/app/types/entities';
+import type { Project, Ticket } from '@/app/types/entities';
 import {
   buildCalendarDays,
   buildTicketsByDate,
   filterTickets,
-  getAbaqueEstimateForTicket,
-  mapTicketComplexityToAbaque,
   sortProjectsByName,
 } from '@/app/features/tickets/model';
 import type { TicketFilters } from '@/app/features/tickets/model';
@@ -70,17 +68,6 @@ const emptyFilters: TicketFilters = {
   wricefFilter: '',
 };
 
-const abaqueFixture: Abaque = {
-  id: 'ABAQUE-TICKETS-001',
-  name: 'Abaque Tickets Delivery',
-  entries: [
-    { ticketNature: 'ENHANCEMENT', complexity: 'MEDIUM', standardHours: 16 },
-    { ticketNature: 'WORKFLOW', complexity: 'HIGH', standardHours: 32 },
-    { ticketNature: 'REPORT', complexity: 'LOW', standardHours: 6 },
-    { ticketNature: 'FEATURE', complexity: 'MEDIUM', standardHours: 14 },
-    { ticketNature: 'DOCUMENTATION', complexity: 'LOW', standardHours: 4 },
-  ],
-};
 
 describe('filterTickets', () => {
   it('returns expected output for typical input', () => {
@@ -207,52 +194,6 @@ describe('sortProjectsByName', () => {
   });
 });
 
-describe('mapTicketComplexityToAbaque', () => {
-  it('returns expected output for typical input', () => {
-    expect(mapTicketComplexityToAbaque('MOYEN')).toBe('MEDIUM');
-  });
-
-  it('handles empty input without throwing', () => {
-    // ⚠️ REVIEW: Empty complexity is out-of-contract and currently returns undefined.
-    expect(mapTicketComplexityToAbaque('' as unknown as Ticket['complexity'])).toBeUndefined();
-  });
-
-  it('handles null/undefined fields gracefully', () => {
-    // ⚠️ REVIEW: Null complexity is out-of-contract and currently returns undefined.
-    expect(mapTicketComplexityToAbaque(null as unknown as Ticket['complexity'])).toBeUndefined();
-  });
-
-  it('handles very-complex edge case', () => {
-    expect(mapTicketComplexityToAbaque('TRES_COMPLEXE')).toBe('HIGH');
-  });
-});
-
-describe('getAbaqueEstimateForTicket', () => {
-  it('returns expected output for typical input', () => {
-    expect(getAbaqueEstimateForTicket(abaqueFixture, 'ENHANCEMENT', 'MEDIUM')).toBe(16);
-  });
-
-  it('handles empty input without throwing', () => {
-    const emptyAbaque: Abaque = { id: 'EMPTY', name: 'Empty', entries: [] };
-    expect(getAbaqueEstimateForTicket(emptyAbaque, 'REPORT', 'LOW')).toBeNull();
-  });
-
-  it('handles null/undefined fields gracefully', () => {
-    const looseAbaque = { ...abaqueFixture, entries: undefined as unknown as Abaque['entries'] };
-    // ⚠️ REVIEW: entries is required in normalized shape; test guards current behavior for invalid caller input.
-    expect(() => getAbaqueEstimateForTicket(looseAbaque, 'ENHANCEMENT', 'MEDIUM')).toThrow();
-  });
-
-  it('handles fallback task-nature edge case', () => {
-    const fallbackAbaque: Abaque = {
-      id: 'AB-FALLBACK-02',
-      name: 'Fallback',
-      entries: [{ ticketNature: 'FEATURE', complexity: 'MEDIUM', standardHours: 19 }],
-    };
-
-    expect(getAbaqueEstimateForTicket(fallbackAbaque, 'PROGRAMME', 'MEDIUM')).toBe(19);
-  });
-});
 
 describe('buildCalendarDays', () => {
   it('returns expected output for typical input', () => {
