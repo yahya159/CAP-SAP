@@ -1,6 +1,7 @@
 'use strict';
 
 const crypto = require('node:crypto');
+const cds = require('@sap/cds');
 const AuthRepo = require('./auth.repo');
 
 const DEMO_PASSWORD_BY_EMAIL = Object.freeze({
@@ -26,6 +27,12 @@ const JWT_TTL_SECONDS = Number(process.env.MOCK_JWT_TTL_SECONDS || 8 * 60 * 60);
 const REVIEWER_ROLES = new Set(['ADMIN', 'MANAGER', 'PROJECT_MANAGER']);
 const PUBLIC_EVENTS = new Set(['authenticate', 'quickAccessAccounts']);
 const QUICK_ACCESS_EMAILS = new Set(Object.keys(DEMO_PASSWORD_BY_EMAIL));
+
+const authConfig = cds.env?.requires?.auth;
+const MOCKED_AUTH_ENABLED =
+  authConfig === 'mocked' ||
+  authConfig?.kind === 'mocked' ||
+  authConfig?.strategy === 'mocked';
 
 const normalizeEmail = (value) => String(value ?? '').trim().toLowerCase();
 
@@ -93,6 +100,21 @@ const extractBearerToken = (req) => {
   return token.trim();
 };
 
+const claimsFromMockedUser = (req) => {
+  const reqUser = req?.user;
+  const reqUserId = String(reqUser?.id ?? reqUser?.ID ?? '').trim();
+  const reqUserEmail = String(reqUser?.email ?? '').trim();
+
+  // In CAP mocked mode, req.user may be sparse; ensure stable fallback claims.
+  return {
+    sub: reqUserId || 'mocked-dev-user',
+    email: reqUserEmail || 'mocked.dev@local',
+    role: 'ADMIN',
+    name: reqUser?.name || 'Mocked Dev User',
+    mocked: true,
+  };
+};
+
 class AuthDomainService {
   constructor(_srv) {
     this.repo = new AuthRepo();
@@ -108,10 +130,18 @@ class AuthDomainService {
 
   authenticateRequest(req) {
     const token = extractBearerToken(req);
-    if (!token) req.reject(401, 'Missing Bearer token');
-    const claims = this.verify(token);
-    if (!claims?.sub || !claims?.role) req.reject(401, 'Invalid or expired token');
-    return claims;
+
+    if (token) {
+      const claims = this.verify(token);
+      if (!claims?.sub || !claims?.role) req.reject(401, 'Invalid or expired token');
+      return claims;
+    }
+
+    if (MOCKED_AUTH_ENABLED) {
+      return claimsFromMockedUser(req);
+    }
+
+    req.reject(401, 'Missing Bearer token');
   }
 
   getRequestClaims(req) {

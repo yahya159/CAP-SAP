@@ -25,6 +25,7 @@
   },
   "cds": {
     "requires": {
+      "auth": "mocked",
       "db": {
         "kind": "sqlite",
         "credentials": {
