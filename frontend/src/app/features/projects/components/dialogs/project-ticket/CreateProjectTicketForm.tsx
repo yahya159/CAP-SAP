@@ -15,11 +15,32 @@ import { Textarea } from '@/app/components/ui/textarea';
 import {
   TICKET_COMPLEXITY_LABELS,
   TICKET_NATURE_LABELS,
+  TicketNature,
+  TicketComplexity,
 } from '@/app/types/entities';
 import { CreateProjectTicketContextBlock } from './CreateProjectTicketContextBlock';
 
+import { UseFormRegister, FieldErrors, UseFormSetValue } from 'react-hook-form';
+import { TicketFormValues } from './schema';
+import { WricefObject } from '@/app/types/entities';
+
+export interface CreateProjectTicketViewModel {
+  projectName: string;
+  wricefObjects: WricefObject[];
+  formValues: TicketFormValues;
+  setValue: UseFormSetValue<TicketFormValues>;
+  register: UseFormRegister<TicketFormValues>;
+  errors: FieldErrors<TicketFormValues>;
+  abaqueSuggestedHours: number | null;
+  isEstimatedByAbaque: boolean;
+  onNatureChange: (value: TicketNature) => void;
+  onComplexityChange: (value: TicketComplexity) => void;
+  onEffortHoursChange: (value: number) => void;
+  onApplyAbaqueEstimate: () => void;
+}
+
 interface CreateProjectTicketFormProps {
-  vm: any;
+  vm: CreateProjectTicketViewModel;
 }
 
 export const CreateProjectTicketForm: React.FC<CreateProjectTicketFormProps> = ({ vm }) => {
@@ -43,7 +64,7 @@ export const CreateProjectTicketForm: React.FC<CreateProjectTicketFormProps> = (
           <Label>Ticket Nature</Label>
           <Select
             value={vm.formValues.nature}
-            onValueChange={(value) => vm.onNatureChange(value)}
+            onValueChange={(value) => vm.onNatureChange(value as TicketNature)}
           >
             <SelectTrigger>
               <SelectValue />
@@ -61,7 +82,7 @@ export const CreateProjectTicketForm: React.FC<CreateProjectTicketFormProps> = (
           <Label>Complexity</Label>
           <Select
             value={vm.formValues.complexity}
-            onValueChange={(value) => vm.onComplexityChange(value)}
+            onValueChange={(value) => vm.onComplexityChange(value as TicketComplexity)}
           >
             <SelectTrigger>
               <SelectValue />
@@ -77,7 +98,10 @@ export const CreateProjectTicketForm: React.FC<CreateProjectTicketFormProps> = (
         </div>
         <div className="space-y-1.5">
           <Label>Priority</Label>
-          <Select value={vm.formValues.priority} onValueChange={(value) => vm.setValue('priority', value)}>
+          <Select
+            value={vm.formValues.priority}
+            onValueChange={(value) => vm.setValue('priority', value as TicketFormValues['priority'])}
+          >
             <SelectTrigger>
               <SelectValue />
             </SelectTrigger>

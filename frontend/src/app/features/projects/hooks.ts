@@ -29,6 +29,10 @@ import { isAbortError } from '../../utils/async';
 import { parseWricefExcel } from '../../utils/wricefExcel';
 import { DocumentationAPI, ProjectDetailsAPI, ProjectsAPI } from './api';
 import type { CreateDocumentationDialogViewModel } from './components/dialogs/CreateDocumentationDialog';
+import type { DocumentationPanelViewModel } from './components/panels/DocumentationPanel';
+import type { OverviewPanelViewModel } from './components/panels/OverviewPanel';
+import type { TicketsPanelViewModel } from './components/panels/TicketsPanel';
+import type { WricefPanelViewModel } from './components/panels/WricefPanel';
 // Imports removed
 import {
   appendFilesAsDocumentationAttachments,
@@ -183,11 +187,11 @@ export interface ProjectDetailsViewModel {
   error: string | null;
   project: Project | null;
   roleBasePath: string;
-  tabs: any[];
+  tabs: ReturnType<typeof withProjectTabIcons>;
   activeTab: ProjectTabKey;
   setActiveTab: React.Dispatch<React.SetStateAction<ProjectTabKey>>;
   handleTabKeyDown: (event: React.KeyboardEvent<HTMLButtonElement>, tabKey: ProjectTabKey) => void;
-  overviewVm: any;
+  overviewVm: OverviewPanelViewModel | null;
   abaquesVm: {
     project: Project;
     hasAbaqueEstimate: boolean;
@@ -196,19 +200,19 @@ export interface ProjectDetailsViewModel {
     onApplyEstimate: (matrix: ProjectAbaqueRow[]) => Promise<void>;
     onRerunEstimate: () => void;
   } | null;
-  ticketsVm: any;
+  ticketsVm: TicketsPanelViewModel;
   teamVm: {
     allocations: Allocation[];
     users: User[];
   };
-  wricefVm: any;
+  wricefVm: WricefPanelViewModel;
   kpisVm: {
     active: boolean;
     kpis: ReturnType<typeof computeProjectKpis>;
     totalActualHours: number;
     totalEstimatedHours: number;
   };
-  documentationVm: any;
+  documentationVm: DocumentationPanelViewModel | null;
   createTicketDialogVm: {
     open: boolean;
     defaultWricefObjectId?: string;
@@ -485,15 +489,24 @@ export const useProjectDetailsViewModel = (): ProjectDetailsViewModel => {
 
       if (plan.uniqueTickets.length > 0) {
         const newTickets = await Promise.all(
-          plan.uniqueTickets.map((ticket) =>
-            TicketsAPI.create({
-              ...ticket,
+          plan.uniqueTickets.map((ticket) => {
+            const ticketPayload: Omit<Ticket, 'id' | 'createdAt' | 'ticketCode' | 'status'> & { status?: TicketStatus } = {
               projectId: project.id,
               createdBy: currentUser?.id || 'u2',
+              priority: ticket.priority ?? 'MEDIUM',
               nature: 'ENHANCEMENT',
+              title: ticket.title,
+              description: ticket.description ?? ticket.title,
+              history: [],
+              effortHours: 0,
+              estimationHours: 0,
+              complexity: 'MOYEN',
               wricefId: ticket.wricefId,
-            } as any)
-          )
+              module: 'OTHER',
+              status: ticket.status ?? 'NEW',
+            };
+            return TicketsAPI.create(ticketPayload);
+          })
         );
         setTickets((previous) => [...previous, ...newTickets]);
       }
@@ -652,7 +665,7 @@ export const useProjectDetailsViewModel = (): ProjectDetailsViewModel => {
     }
   };
 
-  const overviewVm: any = project
+  const overviewVm: OverviewPanelViewModel | null = project
     ? {
         project,
         managerName: manager?.name ?? 'Unknown',
@@ -677,7 +690,7 @@ export const useProjectDetailsViewModel = (): ProjectDetailsViewModel => {
       }
     : null;
 
-  const ticketsVm: any = {
+  const ticketsVm: TicketsPanelViewModel = {
     tickets,
     paginatedTickets,
     filteredTickets,
@@ -691,16 +704,16 @@ export const useProjectDetailsViewModel = (): ProjectDetailsViewModel => {
     selectedTicketHistory,
     wricefStatusColor: WRICEF_STATUS_COLOR,
     wricefPriorityColor: WRICEF_PRIORITY_COLOR,
-    onTicketsSearchChange: (value: any) => {
+    onTicketsSearchChange: (value: string) => {
       setTicketsSearch(value);
       setTicketsPage(1);
     },
-    onTicketsStatusFilterChange: (value: any) => {
+    onTicketsStatusFilterChange: (value: TicketStatus | '') => {
       setTicketsStatusFilter(value);
       setTicketsPage(1);
     },
     onTicketsPageChange: setTicketsPage,
-    onTicketsPageSizeChange: (value: any) => {
+    onTicketsPageSizeChange: (value: number) => {
       setTicketsPageSize(value);
       setTicketsPage(1);
     },
@@ -712,7 +725,7 @@ export const useProjectDetailsViewModel = (): ProjectDetailsViewModel => {
     resolveUserName,
   };
 
-  const wricefVm: any = {
+  const wricefVm: WricefPanelViewModel = {
     objectsSearch,
     objectsTypeFilter,
     objectsComplexityFilter,
@@ -725,24 +738,24 @@ export const useProjectDetailsViewModel = (): ProjectDetailsViewModel => {
     wricefTotalTickets,
     wricefTotalDocuments,
     wricefImporting,
-    onObjectsSearchChange: (value: any) => {
+    onObjectsSearchChange: (value: string) => {
       setObjectsSearch(value);
       setObjectsPage(1);
     },
-    onObjectsTypeFilterChange: (value: any) => {
+    onObjectsTypeFilterChange: (value: WricefType | '') => {
       setObjectsTypeFilter(value);
       setObjectsPage(1);
     },
-    onObjectsComplexityFilterChange: (value: any) => {
+    onObjectsComplexityFilterChange: (value: TicketComplexity | '') => {
       setObjectsComplexityFilter(value);
       setObjectsPage(1);
     },
-    onObjectsModuleFilterChange: (value: any) => {
+    onObjectsModuleFilterChange: (value: SAPModule | '') => {
       setObjectsModuleFilter(value);
       setObjectsPage(1);
     },
     onObjectsPageChange: setObjectsPage,
-    onObjectsPageSizeChange: (value: any) => {
+    onObjectsPageSizeChange: (value: number) => {
       setObjectsPageSize(value);
       setObjectsPage(1);
     },
@@ -754,7 +767,7 @@ export const useProjectDetailsViewModel = (): ProjectDetailsViewModel => {
       setObjectsPage(1);
     },
     onOpenCreateTicket: () => openCreateTicketDialog(),
-    onImportWricefFile: (event: any) => {
+    onImportWricefFile: (event: React.ChangeEvent<HTMLInputElement>) => {
       void importWricefFile(event);
     },
     table: {
@@ -770,7 +783,7 @@ export const useProjectDetailsViewModel = (): ProjectDetailsViewModel => {
       resolveUserName,
       onToggleExpandObject: toggleExpandObject,
       onOpenCreateTicket: openCreateTicketDialog,
-      onOpenCreateDocument: (objectId: any) => openCreateDocDialog(objectId),
+      onOpenCreateDocument: (objectId: string) => openCreateDocDialog(objectId),
       onOpenTicketDetails: openTicketDetails,
       onViewDocument: setViewDocId,
       emptyMessage:
@@ -780,7 +793,7 @@ export const useProjectDetailsViewModel = (): ProjectDetailsViewModel => {
     },
   };
 
-  const documentationVm: any = project
+  const documentationVm: DocumentationPanelViewModel | null = project
     ? {
         projectKeywords: project.techKeywords ?? [],
         documentationObjects,

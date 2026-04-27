@@ -60,6 +60,7 @@ const ODATA_SERVICES: Record<ODataService, string> = {
 
 const ODATA_OBSERVABILITY_ENABLED = import.meta.env.VITE_ODATA_OBSERVABILITY === 'true';
 const ODATA_AUTH_TOKEN_STORAGE_KEY = 'odata.auth.token';
+const JWT_EXPIRY_SKEW_SECONDS = 30;
 
 export interface ODataClientConfig {
   credentials: RequestCredentials;
@@ -92,10 +93,46 @@ let odataClientConfig: ODataClientConfig = {
   },
 };
 
+const decodeJwtPayload = (token: string): Record<string, unknown> | null => {
+  const segments = token.split('.');
+  if (segments.length < 2) return null;
+
+  try {
+    const payloadSegment = segments[1]
+      .replace(/-/g, '+')
+      .replace(/_/g, '/')
+      .padEnd(Math.ceil(segments[1].length / 4) * 4, '=');
+    const payload = atob(payloadSegment);
+    return JSON.parse(payload) as Record<string, unknown>;
+  } catch {
+    return null;
+  }
+};
+
+export const isTokenExpired = (
+  token: string | null | undefined,
+  skewSeconds = JWT_EXPIRY_SKEW_SECONDS
+): boolean => {
+  const normalized = token?.trim();
+  if (!normalized) return true;
+
+  const payload = decodeJwtPayload(normalized);
+  const expRaw = payload?.exp;
+  if (typeof expRaw !== 'number') return false;
+  const nowEpochSeconds = Math.floor(Date.now() / 1000);
+  return expRaw <= nowEpochSeconds + Math.max(0, skewSeconds);
+};
+
 const readStoredAuthToken = (): string | null => {
   try {
     const token = localStorage.getItem(ODATA_AUTH_TOKEN_STORAGE_KEY);
-    return token && token.trim() ? token : null;
+    const normalized = token && token.trim() ? token : null;
+    if (!normalized) return null;
+    if (isTokenExpired(normalized)) {
+      localStorage.removeItem(ODATA_AUTH_TOKEN_STORAGE_KEY);
+      return null;
+    }
+    return normalized;
   } catch {
     return null;
   }

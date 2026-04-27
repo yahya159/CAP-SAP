@@ -2,7 +2,7 @@
 
 import React, { createContext, useCallback, useContext, useEffect, useMemo, useState } from 'react';
 import { User, UserRole, USER_ROLE_LABELS } from '../types/entities';import { AuthAPI } from '../services/odata/authApi';
-import { getODataAuthToken, setODataAuthToken, onAuthExpired } from '../services/odata/core';
+import { getODataAuthToken, setODataAuthToken, onAuthExpired, isTokenExpired } from '../services/odata/core';
 import { UsersAPI } from '../services/odata/usersApi';
 
 interface AuthContextType {
@@ -31,6 +31,7 @@ const DIRECT_LOGIN_ENABLED = import.meta.env.VITE_ALLOW_DIRECT_LOGIN === 'true';
 
 interface StoredAuthSession {
   token: string;
+  expiresAt?: string;
   user: User;
 }
 
@@ -39,8 +40,26 @@ const readStoredSession = (): StoredAuthSession | null => {
     const raw = localStorage.getItem(SESSION_STORAGE_KEY);
     if (!raw) return null;
     const parsed = JSON.parse(raw) as Partial<StoredAuthSession>;
-    if (!parsed?.token || !parsed?.user?.id) return null;
-    return { token: parsed.token, user: parsed.user as User };
+    if (!parsed?.token || !parsed?.user?.id) {
+      localStorage.removeItem(SESSION_STORAGE_KEY);
+      return null;
+    }
+    const token = String(parsed.token).trim();
+    if (!token || isTokenExpired(token)) {
+      localStorage.removeItem(SESSION_STORAGE_KEY);
+      return null;
+    }
+
+    const expiresAt = typeof parsed.expiresAt === 'string' ? parsed.expiresAt : undefined;
+    if (expiresAt) {
+      const expiresAtEpoch = Date.parse(expiresAt);
+      if (Number.isFinite(expiresAtEpoch) && expiresAtEpoch <= Date.now()) {
+        localStorage.removeItem(SESSION_STORAGE_KEY);
+        return null;
+      }
+    }
+
+    return { token, expiresAt, user: parsed.user as User };
   } catch {
     return null;
   }
@@ -188,7 +207,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
     setODataAuthToken(session.token);
     setCurrentUser(session.user);
-    persistStoredSession({ token: session.token, user: session.user });
+    persistStoredSession({ token: session.token, expiresAt: session.expiresAt, user: session.user });
   }, []);
 
   const logout = useCallback(() => {

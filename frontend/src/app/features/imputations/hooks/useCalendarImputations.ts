@@ -2,12 +2,23 @@ import { useState, useMemo, useCallback } from 'react';
 import { useQueryClient } from '@tanstack/react-query';
 import { useAuth } from '@/app/context/AuthContext';
 import { useImputations, useImputationPeriods, useTickets, useUsers, imputationKeys } from '../queries';
-import { getPeriodKey, getPeriodRange, generateCalendarDays } from '../model';
+import { getPeriodKey, getPeriodRange, generateCalendarDays, formatPeriodLabel } from '../model';
 import { ImputationsAPI } from '@/app/services/odata/imputationsApi';
 import { ImputationPeriodsAPI } from '@/app/services/odata/imputationPeriodsApi';
 import { toast } from 'sonner';
 import { Imputation, ImputationPeriod } from '@/app/types/entities';
 import { ImputationFormValues } from '../schema';
+
+export interface CurrentPeriodEntry {
+  key: string;
+  label: string;
+}
+
+export interface PeriodData {
+  period: ImputationPeriod | undefined;
+  imputations: Imputation[];
+  totalHours: number;
+}
 
 export const useCalendarImputations = (canImpute: boolean, _canValidate: boolean) => {
   const { currentUser } = useAuth();
@@ -52,12 +63,12 @@ export const useCalendarImputations = (canImpute: boolean, _canValidate: boolean
   const currentPeriods = useMemo(() => {
     const [y, m] = calendarMonth.split('-');
     return [
-      { key: `${y}-${m}-H1` },
-      { key: `${y}-${m}-H2` },
+      { key: `${y}-${m}-H1`, label: formatPeriodLabel(`${y}-${m}-H1`) },
+      { key: `${y}-${m}-H2`, label: formatPeriodLabel(`${y}-${m}-H2`) },
     ];
   }, [calendarMonth]);
 
-  const periodData = useCallback((key: string) => {
+  const periodData = useCallback((key: string): PeriodData => {
     const p = periods.find((pd) => pd.periodKey === key && (canImpute ? pd.consultantId === userId : true));
     const periodImps = imputations.filter((i) => i.periodKey === key && (canImpute ? i.consultantId === userId : true));
     const totalHours = periodImps.reduce((s, i) => s + i.hours, 0);

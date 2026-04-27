@@ -8,8 +8,11 @@ import {
   SelectValue,
 } from '@/app/components/ui/select';
 
+import { CreateProjectTicketViewModel } from './CreateProjectTicketForm';
+import { WricefObject } from '@/app/types/entities';
+
 interface CreateProjectTicketContextBlockProps {
-  vm: any;
+  vm: CreateProjectTicketViewModel;
 }
 
 export const CreateProjectTicketContextBlock: React.FC<CreateProjectTicketContextBlockProps> = ({
@@ -35,7 +38,7 @@ export const CreateProjectTicketContextBlock: React.FC<CreateProjectTicketContex
             </SelectTrigger>
             <SelectContent>
               <SelectItem value="_none">No WRICEF object</SelectItem>
-              {vm.wricefObjects.map((object: any) => (
+              {vm.wricefObjects.map((object: WricefObject) => (
                 <SelectItem key={object.id} value={object.id}>
                   {object.id} - {object.title}
                 </SelectItem>

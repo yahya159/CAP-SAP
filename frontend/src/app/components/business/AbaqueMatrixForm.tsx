@@ -33,7 +33,11 @@ export const AbaqueMatrixForm: React.FC<AbaqueMatrixFormProps> = ({
     ]);
   };
 
-  const handleUpdateRow = (id: string, field: keyof ProjectAbaqueRow, value: any) => {
+  const handleUpdateRow = (
+    id: string,
+    field: keyof ProjectAbaqueRow,
+    value: ProjectAbaqueRow[keyof ProjectAbaqueRow]
+  ) => {
     setRows(rows.map((row) => (row.id === id ? { ...row, [field]: value } : row)));
   };
 

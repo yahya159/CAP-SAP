@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { Calculator } from 'lucide-react';
 import { Button } from '@/app/components/ui/button';
-import { useForm } from 'react-hook-form';
+import { Resolver, useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import {
   Dialog,
@@ -44,7 +44,7 @@ export const CreateProjectTicketDialog: React.FC<CreateProjectTicketDialogProps>
   const [isEstimatedByAbaque, setIsEstimatedByAbaque] = useState(false);
 
   const form = useForm<TicketFormValues>({
-    resolver: zodResolver(ticketSchema as any),
+    resolver: zodResolver(ticketSchema) as Resolver<TicketFormValues>,
     defaultValues: {
       title: '',
       description: '',
@@ -79,7 +79,7 @@ export const CreateProjectTicketDialog: React.FC<CreateProjectTicketDialogProps>
     formValues.complexity
   );
 
-  const onSubmit = async (values: any) => {
+  const onSubmit = async (values: TicketFormValues) => {
     if (!project || !currentUser) return;
     try {
       setIsCreatingTicket(true);

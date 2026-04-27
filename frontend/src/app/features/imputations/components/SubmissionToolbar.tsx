@@ -4,10 +4,11 @@ import { Button } from '@/app/components/ui/button';
 import { Badge } from '@/app/components/ui/badge';
 import { IMPUTATION_VALIDATION_LABELS } from '@/app/types/entities';
 import { validationColor } from '../model';
+import { CurrentPeriodEntry, PeriodData } from '../hooks/useCalendarImputations';
 
 interface SubmissionToolbarProps {
-  currentPeriods: { key: string; label: string }[];
-  periodData: (key: string) => any;
+  currentPeriods: CurrentPeriodEntry[];
+  periodData: (key: string) => PeriodData;
   submitPeriod: (key: string) => void;
 }
 

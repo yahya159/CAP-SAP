@@ -5,6 +5,7 @@ import { AuthProvider } from './context/AuthContext';
 import { ThemeProvider, useTheme } from './context/ThemeContext';
 import { DensityProvider } from './context/DensityContext';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
+import { AsyncErrorBoundary } from './components/common/AsyncErrorBoundary';
 
 const queryClient = new QueryClient();
 
@@ -21,7 +22,9 @@ export default function App() {
       <ThemeProvider>
         <DensityProvider>
           <AuthProvider>
-            <RouterProvider router={router} />
+            <AsyncErrorBoundary>
+              <RouterProvider router={router} />
+            </AsyncErrorBoundary>
             <ThemedToaster />
           </AuthProvider>
         </DensityProvider>

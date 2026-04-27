@@ -55,7 +55,7 @@ export const CalendarImputations: React.FC<CalendarImputationsProps> = ({
           totalHoursThisMonth={vm.totalHoursThisMonth}
           validatedHoursThisMonth={vm.validatedHoursThisMonth}
           stratimeHoursThisMonth={vm.stratimeHoursThisMonth}
-          currentPeriods={vm.currentPeriods as any}
+          currentPeriods={vm.currentPeriods}
           periodData={vm.periodData}
           canValidate={canValidate}
           periods={vm.reviewPeriods}
@@ -63,7 +63,7 @@ export const CalendarImputations: React.FC<CalendarImputationsProps> = ({
 
         {canEdit && (
           <SubmissionToolbar
-            currentPeriods={vm.currentPeriods as any}
+            currentPeriods={vm.currentPeriods}
             periodData={vm.periodData}
             submitPeriod={vm.submitPeriod}
           />

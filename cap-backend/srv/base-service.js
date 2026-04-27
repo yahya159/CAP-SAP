@@ -70,6 +70,14 @@ module.exports = function (srv) {
     }
   });
 
+  // Global 404 handler for single-entity reads
+  srv.after('READ', '*', (data, req) => {
+    const isSingleRead = req.query.SELECT?.one || (req.params?.length > 0 && !Array.isArray(data));
+    if (isSingleRead && (data === null || data === undefined)) {
+      req.error(404, 'Entity not found');
+    }
+  });
+
   registerDomainImpls(srv);
 
   // Audit trail – logs every CREATE / UPDATE / DELETE

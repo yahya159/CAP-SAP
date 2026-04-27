@@ -9,16 +9,17 @@ import {
   TableHeader,
   TableRow,
 } from '@/app/components/ui/table';
-import { IMPUTATION_VALIDATION_LABELS, ImputationPeriod, Ticket, User } from '@/app/types/entities';
+import { IMPUTATION_VALIDATION_LABELS, Imputation, ImputationPeriod, Ticket, User } from '@/app/types/entities';
 import { validationColor, formatPeriodLabel } from '../model';
 import { useAuth } from '@/app/context/AuthContext';
 import { getBaseRouteForRole } from '@/app/context/roleRouting';
+import { PeriodData } from '../hooks/useCalendarImputations';
 
 interface PeriodDetailTablesProps {
-  entries: any[];
+  entries: Array<ImputationPeriod | { key: string; label: string }>;
   canValidate: boolean;
-  periodData: (key: string) => any;
-  periodImputations: (period: ImputationPeriod) => any[];
+  periodData: (key: string) => PeriodData;
+  periodImputations: (period: ImputationPeriod) => Imputation[];
   tickets: Ticket[];
   users: User[];
 }
@@ -54,7 +55,7 @@ export const PeriodDetailTables: React.FC<PeriodDetailTablesProps> = ({
         const periodRows = canValidate
           ? periodImputations(entry as ImputationPeriod)
           : periodData((entry as { key: string }).key).imputations;
-        const totalHours = periodRows.reduce((sum: number, imp: any) => sum + imp.hours, 0);
+        const totalHours = periodRows.reduce((sum: number, imp) => sum + imp.hours, 0);
 
         if (periodRows.length === 0) return null;
 
@@ -85,8 +86,8 @@ export const PeriodDetailTables: React.FC<PeriodDetailTablesProps> = ({
               </TableHeader>
               <TableBody>
                 {periodRows
-                  .sort((a: any, b: any) => a.date.localeCompare(b.date))
-                  .map((imp: any) => (
+                  .sort((a, b) => a.date.localeCompare(b.date))
+                  .map((imp) => (
                     <TableRow key={imp.id}>
                       <TableCell className="px-4 py-2 text-sm font-mono">{imp.date}</TableCell>
                       <TableCell className="px-4 py-2 text-sm">

@@ -64,16 +64,35 @@ export const TopBar: React.FC<TopBarProps> = ({
   useEffect(() => {
     if (!currentUser) return;
 
+    let mounted = true;
+    let intervalId: NodeJS.Timeout;
+
     const load = async () => {
+      if (!mounted) return;
       try {
         const notificationData = await NotificationsAPI.getByUser(currentUser.id);
-        setNotifications(notificationData.sort((a, b) => b.createdAt.localeCompare(a.createdAt)));
+        if (mounted) {
+          setNotifications(notificationData.sort((a, b) => b.createdAt.localeCompare(a.createdAt)));
+        }
       } catch (error) {
-        toast.error('Failed to load notifications');
+        if (mounted) {
+          console.error('[TopBar] Failed to load notifications:', error);
+          // Optional: toast.error('Failed to load notifications');
+        }
       }
     };
 
     void load();
+
+    // Poll every 15 seconds in production
+    intervalId = setInterval(() => {
+      void load();
+    }, 15000);
+
+    return () => {
+      mounted = false;
+      if (intervalId) clearInterval(intervalId);
+    };
   }, [currentUser]);
 
   const unreadCount = useMemo(

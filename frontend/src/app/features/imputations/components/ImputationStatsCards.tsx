@@ -1,17 +1,18 @@
 import React from 'react';
 import { Clock, CalendarDays, CheckCircle2, Send } from 'lucide-react';
 import { Badge } from '@/app/components/ui/badge';
-import { IMPUTATION_VALIDATION_LABELS } from '@/app/types/entities';
+import { IMPUTATION_VALIDATION_LABELS, ImputationPeriod } from '@/app/types/entities';
 import { validationColor } from '../model';
+import { CurrentPeriodEntry, PeriodData } from '../hooks/useCalendarImputations';
 
 interface ImputationStatsCardsProps {
   totalHoursThisMonth: number;
   validatedHoursThisMonth: number;
   stratimeHoursThisMonth: number;
-  currentPeriods: { key: string; label: string }[];
-  periodData: (key: string) => any;
+  currentPeriods: CurrentPeriodEntry[];
+  periodData: (key: string) => PeriodData;
   canValidate: boolean;
-  periods: any[];
+  periods: ImputationPeriod[];
 }
 
 export const ImputationStatsCards: React.FC<ImputationStatsCardsProps> = ({

@@ -413,7 +413,9 @@ describe('Imputation state machine', () => {
 describe('Unauthenticated access', () => {
   test('GET /Tickets without token returns 401', async () => {
     try {
-      await GET('/odata/v4/ticket/Tickets');
+      await GET('/odata/v4/ticket/Tickets', {
+        headers: { Authorization: 'Bearer invalid-token' },
+      });
       fail('Should have thrown');
     } catch (err) {
       expect(err.response?.status ?? err.status).toBe(401);

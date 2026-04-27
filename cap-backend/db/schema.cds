@@ -62,11 +62,11 @@ entity Projects : cuid, managed {
   endDate         : Date;
   status          : ProjectStatus default 'PLANNED';
   priority        : Priority      default 'MEDIUM';
-  description     : LargeString;
+  description     : String(10000);
   progress        : Integer       default 0;
   complexity      : Complexity;
   techKeywords    : Composition of many ProjectTechKeywords on techKeywords.project = $self;
-  documentation   : LargeString;
+  documentation   : String(10000);
   abaqueEstimate  : Composition of many ProjectAbaqueEstimates on abaqueEstimate.project = $self;
 }
 
@@ -77,7 +77,7 @@ entity ProjectTechKeywords : cuid {
 
 entity ProjectAbaqueEstimates : cuid {
   project : Association to Projects;
-  details : LargeString;
+  details : String(10000);
 }
 
 // ---------------------------------------------------------------------------
@@ -89,7 +89,7 @@ entity Wricefs : cuid, managed {
   importedAt      : DateTime;
   status          : WricefStatus default 'DRAFT';
   autoCreated     : Boolean     default false;
-  rejectionReason : LargeString;
+  rejectionReason : String(5000);
   submittedBy     : String(50);
   submittedAt     : DateTime;
 }
@@ -101,11 +101,11 @@ entity WricefObjects : cuid, managed {
   project                 : Association to Projects on project.ID = projectId;
   type                    : WricefType       not null;
   title                   : String(200)      not null;
-  description             : LargeString;
+  description             : String(10000);
   complexity              : TicketComplexity default 'SIMPLE';
   module                  : SAPModule;
   status                  : WricefStatus default 'DRAFT';
-  rejectionReason         : LargeString;
+  rejectionReason         : String(10000);
   documentationObjectIds  : Composition of many WricefDocumentationObjects on documentationObjectIds.wricefObject = $self;
 }
 
@@ -146,7 +146,7 @@ entity Evaluations : cuid, managed {
   period          : String(20);
   score           : Decimal(4,2) default 0;
   qualitativeGrid : Composition of many EvaluationQualitativeGrids on qualitativeGrid.evaluation = $self;
-  feedback        : LargeString;
+  feedback        : String(10000);
 }
 
 entity EvaluationQualitativeGrids : cuid {
@@ -168,7 +168,7 @@ entity Deliverables : cuid, managed {
   url                : String(500);
   fileRef            : String(500);
   validationStatus   : DeliverableValidation default 'PENDING';
-  functionalComment  : LargeString;
+  functionalComment  : String(10000);
 }
 
 // ---------------------------------------------------------------------------
@@ -187,7 +187,7 @@ entity Tickets : cuid, managed {
   priority                : Priority         default 'MEDIUM';
   nature                  : TicketNature     not null;
   title                   : String(200)      not null;
-  description             : LargeString;
+  description             : String(10000);
   dueDate                 : Date;
   effortHours             : Decimal(6,2)     default 0;
   effortComment           : String(500);
@@ -219,7 +219,7 @@ entity TicketDocumentationObjects : cuid {
 entity TicketHistory : cuid, managed {
   ticket : Association to Tickets;
   event  : String(100);
-  details: LargeString;
+  details: String(10000);
 }
 
 // ---------------------------------------------------------------------------
@@ -230,7 +230,7 @@ entity TicketComments : cuid, managed {
   ticketId        : String(50) not null;
   authorId        : String(50) not null;
   author          : Association to Users on author.ID = authorId;
-  message         : LargeString not null;
+  message         : String(10000) not null;
   isInternal      : Boolean default false;
   commentType     : CommentType default 'GENERAL';
   parentCommentId : String(50);
@@ -246,7 +246,7 @@ entity Notifications : cuid, managed {
   user      : Association to Users on user.ID = userId;
   type      : String(50);
   title     : String(200);
-  message   : LargeString;
+  message   : String(10000);
   read      : Boolean   default false;
 }
 
@@ -258,7 +258,7 @@ entity ProjectFeedback : cuid, managed {
   project   : Association to Projects on project.ID = projectId;
   authorId  : String(50) not null;
   author    : Association to Users on author.ID = authorId;
-  content   : LargeString not null;
+  content   : String(10000) not null;
 }
 
 // ---------------------------------------------------------------------------
@@ -305,7 +305,7 @@ entity TimeLogs : cuid, managed {
   project         : Association to Projects on project.ID = projectId;
   date            : Date       not null;
   durationMinutes : Integer    default 0;
-  description     : LargeString;
+  description     : String(10000);
   sentToStraTIME  : Boolean    default false;
   sentAt          : DateTime;
 }
@@ -327,7 +327,7 @@ entity Imputations : cuid, managed {
   module            : SAPModule;
   date              : Date       not null;
   hours             : Decimal(4,2) default 0;
-  description       : LargeString;
+  description       : String(10000);
   validationStatus  : ImputationStatus default 'DRAFT';
   periodKey         : String(20) not null;
   validatedBy       : String(50);
@@ -360,9 +360,9 @@ entity ImputationPeriods : cuid, managed {
 // ---------------------------------------------------------------------------
 entity DocumentationObjects : cuid, managed {
   title            : String(200) not null;
-  description      : LargeString;
+  description      : String(10000);
   type             : DocObjectType default 'GENERAL';
-  content          : LargeString;
+  content          : String(10000);
   attachedFiles    : Composition of many DocAttachedFiles on attachedFiles.docObject = $self;
   relatedTicketIds : Composition of many DocRelatedTickets on relatedTicketIds.docObject = $self;
   projectId        : String(50)  not null;
@@ -407,5 +407,5 @@ entity AuditLogs : cuid {
   action     : String(10) not null;       // CREATE, UPDATE, DELETE
   entityName : String(100) not null;
   entityId   : String(50);
-  details    : LargeString;               // JSON diff / summary
+  details    : String(10000);               // JSON diff / summary
 }

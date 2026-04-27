@@ -243,7 +243,7 @@ export const Deliverables: React.FC = () => {
             </div>
             <div className="flex items-center gap-2">
                <Filter className="h-4 w-4 text-muted-foreground hidden sm:block" />
-               <Select value={statusFilter} onValueChange={(v) => setStatusFilter(v as any)}>
+               <Select value={statusFilter} onValueChange={(v) => setStatusFilter(v as ValidationStatus | 'ALL')}>
                  <SelectTrigger className="w-[180px] bg-background">
                    <SelectValue placeholder="All Statuses" />
                  </SelectTrigger>

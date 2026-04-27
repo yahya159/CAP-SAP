@@ -192,40 +192,39 @@ class TicketDomainService {
       req.reject(400, 'allocatedHours must be greater than 0');
     }
 
-    const ticket = await this.repo.findById(id);
-    if (!ticket) { req.reject(404, 'Ticket not found'); return; }
+    return await cds.tx(req).run(async (tx) => {
+      const ticket = await tx.run(SELECT.one.from(ENTITIES.Tickets).where({ ID: id }));
+      if (!ticket) { req.reject(404, 'Ticket not found'); return; }
 
-    const allowedFrom = TICKET_STATUS_TRANSITIONS[ticket.status] || new Set();
-    if (!allowedFrom.has(TICKET_STATUS.APPROVED)) {
-      req.reject(409, `Cannot approve ticket in status '${ticket.status}'; expected PENDING_APPROVAL`);
-      return;
-    }
+      const allowedFrom = TICKET_STATUS_TRANSITIONS[ticket.status] || new Set();
+      if (!allowedFrom.has(TICKET_STATUS.APPROVED)) {
+        req.reject(409, `Cannot approve ticket in status '${ticket.status}'; expected PENDING_APPROVAL`);
+        return;
+      }
 
-    await assertEntityExists(ENTITIES.Users, techConsultantId, 'techConsultantId', req);
+      await assertEntityExists(ENTITIES.Users, techConsultantId, 'techConsultantId', req);
 
-    const updated = await this.repo.update(id, {
-      status: TICKET_STATUS.APPROVED,
-      assignedTo: techConsultantId,
-      assignedToRole: 'CONSULTANT_TECHNIQUE',
-      allocatedHours: Number(allocatedHours),
-      updatedAt: nowIso(),
-    });
+      await tx.run(UPDATE(ENTITIES.Tickets).where({ ID: id }).with({
+        status: TICKET_STATUS.APPROVED,
+        assignedTo: techConsultantId,
+        assignedToRole: 'CONSULTANT_TECHNIQUE',
+        allocatedHours: Number(allocatedHours),
+        updatedAt: nowIso(),
+      }));
 
-    // Create notification for the assigned consultant (non-critical; ticket approval is not rolled back on failure)
-    try {
-      await cds.db.run(INSERT.into(ENTITIES.Notifications).entries({
+      // Create notification for the assigned consultant (atomic part of the transaction)
+      await tx.run(INSERT.into(ENTITIES.Notifications).entries({
         userId: techConsultantId,
         type: 'TICKET_ASSIGNED',
         title: `Ticket ${ticket.ticketCode} assigned to you`,
         message: `You have been assigned to ticket "${ticket.title}" with ${allocatedHours}h budget.`,
         read: false,
       }));
-    } catch (err) {
-      console.error('[TicketDomainService] Failed to create approval notification:', err?.message ?? err);
-    }
 
-    this.afterRead(updated);
-    return updated;
+      const updated = await tx.run(SELECT.one.from(ENTITIES.Tickets).where({ ID: id }));
+      this.afterRead(updated);
+      return updated;
+    });
   }
 
   /**
@@ -236,44 +235,43 @@ class TicketDomainService {
     const id = req.params?.[0]?.ID ?? req.params?.[0];
     const { reason } = req.data ?? {};
 
-    const ticket = await this.repo.findById(id);
-    if (!ticket) { req.reject(404, 'Ticket not found'); return; }
+    return await cds.tx(req).run(async (tx) => {
+      const ticket = await tx.run(SELECT.one.from(ENTITIES.Tickets).where({ ID: id }));
+      if (!ticket) { req.reject(404, 'Ticket not found'); return; }
 
-    const allowedFromRej = TICKET_STATUS_TRANSITIONS[ticket.status] || new Set();
-    if (!allowedFromRej.has(TICKET_STATUS.REJECTED)) {
-      req.reject(409, `Cannot reject ticket in status '${ticket.status}'; transition to REJECTED not allowed`);
-      return;
-    }
+      const allowedFromRej = TICKET_STATUS_TRANSITIONS[ticket.status] || new Set();
+      if (!allowedFromRej.has(TICKET_STATUS.REJECTED)) {
+        req.reject(409, `Cannot reject ticket in status '${ticket.status}'; transition to REJECTED not allowed`);
+        return;
+      }
 
-    // Record rejection reason in history
-    await cds.db.run(INSERT.into('sap.performance.dashboard.db.TicketHistory').entries({
-      ticket_ID: id,
-      event: 'REJECTED',
-      details: reason || 'Rejected by manager',
-    }));
+      // Record rejection reason in history
+      await tx.run(INSERT.into('sap.performance.dashboard.db.TicketHistory').entries({
+        ticket_ID: id,
+        event: 'REJECTED',
+        details: reason || 'Rejected by manager',
+      }));
 
-    const updated = await this.repo.update(id, {
-      status: TICKET_STATUS.REJECTED,
-      updatedAt: nowIso(),
-    });
+      await tx.run(UPDATE(ENTITIES.Tickets).where({ ID: id }).with({
+        status: TICKET_STATUS.REJECTED,
+        updatedAt: nowIso(),
+      }));
 
-    // Notify the creator (non-critical; rejection is not rolled back on failure)
-    if (ticket.createdBy) {
-      try {
-        await cds.db.run(INSERT.into(ENTITIES.Notifications).entries({
+      // Notify the creator (atomic part of the transaction)
+      if (ticket.createdBy) {
+        await tx.run(INSERT.into(ENTITIES.Notifications).entries({
           userId: ticket.createdBy,
           type: 'TICKET_REJECTED',
           title: `Ticket ${ticket.ticketCode} rejected`,
           message: reason || 'Your ticket was rejected by the manager.',
           read: false,
         }));
-      } catch (err) {
-        console.error('[TicketDomainService] Failed to create rejection notification:', err?.message ?? err);
       }
-    }
 
-    this.afterRead(updated);
-    return updated;
+      const updated = await tx.run(SELECT.one.from(ENTITIES.Tickets).where({ ID: id }));
+      this.afterRead(updated);
+      return updated;
+    });
   }
 
   // ---- Private helpers ---------------------------------------------------

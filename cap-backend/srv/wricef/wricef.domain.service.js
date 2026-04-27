@@ -52,49 +52,56 @@ class WricefDomainService {
     requireRole(req, MANAGER_CREATE_ROLES, 'Only managers can submit WRICEFs');
     const id = extractEntityId(req);
 
-    const wricef = await this.repo.findById(id);
-    if (!wricef) { req.reject(404, 'WRICEF not found'); return; }
+    return await cds.tx(req).run(async (tx) => {
+      const wricef = await tx.run(SELECT.one.from(ENTITIES.Wricefs).where({ ID: id }));
+      if (!wricef) { req.reject(404, 'WRICEF not found'); return; }
 
-    if (wricef.status !== 'DRAFT') {
-      req.reject(409, `Cannot submit WRICEF in status '${wricef.status}'; expected DRAFT`);
-      return;
-    }
+      if (wricef.status !== 'DRAFT') {
+        req.reject(409, `Cannot submit WRICEF in status '${wricef.status}'; expected DRAFT`);
+        return;
+      }
 
-    // Ensure there is at least one object
-    const objects = await this.repo.findObjectsByWricefId(id);
-    if (!objects || objects.length === 0) {
-      req.reject(400, 'Cannot submit a WRICEF without any objects. Add at least one object first.');
-      return;
-    }
+      // Ensure there is at least one object
+      const objects = await tx.run(SELECT.from(ENTITIES.WricefObjects).where({ wricefId: id }));
+      if (!objects || objects.length === 0) {
+        req.reject(400, 'Cannot submit a WRICEF without any objects. Add at least one object first.');
+        return;
+      }
 
-    const userId = req._authClaims?.sub || req.user?.id || req.headers?.['x-user-id'] || 'unknown';
-    const now = nowIso();
+      const userId = req._authClaims?.sub || req.user?.id || req.headers?.['x-user-id'] || 'unknown';
+      const now = nowIso();
 
-    // Transition the WRICEF
-    const updated = await this.repo.updateById(id, {
-      status: 'PENDING_VALIDATION',
-      submittedBy: userId,
-      submittedAt: now,
-    });
-
-    // Transition all child objects that are in DRAFT
-    await this.repo.updateObjectsStatusByWricefId(id, 'DRAFT', 'PENDING_VALIDATION');
-
-    // Notify all project managers
-    const pms = await cds.db.run(
-      SELECT.from(ENTITIES.Users).where({ role: 'PROJECT_MANAGER', active: true })
-    );
-    for (const pm of pms) {
-      await cds.db.run(INSERT.into(ENTITIES.Notifications).entries({
-        userId: pm.ID,
-        type: 'WRICEF_SUBMITTED',
-        title: 'New WRICEF pending validation',
-        message: `WRICEF "${wricef.sourceFileName || 'Untitled'}" has been submitted for your approval.`,
-        read: false,
+      // Transition the WRICEF
+      await tx.run(UPDATE(ENTITIES.Wricefs).where({ ID: id }).with({
+        status: 'PENDING_VALIDATION',
+        submittedBy: userId,
+        submittedAt: now,
       }));
-    }
 
-    return updated;
+      // Transition all child objects that are in DRAFT
+      await tx.run(UPDATE(ENTITIES.WricefObjects)
+        .where({ wricefId: id, status: 'DRAFT' })
+        .with({ status: 'PENDING_VALIDATION' }));
+
+      // Notify all project managers (Batch insert to fix Issue #1)
+      const pms = await tx.run(
+        SELECT.from(ENTITIES.Users).where({ role: 'PROJECT_MANAGER', active: true })
+      );
+
+      if (pms.length > 0) {
+        const notifications = pms.map(pm => ({
+          userId: pm.ID,
+          type: 'WRICEF_SUBMITTED',
+          title: 'New WRICEF pending validation',
+          message: `WRICEF "${wricef.sourceFileName || 'Untitled'}" has been submitted for your approval.`,
+          read: false,
+        }));
+        await tx.run(INSERT.into(ENTITIES.Notifications).entries(notifications));
+      }
+
+      // Return the updated WRICEF
+      return await tx.run(SELECT.one.from(ENTITIES.Wricefs).where({ ID: id }));
+    });
   }
 
   /**
@@ -105,33 +112,37 @@ class WricefDomainService {
     requireRole(req, PM_ROLES, 'Only project managers can validate WRICEFs');
     const id = extractEntityId(req);
 
-    const wricef = await this.repo.findById(id);
-    if (!wricef) { req.reject(404, 'WRICEF not found'); return; }
+    return await cds.tx(req).run(async (tx) => {
+      const wricef = await tx.run(SELECT.one.from(ENTITIES.Wricefs).where({ ID: id }));
+      if (!wricef) { req.reject(404, 'WRICEF not found'); return; }
 
-    if (wricef.status !== 'PENDING_VALIDATION') {
-      req.reject(409, `Cannot validate WRICEF in status '${wricef.status}'; expected PENDING_VALIDATION`);
-      return;
-    }
+      if (wricef.status !== 'PENDING_VALIDATION') {
+        req.reject(409, `Cannot validate WRICEF in status '${wricef.status}'; expected PENDING_VALIDATION`);
+        return;
+      }
 
-    const updated = await this.repo.updateById(id, {
-      status: 'VALIDATED',
-    });
-
-    // Also validate all child objects still pending
-    await this.repo.updateObjectsStatusByWricefId(id, 'PENDING_VALIDATION', 'VALIDATED');
-
-    // Notify the submitter
-    if (wricef.submittedBy) {
-      await cds.db.run(INSERT.into(ENTITIES.Notifications).entries({
-        userId: wricef.submittedBy,
-        type: 'WRICEF_VALIDATED',
-        title: 'WRICEF validated',
-        message: `Your WRICEF "${wricef.sourceFileName || 'Untitled'}" has been validated by the project manager.`,
-        read: false,
+      await tx.run(UPDATE(ENTITIES.Wricefs).where({ ID: id }).with({
+        status: 'VALIDATED',
       }));
-    }
 
-    return updated;
+      // Also validate all child objects still pending
+      await tx.run(UPDATE(ENTITIES.WricefObjects)
+        .where({ wricefId: id, status: 'PENDING_VALIDATION' })
+        .with({ status: 'VALIDATED' }));
+
+      // Notify the submitter
+      if (wricef.submittedBy) {
+        await tx.run(INSERT.into(ENTITIES.Notifications).entries({
+          userId: wricef.submittedBy,
+          type: 'WRICEF_VALIDATED',
+          title: 'WRICEF validated',
+          message: `Your WRICEF "${wricef.sourceFileName || 'Untitled'}" has been validated by the project manager.`,
+          read: false,
+        }));
+      }
+
+      return await tx.run(SELECT.one.from(ENTITIES.Wricefs).where({ ID: id }));
+    });
   }
 
   /**
@@ -148,34 +159,38 @@ class WricefDomainService {
       return;
     }
 
-    const wricef = await this.repo.findById(id);
-    if (!wricef) { req.reject(404, 'WRICEF not found'); return; }
+    return await cds.tx(req).run(async (tx) => {
+      const wricef = await tx.run(SELECT.one.from(ENTITIES.Wricefs).where({ ID: id }));
+      if (!wricef) { req.reject(404, 'WRICEF not found'); return; }
 
-    if (wricef.status !== 'PENDING_VALIDATION') {
-      req.reject(409, `Cannot reject WRICEF in status '${wricef.status}'; expected PENDING_VALIDATION`);
-      return;
-    }
+      if (wricef.status !== 'PENDING_VALIDATION') {
+        req.reject(409, `Cannot reject WRICEF in status '${wricef.status}'; expected PENDING_VALIDATION`);
+        return;
+      }
 
-    const updated = await this.repo.updateById(id, {
-      status: 'REJECTED',
-      rejectionReason: reason.trim(),
-    });
-
-    // Also reject all child objects still pending
-    await this.repo.updateObjectsStatusByWricefId(id, 'PENDING_VALIDATION', 'REJECTED');
-
-    // Notify the submitter
-    if (wricef.submittedBy) {
-      await cds.db.run(INSERT.into(ENTITIES.Notifications).entries({
-        userId: wricef.submittedBy,
-        type: 'WRICEF_REJECTED',
-        title: 'WRICEF rejected',
-        message: `Your WRICEF "${wricef.sourceFileName || 'Untitled'}" was rejected. Reason: ${reason.trim()}`,
-        read: false,
+      await tx.run(UPDATE(ENTITIES.Wricefs).where({ ID: id }).with({
+        status: 'REJECTED',
+        rejectionReason: reason.trim(),
       }));
-    }
 
-    return updated;
+      // Also reject all child objects still pending
+      await tx.run(UPDATE(ENTITIES.WricefObjects)
+        .where({ wricefId: id, status: 'PENDING_VALIDATION' })
+        .with({ status: 'REJECTED' }));
+
+      // Notify the submitter
+      if (wricef.submittedBy) {
+        await tx.run(INSERT.into(ENTITIES.Notifications).entries({
+          userId: wricef.submittedBy,
+          type: 'WRICEF_REJECTED',
+          title: 'WRICEF rejected',
+          message: `Your WRICEF "${wricef.sourceFileName || 'Untitled'}" was rejected. Reason: ${reason.trim()}`,
+          read: false,
+        }));
+      }
+
+      return await tx.run(SELECT.one.from(ENTITIES.Wricefs).where({ ID: id }));
+    });
   }
 
   // ─── WRICEF Object lifecycle ────────────────────────────────────────

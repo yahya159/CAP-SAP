@@ -1,7 +1,7 @@
 import React from 'react';
 import { useNavigate } from 'react-router';
 import { Plus } from 'lucide-react';
-import { useForm } from 'react-hook-form';
+import { Resolver, useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import {
   Dialog,
@@ -51,7 +51,7 @@ export const AddImputationDialog: React.FC<AddImputationDialogProps> = ({
   const roleBasePath = currentUser ? getBaseRouteForRole(currentUser.role) : '';
 
   const form = useForm<ImputationFormValues>({
-    resolver: zodResolver(imputationSchema as any),
+    resolver: zodResolver(imputationSchema) as Resolver<ImputationFormValues>,
     defaultValues: {
       ticketId: '',
       hours: 0,
@@ -66,7 +66,7 @@ export const AddImputationDialog: React.FC<AddImputationDialogProps> = ({
     }
   }, [open, form]);
 
-  const onSubmit = (values: any) => {
+  const onSubmit = (values: ImputationFormValues) => {
     onAdd(values);
   };
 
