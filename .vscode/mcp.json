@@ -1,0 +1,10 @@
+{
+  "servers": {
+    "cap": {
+      "type": "stdio",
+      "command": "npx",
+      "cwd": "${workspaceFolder}/cap-backend",
+      "args": ["@cap-js/mcp-server"]
+    }
+  }
+}

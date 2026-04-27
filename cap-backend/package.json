@@ -10,6 +10,7 @@
     "test": "jest --forceExit --detectOpenHandles"
   },
   "dependencies": {
+    "@cap-js/mcp-server": "^0.0.5",
     "@cap-js/sqlite": "^1",
     "@sap/cds": "^8"
   },
