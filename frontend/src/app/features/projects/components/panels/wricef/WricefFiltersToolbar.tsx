@@ -1,4 +1,5 @@
 import React from 'react';
+import { useTranslation } from 'react-i18next';
 import { FileUp, Filter, Plus, Search } from 'lucide-react';
 import { Button } from '@/app/components/ui/button';
 import { Input } from '@/app/components/ui/input';
@@ -48,6 +49,7 @@ export const WricefFiltersToolbar: React.FC<WricefFiltersToolbarProps> = ({
   onOpenCreateTicket,
   onImportWricefFile,
 }) => {
+  const { t } = useTranslation();
   return (
     <div className="rounded-lg border bg-card p-4">
       <div className="flex flex-wrap items-center justify-between gap-3">
@@ -55,7 +57,7 @@ export const WricefFiltersToolbar: React.FC<WricefFiltersToolbarProps> = ({
           <div className="relative">
             <Search className="absolute left-2.5 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
             <Input
-              placeholder="Search objects..."
+              placeholder={t('projects.details.wricef.filters.search')}
               value={objectsSearch}
               onChange={(event) => onObjectsSearchChange(event.target.value)}
               className="pl-8 w-[220px] h-9"
@@ -69,10 +71,10 @@ export const WricefFiltersToolbar: React.FC<WricefFiltersToolbarProps> = ({
           >
             <SelectTrigger className="h-9 w-[150px]">
               <Filter className="h-3.5 w-3.5 mr-1 text-muted-foreground" />
-              <SelectValue placeholder="Type" />
+              <SelectValue placeholder={t('projects.details.wricef.filters.type')} />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="_all">All Types</SelectItem>
+              <SelectItem value="_all">{t('projects.details.wricef.filters.allTypes')}</SelectItem>
               {(['W', 'R', 'I', 'C', 'E', 'F'] as WricefType[]).map((type) => (
                 <SelectItem key={type} value={type}>
                   {WRICEF_TYPE_LABELS[type]}
@@ -87,10 +89,10 @@ export const WricefFiltersToolbar: React.FC<WricefFiltersToolbarProps> = ({
             }
           >
             <SelectTrigger className="h-9 w-[150px]">
-              <SelectValue placeholder="Complexity" />
+              <SelectValue placeholder={t('projects.details.wricef.filters.complexity')} />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="_all">All Complexity</SelectItem>
+              <SelectItem value="_all">{t('projects.details.wricef.filters.allComplexity')}</SelectItem>
               {(['SIMPLE', 'MOYEN', 'COMPLEXE', 'TRES_COMPLEXE'] as TicketComplexity[]).map((complexity) => (
                 <SelectItem key={complexity} value={complexity}>
                   {TICKET_COMPLEXITY_LABELS[complexity]}
@@ -105,10 +107,10 @@ export const WricefFiltersToolbar: React.FC<WricefFiltersToolbarProps> = ({
             }
           >
             <SelectTrigger className="h-9 w-[160px]">
-              <SelectValue placeholder="Module" />
+              <SelectValue placeholder={t('projects.details.wricef.filters.module')} />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="_all">All Modules</SelectItem>
+              <SelectItem value="_all">{t('projects.details.wricef.filters.allModules')}</SelectItem>
               {(Object.keys(SAP_MODULE_LABELS) as SAPModule[]).map((module) => (
                 <SelectItem key={module} value={module}>
                   {SAP_MODULE_LABELS[module]}
@@ -118,21 +120,21 @@ export const WricefFiltersToolbar: React.FC<WricefFiltersToolbarProps> = ({
           </Select>
           {(objectsSearch || objectsTypeFilter || objectsComplexityFilter || objectsModuleFilter) && (
             <Button variant="ghost" size="sm" onClick={onClearFilters}>
-              Clear filters
+              {t('projects.details.wricef.filters.clear')}
             </Button>
           )}
         </div>
         <div className="flex items-center gap-2">
           <Button size="sm" onClick={onOpenCreateTicket}>
             <Plus className="h-4 w-4 mr-1" />
-            Add Ticket
+            {t('projects.details.wricef.filters.createTicket')}
           </Button>
           <Label
             htmlFor="wricef-upload-objects"
             className="inline-flex cursor-pointer items-center gap-2 rounded-md border border-border px-3 py-2 text-sm font-medium hover:bg-accent h-9"
           >
             <FileUp className="h-4 w-4" />
-            {wricefImporting ? 'Importing...' : 'Upload WRICEF'}
+            {wricefImporting ? t('projects.dialog.parsing') : t('projects.details.wricef.filters.import')}
           </Label>
           <Input
             id="wricef-upload-objects"

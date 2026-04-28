@@ -1,4 +1,5 @@
 import React from 'react';
+import { useTranslation } from 'react-i18next';
 import { Badge } from '@/app/components/ui/badge';
 import {
   Table,
@@ -23,8 +24,9 @@ export const WricefObjectTicketsTable: React.FC<WricefObjectTicketsTableProps> =
   wricefPriorityColor,
   onOpenTicketDetails,
 }) => {
+  const { t } = useTranslation();
   if (ticketRows.length === 0) {
-    return <p className="text-sm text-muted-foreground py-2">No tickets for this object.</p>;
+    return <p className="text-sm text-muted-foreground py-2">{t('pm.dashboard.recentTickets.noTickets')}</p>;
   }
 
   return (
@@ -32,13 +34,13 @@ export const WricefObjectTicketsTable: React.FC<WricefObjectTicketsTableProps> =
       <Table>
         <TableHeader className="bg-muted/40">
           <TableRow>
-            <TableHead className="px-3 text-xs">Ticket ID</TableHead>
-            <TableHead className="px-3 text-xs">Title</TableHead>
-            <TableHead className="px-3 text-xs">Status</TableHead>
-            <TableHead className="px-3 text-xs">Priority</TableHead>
-            <TableHead className="px-3 text-xs">Live Ticket</TableHead>
-            <TableHead className="px-3 text-xs">Estimation</TableHead>
-            <TableHead className="px-3 text-xs">Effort</TableHead>
+            <TableHead className="px-3 text-xs">{t('projects.details.tables.wricefTickets.ticketId')}</TableHead>
+            <TableHead className="px-3 text-xs">{t('common.name')}</TableHead>
+            <TableHead className="px-3 text-xs">{t('common.status')}</TableHead>
+            <TableHead className="px-3 text-xs">{t('projects.table.priority')}</TableHead>
+            <TableHead className="px-3 text-xs">{t('projects.details.tables.wricefTickets.liveTicket')}</TableHead>
+            <TableHead className="px-3 text-xs">{t('tickets.details.estimation')}</TableHead>
+            <TableHead className="px-3 text-xs">{t('tickets.details.effort')}</TableHead>
           </TableRow>
         </TableHeader>
         <TableBody>

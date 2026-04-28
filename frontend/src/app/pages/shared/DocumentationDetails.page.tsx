@@ -33,6 +33,7 @@ import {
   User,
   Project,
 } from '../../types/entities';
+import { formatDateTime } from '../../utils/date';
 
 const homePathByRole: Record<UserRole, string> = {
   ADMIN: '/admin/dashboard',
@@ -41,11 +42,6 @@ const homePathByRole: Record<UserRole, string> = {
   DEV_COORDINATOR: '/dev-coordinator/dashboard',
   CONSULTANT_TECHNIQUE: '/consultant-tech/dashboard',
   CONSULTANT_FONCTIONNEL: '/consultant-func/dashboard',
-};
-
-const formatDate = (value?: string) => {
-  if (!value) return '-';
-  return new Date(value).toLocaleString();
 };
 
 const formatFileSize = (size: number) => {
@@ -150,7 +146,7 @@ const renderMarkdown = (content: string) => {
 };
 
 export const DocumentationDetails: React.FC = () => {
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
   const { currentUser } = useAuth();
@@ -274,12 +270,12 @@ export const DocumentationDetails: React.FC = () => {
                   <div className="flex items-center gap-2 text-muted-foreground">
                     <CalendarDays className="h-3.5 w-3.5" />
                     <span>{t('documentation.details.created')}</span>
-                    <span className="font-medium text-foreground">{formatDate(documentation.createdAt)}</span>
+                    <span className="font-medium text-foreground">{formatDateTime(documentation.createdAt, i18n.language)}</span>
                   </div>
                   <div className="flex items-center gap-2 text-muted-foreground">
                     <CalendarDays className="h-3.5 w-3.5" />
                     <span>{t('documentation.details.updated')}</span>
-                    <span className="font-medium text-foreground">{formatDate(documentation.updatedAt ?? documentation.createdAt)}</span>
+                    <span className="font-medium text-foreground">{formatDateTime(documentation.updatedAt ?? documentation.createdAt, i18n.language)}</span>
                   </div>
                   <div className="text-muted-foreground">
                     <span>{t('documentation.details.project')}</span>

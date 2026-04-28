@@ -1,4 +1,5 @@
 import React from 'react';
+import { useTranslation } from 'react-i18next';
 import { Plus, Search } from 'lucide-react';
 import { Button } from '@/app/components/ui/button';
 import { Input } from '@/app/components/ui/input';
@@ -28,6 +29,7 @@ export const TicketsPanelToolbar: React.FC<TicketsPanelToolbarProps> = ({
   onTicketsPageChange,
   onOpenCreateTicket,
 }) => {
+  const { t } = useTranslation();
   return (
     <div className="rounded-lg border bg-card p-4">
       <div className="flex flex-wrap items-center justify-between gap-3">
@@ -35,7 +37,7 @@ export const TicketsPanelToolbar: React.FC<TicketsPanelToolbarProps> = ({
           <div className="relative">
             <Search className="absolute left-2.5 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
             <Input
-              placeholder="Search tickets..."
+              placeholder={t('projectPanels.toolbar.searchPlaceholder')}
               value={ticketsSearch}
               onChange={(event) => onTicketsSearchChange(event.target.value)}
               className="pl-8 w-[220px] h-9"

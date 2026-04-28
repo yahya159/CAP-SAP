@@ -1,10 +1,12 @@
 import React from 'react';
+import { useTranslation } from 'react-i18next';
 import { useNavigate } from 'react-router';
 import { Button } from '@/app/components/ui/button';
 import { Ticket, Imputation } from '@/app/types/entities';
 import { CalendarDay } from '../model';
 import { useAuth } from '@/app/context/AuthContext';
 import { getBaseRouteForRole } from '@/app/context/roleRouting';
+import { formatMonthYear } from '@/app/utils/date';
 
 interface CalendarGridProps {
   calendarMonth: string;
@@ -29,6 +31,7 @@ export const CalendarGrid: React.FC<CalendarGridProps> = ({
   nextMonth,
   openAddDialog,
 }) => {
+  const { t, i18n } = useTranslation();
   const navigate = useNavigate();
   const { currentUser } = useAuth();
   const roleBasePath = currentUser ? getBaseRouteForRole(currentUser.role) : '';
@@ -38,16 +41,16 @@ export const CalendarGrid: React.FC<CalendarGridProps> = ({
   return (
     <div className="rounded-lg border bg-card">
       <div className="flex items-center justify-between p-4 border-b">
-        <Button size="sm" variant="outline" onClick={prevMonth}>{'<'} Prev</Button>
+        <Button size="sm" variant="outline" onClick={prevMonth}>{t('calendar.prev')}</Button>
         <h3 className="text-lg font-semibold">
-          {new Date(Number(calendarMonth.split('-')[0]), Number(calendarMonth.split('-')[1]) - 1).toLocaleString('default', { month: 'long', year: 'numeric' })}
+          {formatMonthYear(calendarMonth, i18n.language)}
         </h3>
-        <Button size="sm" variant="outline" onClick={nextMonth}>Next {'>'}</Button>
+        <Button size="sm" variant="outline" onClick={nextMonth}>{t('calendar.next')}</Button>
       </div>
       <div className="p-2">
         <div className="grid grid-cols-7 gap-px bg-border rounded overflow-hidden">
           {['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'].map((d) => (
-            <div key={d} className="bg-muted p-2 text-center text-xs font-semibold text-muted-foreground">{d}</div>
+            <div key={d} className="bg-muted p-2 text-center text-xs font-semibold text-muted-foreground">{t(`calendar.dayNames.${d}`)}</div>
           ))}
           {calendarDays.map((cell) => {
             const dayImps = imputationsByDate[cell.date] || [];

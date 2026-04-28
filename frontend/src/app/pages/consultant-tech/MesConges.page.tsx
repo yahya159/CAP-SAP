@@ -1,4 +1,5 @@
 import React, { useEffect, useMemo, useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { PageHeader } from '../../components/common/PageHeader';import { LeaveRequestsAPI } from '../../services/odata/leaveRequestsApi';
 import { LeaveRequest, LeaveStatus } from '../../types/entities';
 import { useAuth } from '../../context/AuthContext';
@@ -39,6 +40,7 @@ interface LeaveForm {
 const EMPTY_FORM: LeaveForm = { startDate: '', endDate: '', reason: '' };
 
 export const MesConges: React.FC = () => {
+  const { t } = useTranslation();
   const { currentUser } = useAuth();
   const [requests, setRequests] = useState<LeaveRequest[]>([]);
   const [loading, setLoading] = useState(true);
@@ -63,11 +65,11 @@ export const MesConges: React.FC = () => {
   const submitRequest = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!currentUser || !form.startDate || !form.endDate) {
-      toast.error('Start and end date are required');
+      toast.error(t('consultantTech.leaves.errors.dateRequired'));
       return;
     }
     if (form.endDate < form.startDate) {
-      toast.error('End date must be after start date');
+      toast.error(t('consultantTech.leaves.errors.endAfterStart'));
       return;
     }
     try {
@@ -82,9 +84,9 @@ export const MesConges: React.FC = () => {
       setRequests((prev) => [created, ...prev]);
       setForm(EMPTY_FORM);
       setShowCreate(false);
-      toast.success('Leave request submitted');
+      toast.success(t('consultantTech.leaves.toasts.requestSuccess'));
     } catch {
-      toast.error('Failed to submit request');
+      toast.error(t('consultantTech.leaves.toasts.requestFailed'));
     }
   };
 

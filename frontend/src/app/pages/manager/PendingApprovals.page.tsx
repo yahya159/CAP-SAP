@@ -46,6 +46,7 @@ import {
   ticketPriorityColor,
   ticketNatureColor,
 } from '../../utils/ticketColors';
+import { formatDateTime } from '../../utils/date';
 
 // ---------------------------------------------------------------------------
 // Helpers
@@ -53,15 +54,7 @@ import {
 
 const fmtDate = (d?: string | null, locale = 'en-GB') => {
   if (!d) return '—';
-  try {
-    return new Intl.DateTimeFormat(locale, {
-      day: '2-digit',
-      month: 'short',
-      year: 'numeric',
-    }).format(new Date(d));
-  } catch {
-    return d;
-  }
+  return formatDateTime(d, locale, { day: '2-digit', month: 'short', year: 'numeric' });
 };
 
 const fmtHours = (h?: number | null) => (h != null ? `${h}h` : '—');

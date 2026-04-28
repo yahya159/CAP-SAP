@@ -29,7 +29,7 @@ DialogOverlay.displayName = DialogPrimitive.Overlay.displayName;
 
 const DialogContent = React.forwardRef<
   React.ElementRef<typeof DialogPrimitive.Content>,
-  React.ComponentPropsWithoutRef<typeof DialogPrimitive.Content>
+  React.ComponentPropsWithoutRef<typeof DialogPrimitive.Content> & { "aria-describedby"?: string }
 >(({ className, children, ...props }, ref) => (
   <DialogPortal data-slot="dialog-portal">
     <DialogOverlay />
@@ -91,14 +91,18 @@ DialogTitle.displayName = DialogPrimitive.Title.displayName;
 const DialogDescription = React.forwardRef<
   React.ElementRef<typeof DialogPrimitive.Description>,
   React.ComponentPropsWithoutRef<typeof DialogPrimitive.Description>
->(({ className, ...props }, ref) => (
-  <DialogPrimitive.Description
-    ref={ref}
-    data-slot="dialog-description"
-    className={cn("text-muted-foreground text-sm", className)}
-    {...props}
-  />
-));
+>(({ className, id, ...props }, ref) => {
+  const descriptionId = id || `dialog-description-${Math.random().toString(36).substr(2, 9)}`;
+  return (
+    <DialogPrimitive.Description
+      ref={ref}
+      id={descriptionId}
+      data-slot="dialog-description"
+      className={cn("text-muted-foreground text-sm", className)}
+      {...props}
+    />
+  );
+});
 DialogDescription.displayName = DialogPrimitive.Description.displayName;
 
 export {

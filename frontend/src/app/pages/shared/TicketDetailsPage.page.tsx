@@ -25,6 +25,7 @@ import {
   TICKET_NATURE_LABELS,
   User,
 } from '../../types/entities';
+import { formatDate, formatDateTime } from '../../utils/date';
 
 const canAccessTicket = (ticket: Ticket, userId: string, role: User['role']): boolean => {
   if (role === 'CONSULTANT_TECHNIQUE') {
@@ -37,7 +38,7 @@ const canAccessTicket = (ticket: Ticket, userId: string, role: User['role']): bo
 };
 
 export const TicketDetailsPage: React.FC = () => {
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
   const { currentUser } = useAuth();
   const { ticketId } = useParams();
   const navigate = useNavigate();
@@ -225,9 +226,9 @@ export const TicketDetailsPage: React.FC = () => {
             </div>
             <div><span className="text-muted-foreground">{t('tickets.details.estimation')}</span> {ticket.estimationHours}h</div>
             <div><span className="text-muted-foreground">{t('tickets.details.effort')}</span> {ticket.effortHours}h</div>
-            <div><span className="text-muted-foreground">{t('tickets.details.dueDate')}</span> {ticket.dueDate ?? '-'}</div>
-            <div><span className="text-muted-foreground">{t('tickets.details.createdAt')}</span> {new Date(ticket.createdAt).toLocaleString()}</div>
-            <div><span className="text-muted-foreground">{t('tickets.details.updatedAt')}</span> {ticket.updatedAt ? new Date(ticket.updatedAt).toLocaleString() : '-'}</div>
+            <div><span className="text-muted-foreground">{t('tickets.details.dueDate')}</span> {ticket.dueDate ? formatDate(ticket.dueDate, i18n.language) : '-'}</div>
+            <div><span className="text-muted-foreground">{t('tickets.details.createdAt')}</span> {formatDateTime(ticket.createdAt, i18n.language)}</div>
+            <div><span className="text-muted-foreground">{t('tickets.details.updatedAt')}</span> {ticket.updatedAt ? formatDateTime(ticket.updatedAt, i18n.language) : '-'}</div>
             <div>
               <span className="text-muted-foreground">{t('tickets.details.estimatedViaAbaque')}</span>{' '}
               {ticket.estimatedViaAbaque ? t('tickets.details.yes') : t('tickets.details.no')}
@@ -265,7 +266,7 @@ export const TicketDetailsPage: React.FC = () => {
                 className="rounded-md border-l-2 border-primary/30 bg-muted/20 px-3 py-2 text-xs"
               >
                 <div className="text-[11px] text-muted-foreground">
-                  {new Date(event.timestamp).toLocaleString()}
+                  {formatDateTime(event.timestamp, i18n.language)}
                 </div>
                 <div className="mt-1">
                   <span className="font-medium">{userName(event.userId)}</span>{' '}

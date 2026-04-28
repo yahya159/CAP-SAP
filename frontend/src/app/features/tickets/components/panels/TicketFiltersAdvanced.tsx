@@ -1,4 +1,5 @@
 import React from 'react';
+import { useTranslation } from 'react-i18next';
 import { Button } from '@/app/components/ui/button';
 import { Input } from '@/app/components/ui/input';
 import {
@@ -37,16 +38,17 @@ export const TicketFiltersAdvanced: React.FC<TicketFiltersAdvancedProps> = ({
   onDateToChange,
   onClearAll,
 }) => {
+  const { t } = useTranslation();
   if (!showAdvancedFilters) return null;
 
   return (
     <div className="flex flex-wrap items-center gap-3 rounded-lg border bg-muted/30 p-3">
       <Select value={projectFilter} onValueChange={onProjectFilterChange}>
         <SelectTrigger className="w-48">
-          <SelectValue placeholder="Project" />
+          <SelectValue placeholder={t('filters.projectPlaceholder')} />
         </SelectTrigger>
         <SelectContent>
-          <SelectItem value="ALL">All Projects</SelectItem>
+          <SelectItem value="ALL">{t('common.all')}</SelectItem>
           {projects.map((project) => (
             <SelectItem key={project.id} value={project.id}>
               {project.name}
@@ -55,7 +57,7 @@ export const TicketFiltersAdvanced: React.FC<TicketFiltersAdvancedProps> = ({
         </SelectContent>
       </Select>
       <Input
-        placeholder="WRICEF ID..."
+        placeholder={t('filters.wricefPlaceholder')}
         value={wricefFilter}
         onChange={(event) => onWricefFilterChange(event.target.value)}
         className="w-36"

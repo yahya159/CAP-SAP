@@ -35,6 +35,8 @@
     "create": "Créer",
     "back": "Retour",
     "tickets": "Tickets",
+    "previous": "Précédent",
+    "next": "Suivant",
     "errors": {
       "loadFailed": "Échec du chargement des données. Veuillez réessayer plus tard."
     }
@@ -954,6 +956,95 @@
       "saveFailed": "Échec de l'enregistrement du projet",
       "deleted": "Projet supprimé",
       "deleteFailed": "Échec de la suppression du projet"
+    },
+    "details": {
+      "title": "Détails du Projet",
+      "loading": "Chargement des détails du projet...",
+      "notFound": "Projet indisponible",
+      "notFoundDesc": "Le projet demandé n'a pas pu être chargé.",
+      "breadcrumbHome": "Accueil",
+      "subtitle": "Cockpit de projet avec aperçu, tickets, équipe et documentation",
+      "tabs": {
+        "overview": "Aperçu",
+        "abaques": "Abaques",
+        "tickets": "Tickets",
+        "team": "Équipe",
+        "objects": "Objets WRICEF",
+        "docs": "Documentation"
+      },
+      "kpis": {
+        "onTrack": "Tickets à jour",
+        "late": "Tickets en retard",
+        "blocked": "Tickets bloqués",
+        "completed": "Tickets terminés",
+        "critical": "Tickets critiques",
+        "productivity": "Productivité",
+        "actualHours": "Heures réelles",
+        "estimatedHours": "Heures estimées",
+        "variance": "Écart"
+      },
+      "abaques": {
+        "title": "Matrice d'Abaque (Référence Manuelle)",
+        "subtitle": "Matrice de référence associant la nature et la complexité des tâches à l'effort estimé.",
+        "nature": "Nature de la tâche",
+        "complexity": "Complexité",
+        "hours": "Heures estimées",
+        "edit": "Modifier la matrice"
+      },
+      "documentation": {
+        "stats": {
+          "total": "Total Documents"
+        },
+        "keywords": "Mots-clés Tech",
+        "objects": "Objets de Documentation",
+        "create": "Créer un document",
+        "notes": "Notes du Projet (Markdown)",
+        "notesPlaceholder": "Rédigez la documentation du projet ici (markdown supporté)...",
+        "saveNotes": "Enregistrer",
+        "savingNotes": "Enregistrement..."
+      },
+      "wricef": {
+        "stats": {
+          "totalObjects": "Total Objets",
+          "totalTickets": "Total Tickets",
+          "totalDocuments": "Total Documents"
+        },
+        "filters": {
+          "search": "Rechercher des objets...",
+          "type": "Type",
+          "allTypes": "Tous les types",
+          "complexity": "Complexité",
+          "allComplexity": "Toutes les complexités",
+          "module": "Module",
+          "allModules": "Tous les modules",
+          "clear": "Effacer les filtres",
+          "createTicket": "Créer un Ticket",
+          "import": "Importer WRICEF"
+        },
+        "pagination": {
+          "showing": "Affichage de",
+          "to": "à",
+          "of": "sur",
+          "results": "résultats",
+          "pageSize": "Taille de page"
+        }
+      },
+      "tables": {
+        "documentation": {
+          "linkedTickets": "Tickets liés"
+        },
+        "wricef": {
+          "objectId": "ID de l'objet",
+          "ticketsFor": "Tickets pour {{id}}",
+          "documentsFor": "Documents pour {{id}}",
+          "addTicket": "Ajouter un Ticket",
+          "addDocument": "Ajouter un Document"
+        },
+        "wricefTickets": {
+          "ticketId": "ID du Ticket",
+          "liveTicket": "Ticket Live"
+        }
+      }
     }
   },
   "wricefValidation": {
@@ -1270,7 +1361,7 @@
       "Performance": "Performance",
       "Projects": "Projets",
       "Allocations": "Affectations",
-      "Risks": "Risks",
+      "Risks": "Risques",
       "Tickets": "Tickets",
       "Objects": "Objets",
       "Certifications": "Certifications",
@@ -1283,5 +1374,233 @@
       "AI Dispatch": "Dispatch IA",
       "Workload": "Charge de travail"
     }
+  },
+  "imputations": {
+    "title": "Mes Imputations",
+    "subtitle": "Enregistrer le temps passé sur les tickets assignés",
+    "addTitle": "Ajouter une Imputation - {{date}}",
+    "alreadyLogged": "Déjà enregistré :",
+    "selectTicket": "Sélectionner un ticket",
+    "ticketLabel": "Ticket *",
+    "hoursLabel": "Heures *",
+    "descriptionLabel": "Description",
+    "descriptionPlaceholder": "Sur quoi avez-vous travaillé ?",
+    "total": "Total",
+    "cancel": "Annuler",
+    "add": "Ajouter",
+    "next": "Suivant '>'",
+    "noImputations": "Aucune imputation enregistrée.",
+    "toasts": {
+      "addSuccess": "Imputation ajoutée",
+      "addFailed": "Échec de l'ajout d'imputation",
+      "deleteSuccess": "Imputation supprimée",
+      "deleteFailed": "Échec de la suppression d'imputation"
+    }
+  },
+  "comments": {
+    "replyingTo": "Réponse au commentaire",
+    "internalNote": "Note interne",
+    "messagePlaceholder": "Tapez un message… (Ctrl+Entrée pour envoyer)",
+    "internal": "Interne",
+    "reply": "Répondre",
+    "resolved": "Résolu",
+    "markResolved": "Marquer comme résolu",
+    "toasts": {
+      "addSuccess": "Commentaire ajouté",
+      "addFailed": "Échec de l'ajout du commentaire",
+      "deleteSuccess": "Commentaire supprimé",
+      "deleteFailed": "Échec de la suppression du commentaire"
+    }
+  },
+  "consultantTech": {
+    "certifications": {
+      "title": "Mes Certifications",
+      "subtitle": "Gérez vos certifications professionnelles et formations",
+      "noCertificationsYet": "Aucune certification pour l'instant. Cliquez sur \"Ajouter une Certification\" pour commencer.",
+      "addCertificateTitle": "Ajouter une Certification",
+      "certificateNameLabel": "Nom de la Certification *",
+      "certificateNamePlaceholder": "ex. SAP Certified Application Associate",
+      "issuingBodyLabel": "Organisme Certificateur *",
+      "issuingBodyPlaceholder": "ex. SAP",
+      "dateObtainedLabel": "Date d'Obtention *",
+      "expiryDateLabel": "Date d'Expiration",
+      "statusLabel": "Statut",
+      "valid": "Valide",
+      "expiringSoon": "Expire bientôt",
+      "expired": "Expiré",
+      "cancel": "Annuler",
+      "add": "Ajouter",
+      "delete": "Supprimer",
+      "toasts": {
+        "addSuccess": "Certification ajoutée",
+        "addFailed": "Échec de l'ajout de certification",
+        "deleteSuccess": "Certification supprimée",
+        "deleteFailed": "Échec de la suppression de certification"
+      }
+    },
+    "leaves": {
+      "title": "Mes Congés",
+      "subtitle": "Afficher et gérer vos demandes de congé",
+      "requestLeaveTitle": "Demander un Congé",
+      "startDateLabel": "Date de début *",
+      "endDateLabel": "Date de fin *",
+      "reasonLabel": "Raison *",
+      "reasonPlaceholder": "Décrivez la raison de votre congé...",
+      "daysLabel": "Jours",
+      "submitted": "Soumis",
+      "submit": "Soumettre",
+      "cancel": "Annuler",
+      "toasts": {
+        "requestSuccess": "Demande de congé soumise",
+        "requestFailed": "Échec de la soumission de la demande",
+        "approveSuccess": "Congé approuvé",
+        "rejectSuccess": "Congé rejeté"
+      }
+    }
+  },
+  "projects": {
+    "abaques": {
+      "title": "Définir la Matrice",
+      "description": "Définir les heures estimées mappées à la Nature de Tâche et la Complexité. Ceci agit comme une référence de base manuelle.",
+      "noEntries": "Aucune entrée dans la matrice pour l'instant. Cliquez sur \"Ajouter une Entrée\" pour commencer.",
+      "taskNature": "Nature de Tâche",
+      "complexity": "Complexité",
+      "estimatedHours": "Heures Estimées",
+      "addEntry": "Ajouter une Entrée",
+      "cancel": "Annuler",
+      "submit": "Soumettre"
+    },
+    "ticketDialog": {
+      "title": "Créer un nouveau ticket en mappant manuellement l'estimation, la priorité et la complexité.",
+      "cancel": "Annuler"
+    }
+  },
+  "documentation": {
+    "section": {
+      "title": "Documentation Associée",
+      "attachExisting": "Joindre une Documentation Existante",
+      "createNew": "Créer une Nouvelle Documentation",
+      "loading": "Chargement de la documentation...",
+      "noLinked": "Aucune documentation n'est liée à ce ticket pour l'instant.",
+      "attachDialog": "Joindre une Documentation Existante",
+      "selectLabel": "Objet de Documentation",
+      "selectPlaceholder": "Sélectionner la documentation à joindre",
+      "cancel": "Annuler",
+      "attach": "Joindre",
+      "attaching": "Jointure en cours...",
+      "open": "Ouvrir",
+      "noAttachable": "Aucune documentation joignable pour ce projet",
+      "loadFailed": "Échec du chargement de la documentation"
+    },
+    "create": {
+      "title": "Créer un Objet de Documentation",
+      "titleLabel": "Titre *",
+      "typeLabel": "Type",
+      "overviewLabel": "Aperçu",
+      "overviewPlaceholder": "Vue d'ensemble générale de cet objet de documentation",
+      "contentLabel": "Contenu *",
+      "contentPlaceholder": "Écrire du contenu markdown ou texte enrichi...",
+      "attachFilesLabel": "Joindre des Fichiers",
+      "cancel": "Annuler",
+      "create": "Créer",
+      "creating": "Création en cours...",
+      "toasts": {
+        "createSuccess": "Documentation créée",
+        "createFailed": "Échec de la création de la documentation"
+      }
+    }
+  },
+  "admin": {
+    "referenceData": {
+      "title": "Gestion des Données de Référence",
+      "subtitle": "Gérer les valeurs de recherche et codes système",
+      "search": "Rechercher par code ou libellé...",
+      "add": "Ajouter une Donnée de Référence",
+      "code": "Code *",
+      "label": "Libellé *",
+      "type": "Type",
+      "active": "Actif",
+      "order": "Ordre",
+      "cancel": "Annuler",
+      "save": "Enregistrer",
+      "delete": "Supprimer la donnée de référence",
+      "edit": "Modifier {{label}}",
+      "deleteConfirm": "Supprimer la donnée de référence",
+      "deleteDesc": "Cela supprimera \"{{label}}\" du système. Cette action ne peut pas être annulée.",
+      "yes": "Supprimer",
+      "toasts": {
+        "addSuccess": "Donnée de référence ajoutée",
+        "addFailed": "Échec de l'ajout de la donnée",
+        "updateSuccess": "Donnée de référence mise à jour",
+        "updateFailed": "Échec de la mise à jour",
+        "deleteSuccess": "Donnée de référence supprimée",
+        "deleteFailed": "Échec de la suppression"
+      }
+    }
+  },
+  "consultantTech": {
+    "leaves": {
+      "title": "Mes Congés",
+      "subtitle": "Afficher et gérer vos demandes de congé",
+      "requestLeave": "Demander un Congé",
+      "startDate": "Date de début *",
+      "endDate": "Date de fin *",
+      "reason": "Raison",
+      "reasonPlaceholder": "Décrivez la raison de votre congé...",
+      "submitted": "Soumis",
+      "submit": "Soumettre",
+      "cancel": "Annuler",
+      "stats": {
+        "total": "Total des Demandes",
+        "pending": "En attente",
+        "approved": "Approuvé",
+        "rejected": "Rejeté",
+        "daysTaken": "Jours Pris"
+      },
+      "table": {
+        "startDate": "Date de début",
+        "endDate": "Date de fin",
+        "reason": "Raison",
+        "status": "Statut"
+      },
+      "errors": {
+        "dateRequired": "La date de début et de fin sont requises",
+        "endAfterStart": "La date de fin doit être après la date de début",
+        "createFailed": "Échec de la soumission de la demande"
+      },
+      "toasts": {
+        "requestSuccess": "Demande de congé soumise",
+        "requestFailed": "Échec de la soumission de la demande"
+      }
+    }
+  },
+  "filters": {
+    "project": "Projet",
+    "projectPlaceholder": "Projet",
+    "wricefPlaceholder": "ID WRICEF...",
+    "ticketsPlaceholder": "Rechercher des tickets..."
+  },
+  "calendar": {
+    "prev": "Préc",
+    "next": "Suivant",
+    "dayNames": {
+      "Mon": "Lun",
+      "Tue": "Mar",
+      "Wed": "Mer",
+      "Thu": "Jeu",
+      "Fri": "Ven",
+      "Sat": "Sam",
+      "Sun": "Dim"
+    }
+  },
+  "projectPanels": {
+    "ticketsActivity": "Fil d'actualité",
+    "selectTicket": "Sélectionner un ticket pour voir l'activité.",
+    "noActivity": "Aucune activité trouvée pour ce ticket.",
+    "toolbar": {
+      "searchPlaceholder": "Rechercher des tickets...",
+      "status": "Statut"
+    }
   }
+}
 }

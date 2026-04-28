@@ -46,6 +46,7 @@ import {
   User,
   UserRole,
 } from '../../types/entities';
+import { formatDateTime } from '../../utils/date';
 
 type TypeFilter = DocumentationObjectType | 'ALL';
 
@@ -59,8 +60,6 @@ const homePathByRole: Record<UserRole, string> = {
 };
 
 const DOCUMENTATION_OBJECT_TYPES: DocumentationObjectType[] = ['SFD', 'GUIDE', 'ARCHITECTURE_DOC', 'GENERAL'];
-
-const formatDate = (value: string) => new Date(value).toLocaleString();
 
 const formatFileSize = (size: number) => {
   if (size < 1024) return `${size} B`;
@@ -108,7 +107,7 @@ const EMPTY_FORM: CreateFormState = {
 };
 
 export const DocumentationObjectsPage: React.FC = () => {
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
   const navigate = useNavigate();
   const { currentUser } = useAuth();
   const [loading, setLoading] = useState(true);
@@ -459,7 +458,7 @@ export const DocumentationObjectsPage: React.FC = () => {
                       </TableCell>
                       <TableCell className="px-4 py-3 text-sm">{userName(doc.authorId)}</TableCell>
                       <TableCell className="px-4 py-3 text-xs text-muted-foreground">
-                        {formatDate(doc.updatedAt ?? doc.createdAt)}
+                        {formatDateTime(doc.updatedAt ?? doc.createdAt, i18n.language)}
                       </TableCell>
                       <TableCell className="px-4 py-3 text-right">
                         <Button

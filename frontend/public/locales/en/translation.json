@@ -35,6 +35,8 @@
     "create": "Create",
     "back": "Back",
     "tickets": "Tickets",
+    "previous": "Previous",
+    "next": "Next",
     "errors": {
       "loadFailed": "Failed to load data. Please try again later."
     }
@@ -956,6 +958,97 @@
       "saveFailed": "Failed to save project",
       "deleted": "Project deleted",
       "deleteFailed": "Failed to delete project"
+    },
+    "details": {
+      "title": "Project Details",
+      "loading": "Loading project details...",
+      "notFound": "Project unavailable",
+      "notFoundDesc": "The requested project could not be loaded.",
+      "breadcrumbHome": "Home",
+      "subtitle": "Project cockpit with overview, tickets, team and documentation",
+      "tabs": {
+        "overview": "Overview",
+        "abaques": "Abaques",
+        "tickets": "Tickets",
+        "team": "Team",
+        "objects": "WRICEF Objects",
+        "docs": "Documentation"
+      },
+      "kpis": {
+        "onTrack": "On Track Tickets",
+        "late": "Late Tickets",
+        "blocked": "Blocked Tickets",
+        "completed": "Completed Tickets",
+        "critical": "Critical Tickets",
+        "productivity": "Productivity",
+        "actualHours": "Actual Hours",
+        "estimatedHours": "Estimated Hours",
+        "variance": "Variance"
+      },
+      "abaques": {
+        "title": "Abaque Matrix (Manual Reference)",
+        "subtitle": "Reference matrix mapping task nature and complexity to estimated effort.",
+        "nature": "Task Nature",
+        "complexity": "Complexity",
+        "hours": "Estimated Hours",
+        "edit": "Edit Matrix"
+      },
+      "documentation": {
+        "stats": {
+          "total": "Total Documents"
+        },
+        "keywords": "Tech Keywords",
+        "objects": "Documentation Objects",
+        "create": "Create Document",
+        "notes": "Project Notes (Markdown)",
+        "notesPlaceholder": "Write project documentation here (markdown supported)...",
+        "saveNotes": "Save",
+        "savingNotes": "Saving..."
+      },
+      "wricef": {
+        "stats": {
+          "totalObjects": "Total Objects",
+          "totalTickets": "Total Tickets",
+          "totalDocuments": "Total Documents"
+        },
+        "filters": {
+          "search": "Search objects...",
+          "type": "Type",
+          "allTypes": "All Types",
+          "complexity": "Complexity",
+          "allComplexity": "All Complexity",
+          "module": "Module",
+          "allModules": "All Modules",
+          "clear": "Clear Filters",
+          "createTicket": "Create Ticket",
+          "import": "Import WRICEF"
+        },
+        "pagination": {
+          "showing": "Showing",
+          "to": "to",
+          "of": "of",
+          "results": "results",
+          "pageSize": "Page size"
+        }
+      },
+      "tables": {
+        "documentation": {
+          "linkedTickets": "Linked Tickets"
+        },
+        "wricef": {
+          "objectId": "Object ID",
+          "ticketsFor": "Tickets for {{id}}",
+          "documentsFor": "Documents for {{id}}",
+          "addTicket": "Add Ticket",
+          "addDocument": "Add Document",
+          "noDocuments": "No documents for this object.",
+          "noTickets": "No tickets for this object."
+        },
+        "wricefTickets": {
+          "ticketId": "Ticket ID",
+          "liveTicket": "Live Ticket"
+        }
+      }
     }
   },
   "wricefValidation": {
@@ -1284,6 +1377,233 @@
       "Deliverables": "Deliverables",
       "AI Dispatch": "AI Dispatch",
       "Workload": "Workload"
+    }
+  },
+  "imputations": {
+    "title": "My Imputations",
+    "subtitle": "Log time spent on assigned tickets",
+    "addTitle": "Add Imputation - {{date}}",
+    "alreadyLogged": "Already logged:",
+    "selectTicket": "Select a ticket",
+    "ticketLabel": "Ticket *",
+    "hoursLabel": "Hours *",
+    "descriptionLabel": "Description",
+    "descriptionPlaceholder": "What did you work on?",
+    "total": "Total",
+    "cancel": "Cancel",
+    "add": "Add",
+    "next": "Next '>'",
+    "noImputations": "No imputations logged yet.",
+    "toasts": {
+      "addSuccess": "Imputation added",
+      "addFailed": "Failed to add imputation",
+      "deleteSuccess": "Imputation removed",
+      "deleteFailed": "Failed to remove imputation"
+    }
+  },
+  "comments": {
+    "replyingTo": "Replying to comment",
+    "internalNote": "Internal note",
+    "messagePlaceholder": "Type a message… (Ctrl+Enter to send)",
+    "internal": "Internal",
+    "reply": "Reply",
+    "resolved": "Resolved",
+    "markResolved": "Mark resolved",
+    "toasts": {
+      "addSuccess": "Comment added",
+      "addFailed": "Failed to add comment",
+      "deleteSuccess": "Comment removed",
+      "deleteFailed": "Failed to remove comment"
+    }
+  },
+  "consultantTech": {
+    "certifications": {
+      "title": "My Certifications",
+      "subtitle": "Manage your professional certifications and training",
+      "noCertificationsYet": "No certifications yet. Click \"Add Certification\" to get started.",
+      "addCertificateTitle": "Add Certification",
+      "certificateNameLabel": "Certificate Name *",
+      "certificateNamePlaceholder": "e.g. SAP Certified Application Associate",
+      "issuingBodyLabel": "Issuing Body *",
+      "issuingBodyPlaceholder": "e.g. SAP",
+      "dateObtainedLabel": "Date Obtained *",
+      "expiryDateLabel": "Expiry Date",
+      "statusLabel": "Status",
+      "valid": "Valid",
+      "expiringSoon": "Expiring Soon",
+      "expired": "Expired",
+      "cancel": "Cancel",
+      "add": "Add",
+      "delete": "Delete",
+      "toasts": {
+        "addSuccess": "Certification added",
+        "addFailed": "Failed to add certification",
+        "deleteSuccess": "Certification removed",
+        "deleteFailed": "Failed to remove certification"
+      }
+    },
+    "leaves": {
+      "title": "My Leave",
+      "subtitle": "View and manage your leave requests",
+      "requestLeaveTitle": "Request Leave",
+      "startDateLabel": "Start Date *",
+      "endDateLabel": "End Date *",
+      "reasonLabel": "Reason *",
+      "reasonPlaceholder": "Describe your leave reason...",
+      "daysLabel": "Days",
+      "submitted": "Submitted",
+      "submit": "Submit",
+      "cancel": "Cancel",
+      "toasts": {
+        "requestSuccess": "Leave request submitted",
+        "requestFailed": "Failed to submit leave request",
+        "approveSuccess": "Leave approved",
+        "rejectSuccess": "Leave rejected"
+      }
+    }
+  },
+  "projects": {
+    "abaques": {
+      "title": "Define Matrix",
+      "description": "Define estimated hours mapped to Task Nature and Complexity. This acts as a manual baseline reference.",
+      "noEntries": "No entries in the matrix yet. Click \"Add Entry\" to begin.",
+      "taskNature": "Task Nature",
+      "complexity": "Complexity",
+      "estimatedHours": "Estimated Hours",
+      "addEntry": "Add Entry",
+      "cancel": "Cancel",
+      "submit": "Submit"
+    },
+    "ticketDialog": {
+      "title": "Create a new ticket manually mapping estimation, priority, and complexity.",
+      "cancel": "Cancel"
+    }
+  },
+  "documentation": {
+    "section": {
+      "title": "Related Documentation",
+      "attachExisting": "Attach Existing Documentation",
+      "createNew": "Create New Documentation",
+      "loading": "Loading documentation...",
+      "noLinked": "No documentation is linked to this ticket yet.",
+      "attachDialog": "Attach Existing Documentation",
+      "selectLabel": "Documentation Object",
+      "selectPlaceholder": "Select documentation to attach",
+      "cancel": "Cancel",
+      "attach": "Attach",
+      "attaching": "Attaching...",
+      "open": "Open",
+      "noAttachable": "No attachable documentation for this project",
+      "loadFailed": "Failed to load documentation"
+    },
+    "create": {
+      "title": "Create Documentation Object",
+      "titleLabel": "Title *",
+      "typeLabel": "Type",
+      "overviewLabel": "Overview",
+      "overviewPlaceholder": "General overview of this documentation object",
+      "contentLabel": "Content *",
+      "contentPlaceholder": "Write markdown or rich text content...",
+      "attachFilesLabel": "Attach Files",
+      "cancel": "Cancel",
+      "create": "Create",
+      "creating": "Creating...",
+      "toasts": {
+        "createSuccess": "Documentation created",
+        "createFailed": "Failed to create documentation"
+      }
+    }
+  },
+  "admin": {
+    "referenceData": {
+      "title": "Reference Data Management",
+      "subtitle": "Manage system lookup values and codes",
+      "search": "Search by code or label...",
+      "add": "Add Reference Item",
+      "code": "Code *",
+      "label": "Label *",
+      "type": "Type",
+      "active": "Active",
+      "order": "Order",
+      "cancel": "Cancel",
+      "save": "Save",
+      "delete": "Delete reference item",
+      "edit": "Edit {{label}}",
+      "deleteConfirm": "Delete reference item",
+      "deleteDesc": "This will remove \"{{label}}\" from the system. This action cannot be undone.",
+      "yes": "Delete",
+      "toasts": {
+        "addSuccess": "Reference item added",
+        "addFailed": "Failed to add reference item",
+        "updateSuccess": "Reference item updated",
+        "updateFailed": "Failed to update reference item",
+        "deleteSuccess": "Reference item deleted",
+        "deleteFailed": "Failed to delete reference item"
+      }
+    }
+  },
+  "consultantTech": {
+    "leaves": {
+      "title": "My Leave",
+      "subtitle": "View and manage your leave requests",
+      "requestLeave": "Request Leave",
+      "startDate": "Start Date *",
+      "endDate": "End Date *",
+      "reason": "Reason",
+      "reasonPlaceholder": "Describe your leave reason...",
+      "submitted": "Submitted",
+      "submit": "Submit",
+      "cancel": "Cancel",
+      "stats": {
+        "total": "Total Requests",
+        "pending": "Pending",
+        "approved": "Approved",
+        "rejected": "Rejected",
+        "daysTaken": "Days Taken"
+      },
+      "table": {
+        "startDate": "Start Date",
+        "endDate": "End Date",
+        "reason": "Reason",
+        "status": "Status"
+      },
+      "errors": {
+        "dateRequired": "Start and end date are required",
+        "endAfterStart": "End date must be after start date",
+        "createFailed": "Failed to submit request"
+      },
+      "toasts": {
+        "requestSuccess": "Leave request submitted",
+        "requestFailed": "Failed to submit leave request"
+      }
+    }
+  },
+  "filters": {
+    "project": "Project",
+    "projectPlaceholder": "Project",
+    "wricefPlaceholder": "WRICEF ID...",
+    "ticketsPlaceholder": "Search tickets..."
+  },
+  "calendar": {
+    "prev": "Prev",
+    "next": "Next",
+    "dayNames": {
+      "Mon": "Mon",
+      "Tue": "Tue",
+      "Wed": "Wed",
+      "Thu": "Thu",
+      "Fri": "Fri",
+      "Sat": "Sat",
+      "Sun": "Sun"
+    }
+  },
+  "projectPanels": {
+    "ticketsActivity": "Activity Feed",
+    "selectTicket": "Select a ticket to view activity.",
+    "noActivity": "No activity found for this ticket.",
+    "toolbar": {
+      "searchPlaceholder": "Search tickets...",
+      "status": "Status"
     }
   }
 }

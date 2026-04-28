@@ -1,4 +1,5 @@
 ﻿import React, { useEffect, useMemo, useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { Pencil, Plus, Save, Trash2, X } from 'lucide-react';
 import { toast } from 'sonner';
 import { PageHeader } from '../../components/common/PageHeader';
@@ -47,6 +48,7 @@ const EMPTY_FORM: Omit<ReferenceData, 'id'> = {
 };
 
 export const ReferenceDataManagement: React.FC = () => {
+  const { t } = useTranslation();
   const [items, setItems] = useState<ReferenceData[]>([]);
   const [loading, setLoading] = useState(true);
   const [typeFilter, setTypeFilter] = useState<ReferenceType>('ALL');
@@ -96,7 +98,7 @@ export const ReferenceDataManagement: React.FC = () => {
   const handleSubmit = async (event: React.FormEvent) => {
     event.preventDefault();
     if (!form.code.trim() || !form.label.trim()) {
-      toast.error('Code and label are required');
+      toast.error(t('admin.referenceData.toasts.addFailed'));
       return;
     }
     if ((form.order ?? 1) < 1) {

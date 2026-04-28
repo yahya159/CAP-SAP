@@ -1,4 +1,5 @@
 import React from 'react';
+import { useTranslation } from 'react-i18next';
 import { Eye, Paperclip } from 'lucide-react';
 import { Badge } from '@/app/components/ui/badge';
 import { Button } from '@/app/components/ui/button';
@@ -23,8 +24,9 @@ export const WricefObjectDocumentsTable: React.FC<WricefObjectDocumentsTableProp
   resolveUserName,
   onViewDocument,
 }) => {
+  const { t } = useTranslation();
   if (objectDocs.length === 0) {
-    return <p className="text-sm text-muted-foreground py-2">No documents for this object.</p>;
+    return <p className="text-sm text-muted-foreground py-2">{t('projects.details.wricef.noDocuments')}</p>;
   }
 
   return (
@@ -32,11 +34,11 @@ export const WricefObjectDocumentsTable: React.FC<WricefObjectDocumentsTableProp
       <Table>
         <TableHeader className="bg-muted/40">
           <TableRow>
-            <TableHead className="px-3 text-xs">Title</TableHead>
-            <TableHead className="px-3 text-xs">Type</TableHead>
-            <TableHead className="px-3 text-xs">Author</TableHead>
-            <TableHead className="px-3 text-xs text-center">Files</TableHead>
-            <TableHead className="px-3 text-xs text-center">Actions</TableHead>
+            <TableHead className="px-3 text-xs">{t('documentation.table.title')}</TableHead>
+            <TableHead className="px-3 text-xs">{t('common.type')}</TableHead>
+            <TableHead className="px-3 text-xs">{t('documentation.table.author')}</TableHead>
+            <TableHead className="px-3 text-xs text-center">{t('documentation.table.files')}</TableHead>
+            <TableHead className="px-3 text-xs text-center">{t('common.actions')}</TableHead>
           </TableRow>
         </TableHeader>
         <TableBody>

@@ -1,5 +1,82 @@
 // Date helpers that avoid UTC conversion side effects in local-date UIs.
 
+type DateInput = Date | string | number | null | undefined;
+
+const DEFAULT_LOCALE = typeof navigator !== 'undefined' ? navigator.language : 'en-GB';
+
+const ISO_DATE_RE = /^\d{4}-\d{2}-\d{2}$/;
+const ISO_MONTH_RE = /^\d{4}-\d{2}$/;
+
+const parseDateInput = (value: DateInput): Date | null => {
+  if (value == null || value === '') return null;
+  if (value instanceof Date) return new Date(value);
+
+  if (typeof value === 'string') {
+    if (ISO_DATE_RE.test(value)) {
+      const [year, month, day] = value.split('-').map(Number);
+      return new Date(year, month - 1, day);
+    }
+
+    if (ISO_MONTH_RE.test(value)) {
+      const [year, month] = value.split('-').map(Number);
+      return new Date(year, month - 1, 1);
+    }
+  }
+
+  const parsed = new Date(value);
+  return Number.isNaN(parsed.getTime()) ? null : parsed;
+};
+
+export const resolveLocale = (language?: string, fallback = DEFAULT_LOCALE): string => {
+  if (!language) return fallback;
+
+  const normalized = language.toLowerCase();
+  if (normalized.startsWith('fr')) return 'fr-FR';
+  if (normalized.startsWith('en')) return 'en-GB';
+  return language;
+};
+
+export const formatDate = (
+  value: DateInput,
+  language?: string,
+  options?: Intl.DateTimeFormatOptions
+): string => {
+  const date = parseDateInput(value);
+  if (!date) return '-';
+
+  return new Intl.DateTimeFormat(resolveLocale(language), options ?? { dateStyle: 'medium' }).format(date);
+};
+
+export const formatDateTime = (
+  value: DateInput,
+  language?: string,
+  options?: Intl.DateTimeFormatOptions
+): string => {
+  const date = parseDateInput(value);
+  if (!date) return '-';
+
+  return new Intl.DateTimeFormat(
+    resolveLocale(language),
+    options ?? { dateStyle: 'medium', timeStyle: 'short' }
+  ).format(date);
+};
+
+export const formatMonthYear = (value: DateInput, language?: string): string =>
+  formatDate(value, language, { month: 'long', year: 'numeric' });
+
+export const formatNumber = (
+  value: number | string | null | undefined,
+  language?: string,
+  options?: Intl.NumberFormatOptions
+): string => {
+  if (value == null || value === '') return '-';
+
+  const parsed = typeof value === 'number' ? value : Number(value);
+  if (Number.isNaN(parsed)) return String(value);
+
+  return new Intl.NumberFormat(resolveLocale(language), options).format(parsed);
+};
+
 export const toLocalDateKey = (date: Date): string => {
   const year = date.getFullYear();
   const month = String(date.getMonth() + 1).padStart(2, '0');

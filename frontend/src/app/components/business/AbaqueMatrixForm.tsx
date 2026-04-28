@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { ProjectAbaqueRow, TicketNature, TicketComplexity, TICKET_NATURE_LABELS, TICKET_COMPLEXITY_LABELS } from '../../types/entities';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '../ui/card';
 import { Button } from '../ui/button';
@@ -19,6 +20,7 @@ export const AbaqueMatrixForm: React.FC<AbaqueMatrixFormProps> = ({
   onApply,
   onCancel,
 }) => {
+  const { t } = useTranslation();
   const [rows, setRows] = useState<ProjectAbaqueRow[]>(initialMatrix);
 
   const handleAddRow = () => {
@@ -54,24 +56,24 @@ export const AbaqueMatrixForm: React.FC<AbaqueMatrixFormProps> = ({
       <CardHeader className="border-b border-border/60">
         <CardTitle className="flex items-center gap-2 text-xl font-semibold">
           <Calculator className="h-5 w-5 text-primary" />
-          Abaque Matrix (Manual Reference)
+          {t('projects.abaques.title')}
         </CardTitle>
         <CardDescription>
-          Define estimated hours mapped to Task Nature and Complexity. This acts as a manual baseline reference.
+          {t('projects.abaques.description')}
         </CardDescription>
       </CardHeader>
       <CardContent className="pt-6">
         <div className="space-y-4">
           {rows.length === 0 ? (
             <div className="text-center py-8 text-muted-foreground border border-dashed rounded-lg">
-              No entries in the matrix yet. Click "Add Entry" to begin.
+              {t('projects.abaques.noEntries')}
             </div>
           ) : (
             <div className="grid gap-4">
               {rows.map((row) => (
                 <div key={row.id} className="flex flex-col sm:flex-row gap-3 items-end sm:items-center bg-muted/30 p-3 rounded-lg border">
                   <div className="flex-1 w-full space-y-1">
-                    <label className="text-xs font-medium">Task Nature</label>
+                    <label className="text-xs font-medium">{t('projects.abaques.taskNature')}</label>
                     <Select
                       value={row.nature}
                       onValueChange={(val) => handleUpdateRow(row.id, 'nature', val as TicketNature)}
@@ -87,7 +89,7 @@ export const AbaqueMatrixForm: React.FC<AbaqueMatrixFormProps> = ({
                     </Select>
                   </div>
                   <div className="flex-1 w-full space-y-1">
-                    <label className="text-xs font-medium">Complexity</label>
+                    <label className="text-xs font-medium">{t('projects.abaques.complexity')}</label>
                     <Select
                       value={row.complexity}
                       onValueChange={(val) => handleUpdateRow(row.id, 'complexity', val as TicketComplexity)}

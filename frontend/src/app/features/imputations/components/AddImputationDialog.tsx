@@ -1,5 +1,6 @@
 import React from 'react';
 import { useNavigate } from 'react-router';
+import { useTranslation } from 'react-i18next';
 import { Plus } from 'lucide-react';
 import { Resolver, useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -47,6 +48,7 @@ export const AddImputationDialog: React.FC<AddImputationDialogProps> = ({
   onAdd,
 }) => {
   const navigate = useNavigate();
+  const { t } = useTranslation();
   const { currentUser } = useAuth();
   const roleBasePath = currentUser ? getBaseRouteForRole(currentUser.role) : '';
 
@@ -79,12 +81,12 @@ export const AddImputationDialog: React.FC<AddImputationDialogProps> = ({
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-md">
         <DialogHeader>
-          <DialogTitle>Add Imputation - {selectedDate}</DialogTitle>
+          <DialogTitle>{t('imputations.addTitle', { date: selectedDate })}</DialogTitle>
         </DialogHeader>
         <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
           {(imputationsByDate[selectedDate] || []).length > 0 && (
             <div className="rounded border bg-muted/30 p-3">
-              <p className="text-xs font-semibold text-muted-foreground mb-2">Already logged:</p>
+              <p className="text-xs font-semibold text-muted-foreground mb-2">{t('imputations.alreadyLogged')}</p>
               {(imputationsByDate[selectedDate] || []).map((imp) => (
                 <div key={imp.id} className="flex items-center justify-between py-1 text-sm">
                   <button
@@ -98,20 +100,20 @@ export const AddImputationDialog: React.FC<AddImputationDialogProps> = ({
                 </div>
               ))}
               <div className="flex items-center justify-between pt-1 border-t mt-1">
-                <span className="text-xs font-semibold">Total</span>
+                <span className="text-xs font-semibold">{t('imputations.total')}</span>
                 <span className="text-sm font-bold">{hoursByDate[selectedDate] || 0}h</span>
               </div>
             </div>
           )}
 
           <div>
-            <Label>Ticket *</Label>
+            <Label>{t('imputations.ticketLabel')}</Label>
             <Select
               value={form.watch('ticketId')}
               onValueChange={(v) => form.setValue('ticketId', v)}
             >
               <SelectTrigger>
-                <SelectValue placeholder="Select a ticket" />
+                <SelectValue placeholder={t('imputations.selectTicket')} />
               </SelectTrigger>
               <SelectContent>
                 {myTickets.map((t) => (
@@ -126,7 +128,7 @@ export const AddImputationDialog: React.FC<AddImputationDialogProps> = ({
             )}
           </div>
           <div>
-            <Label>Hours *</Label>
+            <Label>{t('imputations.hoursLabel')}</Label>
             <Input
               type="number"
               min={0.5}
@@ -139,19 +141,19 @@ export const AddImputationDialog: React.FC<AddImputationDialogProps> = ({
             )}
           </div>
           <div>
-            <Label>Description</Label>
+            <Label>{t('imputations.descriptionLabel')}</Label>
             <Textarea
               {...form.register('description')}
               rows={2}
-              placeholder="What did you work on?"
+              placeholder={t('imputations.descriptionPlaceholder')}
             />
           </div>
           <div className="flex justify-end gap-2">
             <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>
-              Cancel
+              {t('imputations.cancel')}
             </Button>
             <Button type="submit">
-              <Plus className="h-4 w-4 mr-1" /> Add
+              <Plus className="h-4 w-4 mr-1" /> {t('imputations.add')}
             </Button>
           </div>
         </form>

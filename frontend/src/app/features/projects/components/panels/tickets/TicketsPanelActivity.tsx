@@ -1,4 +1,5 @@
 import React from 'react';
+import { useTranslation } from 'react-i18next';
 import { Ticket } from '@/app/types/entities';
 
 interface TicketsPanelActivityProps {
@@ -16,16 +17,17 @@ export const TicketsPanelActivity: React.FC<TicketsPanelActivityProps> = ({
   renderTicketEvent,
   resolveUserName,
 }) => {
+  const { t } = useTranslation();
   return (
     <div className="rounded-lg border bg-card p-4">
       <div className="mb-3">
-        <h4 className="text-sm font-semibold text-foreground">Fil d'actualite</h4>
+        <h4 className="text-sm font-semibold text-foreground">{t('projectPanels.ticketsActivity')}</h4>
         {selectedTicket ? (
           <p className="text-xs text-muted-foreground mt-1">
             {selectedTicket.ticketCode} - {selectedTicket.title}
           </p>
         ) : (
-          <p className="text-xs text-muted-foreground mt-1">Select a ticket to view activity.</p>
+          <p className="text-xs text-muted-foreground mt-1">{t('projectPanels.selectTicket')}</p>
         )}
       </div>
       {selectedTicket && selectedTicketHistory.length > 0 && (
@@ -44,7 +46,7 @@ export const TicketsPanelActivity: React.FC<TicketsPanelActivityProps> = ({
         </div>
       )}
       {selectedTicket && selectedTicketHistory.length === 0 && (
-        <p className="text-xs text-muted-foreground">No activity found for this ticket.</p>
+        <p className="text-xs text-muted-foreground">{t('projectPanels.noActivity')}</p>
       )}
     </div>
   );

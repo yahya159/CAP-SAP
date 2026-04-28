@@ -1,4 +1,5 @@
 import React from 'react';
+import { useTranslation } from 'react-i18next';
 
 interface ProjectKpisProps {
   active: boolean;
@@ -20,6 +21,7 @@ export const ProjectKpis: React.FC<ProjectKpisProps> = ({
   totalActualHours,
   totalEstimatedHours,
 }) => {
+  const { t } = useTranslation();
   if (!active) return null;
 
   return (
@@ -32,27 +34,27 @@ export const ProjectKpis: React.FC<ProjectKpisProps> = ({
     >
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
         <div className="rounded-lg border bg-card p-4">
-          <div className="text-xs text-muted-foreground">On Track Tickets</div>
+          <div className="text-xs text-muted-foreground">{t('projects.details.kpis.onTrack')}</div>
           <div className="mt-1 text-2xl font-semibold text-foreground">{kpis.onTrack}</div>
         </div>
         <div className="rounded-lg border bg-card p-4">
-          <div className="text-xs text-muted-foreground">Late Tickets</div>
+          <div className="text-xs text-muted-foreground">{t('projects.details.kpis.late')}</div>
           <div className="mt-1 text-2xl font-semibold text-destructive">{kpis.late}</div>
         </div>
         <div className="rounded-lg border bg-card p-4">
-          <div className="text-xs text-muted-foreground">Blocked Tickets</div>
+          <div className="text-xs text-muted-foreground">{t('projects.details.kpis.blocked')}</div>
           <div className="mt-1 text-2xl font-semibold text-amber-600">{kpis.blocked}</div>
         </div>
         <div className="rounded-lg border bg-card p-4">
-          <div className="text-xs text-muted-foreground">Completed Tickets</div>
+          <div className="text-xs text-muted-foreground">{t('projects.details.kpis.completed')}</div>
           <div className="mt-1 text-2xl font-semibold text-emerald-600">{kpis.completed}</div>
         </div>
         <div className="rounded-lg border bg-card p-4">
-          <div className="text-xs text-muted-foreground">Critical Tickets</div>
+          <div className="text-xs text-muted-foreground">{t('projects.details.kpis.critical')}</div>
           <div className="mt-1 text-2xl font-semibold text-destructive">{kpis.critical}</div>
         </div>
         <div className="rounded-lg border bg-card p-4">
-          <div className="text-xs text-muted-foreground">Productivity</div>
+          <div className="text-xs text-muted-foreground">{t('projects.details.kpis.productivity')}</div>
           <div className="mt-1 text-2xl font-semibold text-foreground">
             {Math.round(kpis.productivity)}%
           </div>
@@ -61,19 +63,19 @@ export const ProjectKpis: React.FC<ProjectKpisProps> = ({
 
       <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
         <div className="rounded-lg border bg-card p-4">
-          <div className="text-xs text-muted-foreground">Actual Hours</div>
+          <div className="text-xs text-muted-foreground">{t('projects.details.kpis.actualHours')}</div>
           <div className="mt-1 text-xl font-semibold text-foreground">
             {totalActualHours.toFixed(1)}h
           </div>
         </div>
         <div className="rounded-lg border bg-card p-4">
-          <div className="text-xs text-muted-foreground">Estimated Hours</div>
+          <div className="text-xs text-muted-foreground">{t('projects.details.kpis.estimatedHours')}</div>
           <div className="mt-1 text-xl font-semibold text-foreground">
             {totalEstimatedHours.toFixed(1)}h
           </div>
         </div>
         <div className="rounded-lg border bg-card p-4">
-          <div className="text-xs text-muted-foreground">Variance</div>
+          <div className="text-xs text-muted-foreground">{t('projects.details.kpis.variance')}</div>
           <div
             className={`mt-1 text-xl font-semibold ${
               totalActualHours > totalEstimatedHours ? 'text-destructive' : 'text-emerald-600'

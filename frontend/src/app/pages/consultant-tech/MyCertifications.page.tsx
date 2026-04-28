@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { PageHeader } from '../../components/common/PageHeader';import { UsersAPI } from '../../services/odata/usersApi';
 import { Certification, CertificationStatus, User } from '../../types/entities';
 import { useAuth } from '../../context/AuthContext';
@@ -53,6 +54,7 @@ const EMPTY_FORM: CertForm = {
 };
 
 export const MyCertifications: React.FC = () => {
+  const { t } = useTranslation();
   const { currentUser } = useAuth();
   const [profile, setProfile] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
@@ -77,7 +79,7 @@ export const MyCertifications: React.FC = () => {
   const addCertification = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!profile || !form.name || !form.issuingBody || !form.dateObtained) {
-      toast.error('Name, issuing body and date obtained are required');
+      toast.error(t('consultantTech.certifications.toasts.addFailed'));
       return;
     }
     const cert: Certification = {

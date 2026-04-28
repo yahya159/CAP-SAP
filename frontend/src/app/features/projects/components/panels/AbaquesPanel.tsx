@@ -1,4 +1,5 @@
 import React from 'react';
+import { useTranslation } from 'react-i18next';
 import { AbaqueMatrixForm } from '@/app/components/business/AbaqueMatrixForm';
 import { Button } from '@/app/components/ui/button';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/app/components/ui/table';
@@ -25,6 +26,7 @@ interface AbaquesPanelProps {
 }
 
 export const AbaquesPanel: React.FC<AbaquesPanelProps> = ({ active, vm }) => {
+  const { t } = useTranslation();
   if (!active) return null;
 
   return (
@@ -46,10 +48,10 @@ export const AbaquesPanel: React.FC<AbaquesPanelProps> = ({ active, vm }) => {
           <div className="flex flex-col space-y-1.5 p-6 border-b border-border/60">
             <h3 className="font-semibold leading-none tracking-tight flex items-center gap-2 text-xl">
               <Calculator className="h-5 w-5 text-primary" />
-              Abaque Matrix (Manual Reference)
+              {t('projects.details.abaques.title')}
             </h3>
             <p className="text-sm text-muted-foreground">
-              Reference matrix mapping task nature and complexity to estimated effort.
+              {t('projects.details.abaques.subtitle')}
             </p>
           </div>
           <div className="p-6">
@@ -57,9 +59,9 @@ export const AbaquesPanel: React.FC<AbaquesPanelProps> = ({ active, vm }) => {
               <Table>
                 <TableHeader>
                   <TableRow>
-                    <TableHead>Task Nature</TableHead>
-                    <TableHead>Complexity</TableHead>
-                    <TableHead className="text-right">Estimated Hours</TableHead>
+                    <TableHead>{t('projects.details.abaques.nature')}</TableHead>
+                    <TableHead>{t('projects.details.abaques.complexity')}</TableHead>
+                    <TableHead className="text-right">{t('projects.details.abaques.hours')}</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
@@ -80,7 +82,7 @@ export const AbaquesPanel: React.FC<AbaquesPanelProps> = ({ active, vm }) => {
           </div>
           <div className="flex items-center p-6 pt-0 justify-end">
             <Button variant="outline" onClick={vm.onRerunEstimate}>
-              Edit Matrix
+              {t('projects.details.abaques.edit')}
             </Button>
           </div>
         </div>

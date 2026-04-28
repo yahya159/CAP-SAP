@@ -1,4 +1,5 @@
 import React from 'react';
+import { useTranslation } from 'react-i18next';
 import { FileText, Package, Ticket as TicketIcon } from 'lucide-react';
 
 interface WricefStatsCardsProps {
@@ -12,6 +13,7 @@ export const WricefStatsCards: React.FC<WricefStatsCardsProps> = ({
   wricefTotalTickets,
   wricefTotalDocuments,
 }) => {
+  const { t } = useTranslation();
   return (
     <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
       <div className="rounded-lg border bg-card p-4 flex items-center gap-3">
@@ -19,7 +21,7 @@ export const WricefStatsCards: React.FC<WricefStatsCardsProps> = ({
           <Package className="h-5 w-5 text-primary" />
         </div>
         <div>
-          <p className="text-xs text-muted-foreground">Total Objects</p>
+          <p className="text-xs text-muted-foreground">{t('projects.details.wricef.stats.totalObjects')}</p>
           <p className="text-2xl font-bold text-foreground">{wricefObjectCount}</p>
         </div>
       </div>
@@ -28,7 +30,7 @@ export const WricefStatsCards: React.FC<WricefStatsCardsProps> = ({
           <TicketIcon className="h-5 w-5 text-blue-600 dark:text-blue-400" />
         </div>
         <div>
-          <p className="text-xs text-muted-foreground">Total Tickets</p>
+          <p className="text-xs text-muted-foreground">{t('projects.details.wricef.stats.totalTickets')}</p>
           <p className="text-2xl font-bold text-foreground">{wricefTotalTickets}</p>
         </div>
       </div>
@@ -37,7 +39,7 @@ export const WricefStatsCards: React.FC<WricefStatsCardsProps> = ({
           <FileText className="h-5 w-5 text-emerald-600 dark:text-emerald-400" />
         </div>
         <div>
-          <p className="text-xs text-muted-foreground">Total Documents</p>
+          <p className="text-xs text-muted-foreground">{t('projects.details.wricef.stats.totalDocuments')}</p>
           <p className="text-2xl font-bold text-foreground">{wricefTotalDocuments}</p>
         </div>
       </div>

@@ -1,4 +1,5 @@
 import React, { useCallback, useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { Button } from '@/app/components/ui/button';
 import { Send, X } from 'lucide-react';
 import type { CommentType } from '@/app/types/entities';
@@ -27,6 +28,7 @@ export const CommentComposeBox: React.FC<CommentComposeBoxProps> = ({
   replyToId,
   onCancelReply,
 }) => {
+  const { t } = useTranslation();
   const [message, setMessage] = useState('');
   const [commentType, setCommentType] = useState<CommentType>('GENERAL');
   const [isInternal, setIsInternal] = useState(false);
@@ -60,7 +62,7 @@ export const CommentComposeBox: React.FC<CommentComposeBoxProps> = ({
     <div className="border-t pt-3 space-y-2">
       {replyToId && (
         <div className="flex items-center gap-2 text-xs text-muted-foreground">
-          <span>Replying to comment</span>
+          <span>{t('comments.replyingTo')}</span>
           <Button variant="ghost" size="sm" className="h-5 px-1" onClick={onCancelReply}>
             <X className="h-3 w-3" />
           </Button>
@@ -88,7 +90,7 @@ export const CommentComposeBox: React.FC<CommentComposeBoxProps> = ({
               onChange={(e) => setIsInternal(e.target.checked)}
               className="rounded"
             />
-            Internal note
+            {t('comments.internalNote')}
           </label>
         )}
       </div>
@@ -96,7 +98,7 @@ export const CommentComposeBox: React.FC<CommentComposeBoxProps> = ({
       <div className="flex gap-2">
         <textarea
           className="flex-1 min-h-[60px] rounded-md border bg-background px-3 py-2 text-sm resize-none focus:outline-none focus:ring-1 focus:ring-ring"
-          placeholder="Type a message… (Ctrl+Enter to send)"
+          placeholder={t('comments.messagePlaceholder')}
           value={message}
           onChange={(e) => setMessage(e.target.value)}
           onKeyDown={handleKeyDown}

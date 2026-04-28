@@ -1,4 +1,5 @@
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { BookOpenText, ExternalLink, Link2, Paperclip, Plus } from 'lucide-react';
 import { toast } from 'sonner';
 import { useNavigate } from 'react-router';
@@ -25,6 +26,7 @@ import {
   DOCUMENTATION_OBJECT_TYPE_LABELS,
   Ticket,
 } from '../../types/entities';
+import { formatDateTime } from '../../utils/date';
 
 interface TicketDocumentationSectionProps {
   ticket: Ticket;
@@ -37,11 +39,6 @@ interface TicketDocumentationSectionProps {
 const byRecentUpdate = (a: DocumentationObject, b: DocumentationObject) =>
   (b.updatedAt ?? b.createdAt).localeCompare(a.updatedAt ?? a.createdAt);
 
-const formatDate = (value?: string) => {
-  if (!value) return '-';
-  return new Date(value).toLocaleString();
-};
-
 export const TicketDocumentationSection: React.FC<TicketDocumentationSectionProps> = ({
   ticket,
   currentUserId,
@@ -49,6 +46,7 @@ export const TicketDocumentationSection: React.FC<TicketDocumentationSectionProp
   resolveUserName,
   onDocumentationChanged,
 }) => {
+  const { t, i18n } = useTranslation();
   const navigate = useNavigate();
   const [loading, setLoading] = useState(true);
   const [isAttachDialogOpen, setIsAttachDialogOpen] = useState(false);
@@ -76,7 +74,7 @@ export const TicketDocumentationSection: React.FC<TicketDocumentationSectionProp
       setAttachableDocs(sortedAttachableDocs);
       onDocumentationChanged?.(ticket.id, sortedTicketDocs.map((doc) => doc.id));
     } catch {
-      toast.error('Failed to load related documentation');
+      toast.error(t('documentation.section.loadFailed') || 'Failed to load documentation');
     } finally {
       setLoading(false);
     }
@@ -119,7 +117,7 @@ export const TicketDocumentationSection: React.FC<TicketDocumentationSectionProp
         <div className="flex flex-wrap items-center justify-between gap-2">
           <div className="flex items-center gap-2">
             <BookOpenText className="h-4 w-4 text-primary" />
-            <h4 className="text-sm font-semibold text-foreground">Related Documentation</h4>
+            <h4 className="text-sm font-semibold text-foreground">{t('documentation.section.title')}</h4>
             <Badge variant="outline">{relatedDocs.length}</Badge>
           </div>
 
@@ -132,21 +130,21 @@ export const TicketDocumentationSection: React.FC<TicketDocumentationSectionProp
                 disabled={attachableDocs.length === 0}
               >
                 <Link2 className="mr-1 h-3.5 w-3.5" />
-                Attach Existing Documentation
+                {t('documentation.section.attachExisting')}
               </Button>
               <Button size="sm" onClick={() => setIsCreateDialogOpen(true)} disabled={!currentUserId}>
                 <Plus className="mr-1 h-3.5 w-3.5" />
-                Create New Documentation
+                {t('documentation.section.createNew')}
               </Button>
             </div>
           )}
         </div>
 
         {loading ? (
-          <p className="text-sm text-muted-foreground">Loading documentation...</p>
+          <p className="text-sm text-muted-foreground">{t('documentation.section.loading')}</p>
         ) : relatedDocs.length === 0 ? (
           <p className="text-sm text-muted-foreground">
-            No documentation is linked to this ticket yet.
+            {t('documentation.section.noLinked')}
           </p>
         ) : (
           <div className="space-y-2">
@@ -172,7 +170,7 @@ export const TicketDocumentationSection: React.FC<TicketDocumentationSectionProp
                       <span>
                         Author: {resolveUserName ? resolveUserName(doc.authorId) : doc.authorId}
                       </span>
-                      <span>Updated: {formatDate(doc.updatedAt ?? doc.createdAt)}</span>
+                      <span>Updated: {formatDateTime(doc.updatedAt ?? doc.createdAt, i18n.language)}</span>
                       <span className="inline-flex items-center gap-1">
                         <Paperclip className="h-3 w-3" />
                         {doc.attachedFiles.length} file{doc.attachedFiles.length > 1 ? 's' : ''}
@@ -198,17 +196,17 @@ export const TicketDocumentationSection: React.FC<TicketDocumentationSectionProp
       <Dialog open={isAttachDialogOpen} onOpenChange={setIsAttachDialogOpen}>
         <DialogContent className="max-w-lg">
           <DialogHeader>
-            <DialogTitle>Attach Existing Documentation</DialogTitle>
+            <DialogTitle>{t('documentation.section.attachDialog')}</DialogTitle>
             <DialogDescription>
-              Select a project documentation object to link it to this ticket.
+              {t('documentation.section.selectLabel')}
             </DialogDescription>
           </DialogHeader>
 
           <div className="space-y-3">
-            <Label htmlFor="attach-doc-select">Documentation Object</Label>
+            <Label htmlFor="attach-doc-select">{t('documentation.section.selectLabel')}</Label>
             <Select value={selectedAttachDocId} onValueChange={setSelectedAttachDocId}>
               <SelectTrigger id="attach-doc-select">
-                <SelectValue placeholder="Select documentation to attach" />
+                <SelectValue placeholder={t('documentation.section.selectPlaceholder')} />
               </SelectTrigger>
               <SelectContent>
                 {attachableDocs.map((doc) => (
@@ -218,7 +216,7 @@ export const TicketDocumentationSection: React.FC<TicketDocumentationSectionProp
                 ))}
                 {attachableDocs.length === 0 && (
                   <SelectItem value="__none" disabled>
-                    No attachable documentation for this project
+                    {t('documentation.section.noAttachable')}
                   </SelectItem>
                 )}
               </SelectContent>
@@ -237,13 +235,13 @@ export const TicketDocumentationSection: React.FC<TicketDocumentationSectionProp
 
             <div className="flex justify-end gap-2">
               <Button variant="outline" onClick={() => setIsAttachDialogOpen(false)}>
-                Cancel
+                {t('documentation.section.cancel')}
               </Button>
               <Button
                 onClick={() => void attachExistingDocumentation()}
                 disabled={!selectedAttachDocId || isAttaching}
               >
-                {isAttaching ? 'Attaching...' : 'Attach'}
+                {isAttaching ? t('documentation.section.attaching') : t('documentation.section.attach')}
               </Button>
             </div>
           </div>

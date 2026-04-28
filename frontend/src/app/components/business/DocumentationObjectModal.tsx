@@ -1,4 +1,5 @@
 import React, { useEffect, useRef, useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { FilePlus2, Paperclip, X } from 'lucide-react';
 import { toast } from 'sonner';
 import { Button } from '../ui/button';
@@ -51,6 +52,7 @@ export const DocumentationObjectModal: React.FC<DocumentationObjectModalProps> =
   currentUserId,
   onCreated,
 }) => {
+  const { t } = useTranslation();
   const [title, setTitle] = useState('');
   const [description, setDescription] = useState('');
   const [type, setType] = useState<DocumentationObjectType>('SFD');
@@ -117,7 +119,7 @@ export const DocumentationObjectModal: React.FC<DocumentationObjectModalProps> =
       return;
     }
     if (!title.trim()) {
-      toast.error('Title is required');
+      toast.error(t('documentation.create.toasts.createFailed'));
       return;
     }
     if (!content.trim()) {
@@ -144,7 +146,7 @@ export const DocumentationObjectModal: React.FC<DocumentationObjectModalProps> =
       toast.success('Documentation created');
       onOpenChange(false);
     } catch {
-      toast.error('Failed to create documentation');
+      toast.error(t('documentation.create.toasts.createFailed'));
     } finally {
       setIsSubmitting(false);
     }
@@ -156,7 +158,7 @@ export const DocumentationObjectModal: React.FC<DocumentationObjectModalProps> =
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
             <FilePlus2 className="h-5 w-5 text-primary" />
-            Create Documentation Object
+            {t('documentation.create.title')}
           </DialogTitle>
         </DialogHeader>
 
