@@ -9,6 +9,7 @@ import {
   Users,
   XCircle,
 } from 'lucide-react';
+import { useTranslation } from 'react-i18next';
 import { toast } from 'sonner';
 import { PageHeader } from '../../components/common/PageHeader';
 import { Badge } from '../../components/ui/badge';
@@ -54,7 +55,7 @@ import {
 } from '../../components/ui/alert-dialog';
 import { cn } from '../../components/ui/utils';
 import { useAuth } from '../../context/AuthContext';import { UsersAPI } from '../../services/odata/usersApi';
-import { USER_ROLE_LABELS, User, UserRole } from '../../types/entities';
+import { User, UserRole } from '../../types/entities';
 
 interface UserForm {
   name: string;
@@ -76,10 +77,6 @@ const EMPTY_FORM: UserForm = {
   availabilityPercent: 100,
 };
 
-const getRoleLabel = (role: UserRole) => {
-  return USER_ROLE_LABELS[role];
-};
-
 const getRoleBadgeTone = (role: UserRole) => {
   const styles: Record<UserRole, string> = {
     ADMIN: 'bg-destructive/12 text-destructive',
@@ -93,6 +90,7 @@ const getRoleBadgeTone = (role: UserRole) => {
 };
 
 export const UsersManagement: React.FC = () => {
+  const { t } = useTranslation();
   const { currentUser } = useAuth();
   const [users, setUsers] = useState<User[]>([]);
   const [loading, setLoading] = useState(true);
@@ -148,26 +146,26 @@ export const UsersManagement: React.FC = () => {
     try {
       const updated = await UsersAPI.update(userId, { active: !currentStatus });
       setUsers((prev) => prev.map((entry) => (entry.id === userId ? updated : entry)));
-      toast.success(`User ${!currentStatus ? 'activated' : 'deactivated'}`);
+      toast.success(t(`admin.users.toasts.${!currentStatus ? 'activated' : 'deactivated'}`));
     } catch (error) {
-      toast.error('Failed to update user status');
+      toast.error(t('admin.users.toasts.updateStatusFailed'));
     }
   };
 
   const saveUser = async (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
     if (!form.name.trim() || !form.email.trim()) {
-      toast.error('Name and email are required');
+      toast.error(t('admin.users.toasts.requiredFields'));
       return;
     }
     const email = form.email.trim().toLowerCase();
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
     if (!emailRegex.test(email)) {
-      toast.error('Please enter a valid email address');
+      toast.error(t('admin.users.toasts.invalidEmail'));
       return;
     }
     if (form.availabilityPercent < 0 || form.availabilityPercent > 100) {
-      toast.error('Availability must be between 0 and 100');
+      toast.error(t('admin.users.toasts.invalidAvailability'));
       return;
     }
 
@@ -194,15 +192,15 @@ export const UsersManagement: React.FC = () => {
       if (editingUserId) {
         const updated = await UsersAPI.update(editingUserId, payload);
         setUsers((prev) => prev.map((entry) => (entry.id === editingUserId ? updated : entry)));
-        toast.success('User updated');
+        toast.success(t('admin.users.toasts.updated'));
       } else {
         const created = await UsersAPI.create(payload);
         setUsers((prev) => [created, ...prev]);
-        toast.success('User created');
+        toast.success(t('admin.users.toasts.created'));
       }
       resetDialog();
     } catch (error) {
-      toast.error('Failed to save user');
+      toast.error(t('admin.users.toasts.saveFailed'));
     } finally {
       setIsSubmitting(false);
     }
@@ -210,7 +208,7 @@ export const UsersManagement: React.FC = () => {
 
   const requestDeleteUser = (user: User) => {
     if (currentUser?.id === user.id) {
-      toast.error('You cannot delete the currently connected user');
+      toast.error(t('admin.users.toasts.deleteSelf'));
       return;
     }
     setUserPendingDelete(user);
@@ -222,9 +220,9 @@ export const UsersManagement: React.FC = () => {
     try {
       await UsersAPI.delete(userPendingDelete.id);
       setUsers((prev) => prev.filter((entry) => entry.id !== userPendingDelete.id));
-      toast.success('User deleted');
+      toast.success(t('admin.users.toasts.deleted'));
     } catch (error) {
-      toast.error('Failed to delete user');
+      toast.error(t('admin.users.toasts.deleteFailed'));
     } finally {
       setUserPendingDelete(null);
     }
@@ -243,16 +241,16 @@ export const UsersManagement: React.FC = () => {
   return (
     <div className="min-h-screen bg-background">
       <PageHeader
-        title="Users Management"
-        subtitle="Manage user accounts, roles, and permissions"
+        title={t('admin.users.title')}
+        subtitle={t('admin.users.subtitle')}
         breadcrumbs={[
-          { label: 'Home', path: '/admin/dashboard' },
-          { label: 'Users Management' },
+          { label: t('common.home'), path: '/admin/dashboard' },
+          { label: t('admin.users.title') },
         ]}
         actions={
           <Button type="button" onClick={openCreate}>
             <Plus className="h-4 w-4" />
-            New User
+            {t('admin.users.newUser')}
           </Button>
         }
       />
@@ -263,11 +261,11 @@ export const UsersManagement: React.FC = () => {
             <div className="relative">
               <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
               <Label htmlFor="users-search" className="sr-only">
-                Search users
+                {t('admin.users.searchPlaceholder')}
               </Label>
               <Input
                 id="users-search"
-                placeholder="Search users by name or email..."
+                placeholder={t('admin.users.searchPlaceholder')}
                 value={searchQuery}
                 onChange={(event) => setSearchQuery(event.target.value)}
                 className="pl-9"
@@ -275,22 +273,22 @@ export const UsersManagement: React.FC = () => {
             </div>
 
             <div className="space-y-1.5">
-              <Label htmlFor="users-role-filter">Role</Label>
+              <Label htmlFor="users-role-filter">{t('admin.users.role')}</Label>
               <Select
                 value={filterRole}
                 onValueChange={(val) => setFilterRole(val as UserRole | 'ALL')}
               >
                 <SelectTrigger id="users-role-filter">
-                  <SelectValue placeholder="All Roles" />
+                  <SelectValue placeholder={t('admin.users.allRoles')} />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="ALL">All Roles</SelectItem>
-                  <SelectItem value="ADMIN">Administrator</SelectItem>
-                  <SelectItem value="MANAGER">Manager</SelectItem>
-                  <SelectItem value="PROJECT_MANAGER">Project Manager</SelectItem>
-                  <SelectItem value="DEV_COORDINATOR">Dev Coordinator</SelectItem>
-                  <SelectItem value="CONSULTANT_TECHNIQUE">Technical Consultant</SelectItem>
-                  <SelectItem value="CONSULTANT_FONCTIONNEL">Functional Consultant</SelectItem>
+                  <SelectItem value="ALL">{t('admin.users.allRoles')}</SelectItem>
+                  <SelectItem value="ADMIN">{t('entities.userRole.ADMIN')}</SelectItem>
+                  <SelectItem value="MANAGER">{t('entities.userRole.MANAGER')}</SelectItem>
+                  <SelectItem value="PROJECT_MANAGER">{t('entities.userRole.PROJECT_MANAGER')}</SelectItem>
+                  <SelectItem value="DEV_COORDINATOR">{t('entities.userRole.DEV_COORDINATOR')}</SelectItem>
+                  <SelectItem value="CONSULTANT_TECHNIQUE">{t('entities.userRole.CONSULTANT_TECHNIQUE')}</SelectItem>
+                  <SelectItem value="CONSULTANT_FONCTIONNEL">{t('entities.userRole.CONSULTANT_FONCTIONNEL')}</SelectItem>
                 </SelectContent>
               </Select>
             </div>
@@ -302,19 +300,19 @@ export const UsersManagement: React.FC = () => {
             <Table>
               <TableHeader className="bg-muted/65">
                 <TableRow>
-                  <TableHead className="px-6">User</TableHead>
-                  <TableHead className="px-6">Role</TableHead>
-                  <TableHead className="px-6">Skills</TableHead>
-                  <TableHead className="px-6">Availability</TableHead>
-                  <TableHead className="px-6">Status</TableHead>
-                  <TableHead className="px-6 text-right">Actions</TableHead>
+                  <TableHead className="px-6">{t('admin.users.table.user')}</TableHead>
+                  <TableHead className="px-6">{t('admin.users.table.role')}</TableHead>
+                  <TableHead className="px-6">{t('admin.users.table.skills')}</TableHead>
+                  <TableHead className="px-6">{t('admin.users.table.availability')}</TableHead>
+                  <TableHead className="px-6">{t('admin.users.table.status')}</TableHead>
+                  <TableHead className="px-6 text-right">{t('admin.users.table.actions')}</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
                 {loading ? (
                   <TableRow>
                     <TableCell colSpan={6} className="h-24 text-center">
-                      Loading users...
+                      {t('admin.users.table.loading')}
                     </TableCell>
                   </TableRow>
                 ) : filteredUsers.length === 0 ? (
@@ -322,7 +320,7 @@ export const UsersManagement: React.FC = () => {
                     <TableCell colSpan={6} className="h-32 text-center">
                       <div className="flex flex-col items-center justify-center gap-1">
                         <Users className="h-8 w-8 text-muted-foreground/50" />
-                        <p className="text-muted-foreground">No users match your filters.</p>
+                        <p className="text-muted-foreground">{t('admin.users.table.empty')}</p>
                       </div>
                     </TableCell>
                   </TableRow>
@@ -341,7 +339,7 @@ export const UsersManagement: React.FC = () => {
                         </div>
                       </TableCell>
                       <TableCell className="px-6 py-4">
-                        <Badge className={getRoleBadgeTone(user.role)}>{getRoleLabel(user.role)}</Badge>
+                        <Badge className={getRoleBadgeTone(user.role)}>{t(`entities.userRole.${user.role}`)}</Badge>
                       </TableCell>
                       <TableCell className="px-6 py-4">
                         <div className="flex flex-wrap gap-1">
@@ -358,7 +356,7 @@ export const UsersManagement: React.FC = () => {
                       <TableCell className="px-6 py-4">
                         <div className="w-40 space-y-1">
                           <div className="flex items-center justify-between text-xs text-muted-foreground">
-                            <span>Rate</span>
+                            <span>{t('admin.users.table.rate')}</span>
                             <span>{user.availabilityPercent}%</span>
                           </div>
                           <Progress value={user.availabilityPercent} />
@@ -376,7 +374,7 @@ export const UsersManagement: React.FC = () => {
                           )}
                         >
                           {user.active ? <CheckCircle className="h-3.5 w-3.5" /> : <XCircle className="h-3.5 w-3.5" />}
-                          {user.active ? 'Active' : 'Inactive'}
+                          {user.active ? t('admin.users.table.active') : t('admin.users.table.inactive')}
                         </button>
                       </TableCell>
                       <TableCell className="px-6 py-4 text-right">
@@ -385,8 +383,8 @@ export const UsersManagement: React.FC = () => {
                             variant="ghost"
                             size="icon"
                             onClick={() => openEdit(user)}
-                            title={`Edit ${user.name}`}
-                            aria-label={`Edit ${user.name}`}
+                            title={`${t('common.edit')} ${user.name}`}
+                            aria-label={`${t('common.edit')} ${user.name}`}
                           >
                             <Edit className="h-4 w-4" />
                           </Button>
@@ -394,8 +392,8 @@ export const UsersManagement: React.FC = () => {
                             variant="ghost"
                             size="icon"
                             onClick={() => requestDeleteUser(user)}
-                            title={`Delete ${user.name}`}
-                            aria-label={`Delete ${user.name}`}
+                            title={`${t('common.delete')} ${user.name}`}
+                            aria-label={`${t('common.delete')} ${user.name}`}
                           >
                             <Trash2 className="h-4 w-4 text-destructive" />
                           </Button>
@@ -422,16 +420,16 @@ export const UsersManagement: React.FC = () => {
       >
         <DialogContent className="sm:max-w-2xl">
           <DialogHeader>
-            <DialogTitle>{editingUserId ? 'Edit User' : 'Create User'}</DialogTitle>
+            <DialogTitle>{editingUserId ? t('admin.users.dialog.editTitle') : t('admin.users.dialog.createTitle')}</DialogTitle>
             <DialogDescription>
-              Manage account profile, role assignment, and staffing attributes.
+              {t('admin.users.dialog.desc')}
             </DialogDescription>
           </DialogHeader>
 
           <form onSubmit={saveUser} className="space-y-4">
             <div className="grid grid-cols-1 gap-3 md:grid-cols-2">
               <div className="space-y-1.5">
-                <Label htmlFor="user-name">Name</Label>
+                <Label htmlFor="user-name">{t('admin.users.dialog.name')}</Label>
                 <Input
                   id="user-name"
                   value={form.name}
@@ -440,7 +438,7 @@ export const UsersManagement: React.FC = () => {
                 />
               </div>
               <div className="space-y-1.5">
-                <Label htmlFor="user-email">Email</Label>
+                <Label htmlFor="user-email">{t('admin.users.dialog.email')}</Label>
                 <Input
                   id="user-email"
                   type="email"
@@ -453,26 +451,26 @@ export const UsersManagement: React.FC = () => {
 
             <div className="grid grid-cols-1 gap-3 md:grid-cols-2">
               <div className="space-y-1.5">
-                <Label htmlFor="user-role">Role</Label>
+                <Label htmlFor="user-role">{t('admin.users.dialog.role')}</Label>
                 <Select
                   value={form.role}
                   onValueChange={(val) => setForm((prev) => ({ ...prev, role: val as UserRole }))}
                 >
                   <SelectTrigger id="user-role">
-                    <SelectValue placeholder="Select role" />
+                    <SelectValue placeholder={t('admin.users.dialog.selectRole')} />
                   </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="ADMIN">Administrator</SelectItem>
-                      <SelectItem value="MANAGER">Manager</SelectItem>
-                      <SelectItem value="PROJECT_MANAGER">Project Manager</SelectItem>
-                      <SelectItem value="DEV_COORDINATOR">Dev Coordinator</SelectItem>
-                      <SelectItem value="CONSULTANT_TECHNIQUE">Technical Consultant</SelectItem>
-                      <SelectItem value="CONSULTANT_FONCTIONNEL">Functional Consultant</SelectItem>
+                      <SelectItem value="ADMIN">{t('entities.userRole.ADMIN')}</SelectItem>
+                      <SelectItem value="MANAGER">{t('entities.userRole.MANAGER')}</SelectItem>
+                      <SelectItem value="PROJECT_MANAGER">{t('entities.userRole.PROJECT_MANAGER')}</SelectItem>
+                      <SelectItem value="DEV_COORDINATOR">{t('entities.userRole.DEV_COORDINATOR')}</SelectItem>
+                      <SelectItem value="CONSULTANT_TECHNIQUE">{t('entities.userRole.CONSULTANT_TECHNIQUE')}</SelectItem>
+                      <SelectItem value="CONSULTANT_FONCTIONNEL">{t('entities.userRole.CONSULTANT_FONCTIONNEL')}</SelectItem>
                     </SelectContent>
                   </Select>
               </div>
               <div className="space-y-1.5">
-                <Label htmlFor="user-availability">Availability %</Label>
+                <Label htmlFor="user-availability">{t('admin.users.dialog.availability')}</Label>
                 <Input
                   id="user-availability"
                   type="number"
@@ -490,7 +488,7 @@ export const UsersManagement: React.FC = () => {
             </div>
 
             <div className="space-y-1.5">
-              <Label htmlFor="user-skills">Skills (comma-separated)</Label>
+              <Label htmlFor="user-skills">{t('admin.users.dialog.skills')}</Label>
               <Textarea
                 id="user-skills"
                 rows={3}
@@ -500,7 +498,7 @@ export const UsersManagement: React.FC = () => {
             </div>
 
             <div className="space-y-1.5">
-              <Label htmlFor="user-certifications">Certifications (comma-separated)</Label>
+              <Label htmlFor="user-certifications">{t('admin.users.dialog.certifications')}</Label>
               <Textarea
                 id="user-certifications"
                 rows={2}
@@ -512,7 +510,7 @@ export const UsersManagement: React.FC = () => {
             </div>
 
             <div className="flex items-center justify-between rounded-md border border-border/70 bg-surface-2 p-3">
-              <Label htmlFor="user-active">Active account</Label>
+              <Label htmlFor="user-active">{t('admin.users.dialog.active')}</Label>
               <Switch
                 id="user-active"
                 checked={form.active}
@@ -524,11 +522,11 @@ export const UsersManagement: React.FC = () => {
 
             <DialogFooter>
               <Button type="button" variant="outline" onClick={resetDialog}>
-                Cancel
+                {t('common.cancel')}
               </Button>
               <Button type="submit" disabled={isSubmitting}>
                 <Save className="h-4 w-4" />
-                {isSubmitting ? 'Saving...' : editingUserId ? 'Update User' : 'Create User'}
+                {isSubmitting ? t('admin.users.dialog.saving') : editingUserId ? t('common.edit') : t('common.create')}
               </Button>
             </DialogFooter>
           </form>
@@ -538,17 +536,17 @@ export const UsersManagement: React.FC = () => {
       <AlertDialog open={userPendingDelete !== null} onOpenChange={(open) => !open && setUserPendingDelete(null)}>
         <AlertDialogContent>
           <AlertDialogHeader>
-            <AlertDialogTitle>Delete user</AlertDialogTitle>
+            <AlertDialogTitle>{t('admin.users.deleteDialog.title')}</AlertDialogTitle>
             <AlertDialogDescription>
               {userPendingDelete
-                ? `This will permanently remove "${userPendingDelete.name}" from the current dataset.`
-                : 'This action cannot be undone.'}
+                ? t('admin.users.deleteDialog.desc', { name: userPendingDelete.name })
+                : t('admin.users.deleteDialog.fallback')}
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
-            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogCancel>{t('common.cancel')}</AlertDialogCancel>
             <AlertDialogAction className="bg-destructive text-destructive-foreground hover:bg-destructive/90" onClick={() => void confirmDeleteUser()}>
-              Delete
+              {t('common.delete')}
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
@@ -556,3 +554,4 @@ export const UsersManagement: React.FC = () => {
     </div>
   );
 };
+

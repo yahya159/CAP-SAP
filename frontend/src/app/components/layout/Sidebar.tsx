@@ -1,5 +1,6 @@
 ﻿import React from 'react';
 import { NavLink } from 'react-router';
+import { useTranslation } from 'react-i18next';
 import {
   BarChart3,
   Clock,
@@ -23,7 +24,6 @@ import {
 import { Button } from '../ui/button';
 import { cn } from '../ui/utils';
 import { useAuth } from '../../context/AuthContext';
-import { USER_ROLE_LABELS } from '../../types/entities';
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from '../ui/sheet';
 import {
   getSidebarItemsForRole,
@@ -65,6 +65,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
   onCloseMobile,
   onToggleCollapse,
 }) => {
+  const { t } = useTranslation();
   const { currentUser } = useAuth();
 
   if (!currentUser) return null;
@@ -109,7 +110,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
               variant="ghost"
               size="icon"
               onClick={onToggleCollapse}
-              aria-label={compact ? 'Expand sidebar' : 'Collapse sidebar'}
+              aria-label={compact ? t('common.expandSidebar') : t('common.collapseSidebar')}
             >
               {compact ? <ChevronRight className="h-4 w-4" /> : <ChevronLeft className="h-4 w-4" />}
             </Button>
@@ -121,7 +122,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
             <div key={sectionName} className="mb-5 last:mb-0">
               {!compact && (
                 <p className="mb-2 px-2 text-[11px] font-semibold uppercase tracking-[0.12em] text-muted-foreground">
-                  {sectionName}
+                  {t(`sidebar.sections.${sectionName}`, sectionName)}
                 </p>
               )}
               <div className="space-y-1.5">
@@ -132,7 +133,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
                     <NavLink
                       key={item.path}
                       to={item.path}
-                      title={compact ? item.label : undefined}
+                      title={compact ? t(`sidebar.items.${item.label}`, item.label) : undefined}
                       onClick={() => mobile && onCloseMobile()}
                       className={({ isActive }) =>
                         cn(
@@ -152,7 +153,11 @@ export const Sidebar: React.FC<SidebarProps> = ({
                               isActive ? 'text-primary' : 'text-sidebar-foreground/70'
                             )}
                           />
-                          {!compact && <span className="truncate font-medium">{item.label}</span>}
+                          {!compact && (
+                            <span className="truncate font-medium">
+                              {t(`sidebar.items.${item.label}`, item.label)}
+                            </span>
+                          )}
                         </>
                       )}
                     </NavLink>
@@ -176,7 +181,9 @@ export const Sidebar: React.FC<SidebarProps> = ({
             {(!collapsed || mobile) && (
               <div className="min-w-0">
                 <p className="truncate text-sm font-semibold text-sidebar-foreground">{currentUser.name}</p>
-                <p className="truncate text-xs text-muted-foreground">{USER_ROLE_LABELS[currentUser.role]}</p>
+                <p className="truncate text-xs text-muted-foreground">
+                  {t(`roles.${currentUser.role}`)}
+                </p>
               </div>
             )}
           </div>

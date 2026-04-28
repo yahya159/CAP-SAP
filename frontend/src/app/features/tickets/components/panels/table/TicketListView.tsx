@@ -1,4 +1,5 @@
 import React from 'react';
+import { useTranslation } from 'react-i18next';
 import { AlertOctagon, MessageSquare, Plus, Ticket as TicketIcon } from 'lucide-react';
 import { EmptyState } from '@/app/components/common/EmptyState';
 import { Badge } from '@/app/components/ui/badge';
@@ -14,10 +15,6 @@ import {
 import {
   Ticket,
   TicketStatus,
-  TICKET_COMPLEXITY_LABELS,
-  TICKET_NATURE_LABELS,
-  TICKET_STATUS_LABELS,
-  USER_ROLE_LABELS,
 } from '@/app/types/entities';
 import { TicketActions } from '../../TicketActions';
 import { priorityColor, statusColor } from '../../ticketView.constants';
@@ -48,26 +45,28 @@ export const TicketListView: React.FC<TicketListViewProps> = ({
   resolveProjectName,
   resolveUserName,
 }) => {
+  const { t } = useTranslation();
+
   return (
     <div className="rounded-lg border bg-card overflow-x-auto">
       <Table>
         <TableHeader className="bg-muted/50">
           <TableRow>
-            <TableHead className="px-4">Code</TableHead>
-            <TableHead className="px-4">Title</TableHead>
-            <TableHead className="px-4">WRICEF</TableHead>
-            <TableHead className="px-4">Module</TableHead>
-            <TableHead className="px-4">Complexity</TableHead>
-            <TableHead className="px-4">Nature</TableHead>
-            <TableHead className="px-4">Project</TableHead>
-            <TableHead className="px-4">Status</TableHead>
-            <TableHead className="px-4">Priority</TableHead>
-            <TableHead className="px-4">Est.</TableHead>
-            <TableHead className="px-4">Actual</TableHead>
-            <TableHead className="px-4">Due</TableHead>
-            <TableHead className="px-4">Assigned</TableHead>
-            <TableHead className="px-4">Indicators</TableHead>
-            <TableHead className="px-4">Actions</TableHead>
+            <TableHead className="px-4">{t('tickets.list.table.code')}</TableHead>
+            <TableHead className="px-4">{t('tickets.list.table.title')}</TableHead>
+            <TableHead className="px-4">{t('tickets.list.table.wricef')}</TableHead>
+            <TableHead className="px-4">{t('tickets.list.table.module')}</TableHead>
+            <TableHead className="px-4">{t('tickets.list.table.complexity')}</TableHead>
+            <TableHead className="px-4">{t('tickets.list.table.nature')}</TableHead>
+            <TableHead className="px-4">{t('tickets.list.table.project')}</TableHead>
+            <TableHead className="px-4">{t('tickets.list.table.status')}</TableHead>
+            <TableHead className="px-4">{t('tickets.list.table.priority')}</TableHead>
+            <TableHead className="px-4">{t('tickets.list.table.estimation')}</TableHead>
+            <TableHead className="px-4">{t('tickets.list.table.actual')}</TableHead>
+            <TableHead className="px-4">{t('tickets.list.table.due')}</TableHead>
+            <TableHead className="px-4">{t('tickets.list.table.assigned')}</TableHead>
+            <TableHead className="px-4">{t('tickets.list.table.indicators')}</TableHead>
+            <TableHead className="px-4">{t('tickets.list.table.actions')}</TableHead>
           </TableRow>
         </TableHeader>
         <TableBody>
@@ -79,24 +78,24 @@ export const TicketListView: React.FC<TicketListViewProps> = ({
                 <TableCell className="px-4 py-3 font-medium max-w-[200px] truncate">{ticket.title}</TableCell>
                 <TableCell className="px-4 py-3 text-xs font-mono">{ticket.wricefId ?? '-'}</TableCell>
                 <TableCell className="px-4 py-3">
-                  <Badge variant="outline" className="text-[10px]">{ticket.module ?? '-'}</Badge>
+                  <Badge variant="outline" className="text-[10px]">{ticket.module ? t(`entities.sapModule.${ticket.module}`) : '-'}</Badge>
                 </TableCell>
                 <TableCell className="px-4 py-3">
                   <Badge variant="outline" className={`text-[10px] ${ticket.complexity === 'TRES_COMPLEXE' ? 'border-red-300 text-red-700 dark:text-red-400' : ticket.complexity === 'COMPLEXE' ? 'border-orange-300 text-orange-700 dark:text-orange-400' : ''}`}>
-                    {TICKET_COMPLEXITY_LABELS[ticket.complexity]}
+                    {t(`entities.ticketComplexity.${ticket.complexity}`)}
                   </Badge>
                 </TableCell>
-                <TableCell className="px-4 py-3"><Badge variant="outline">{TICKET_NATURE_LABELS[ticket.nature]}</Badge></TableCell>
+                <TableCell className="px-4 py-3"><Badge variant="outline">{t(`entities.ticketNature.${ticket.nature}`)}</Badge></TableCell>
                 <TableCell className="px-4 py-3 text-sm text-muted-foreground">{resolveProjectName(ticket.projectId)}</TableCell>
-                <TableCell className="px-4 py-3"><Badge className={statusColor[ticket.status]}>{TICKET_STATUS_LABELS[ticket.status]}</Badge></TableCell>
-                <TableCell className="px-4 py-3"><Badge className={priorityColor[ticket.priority]}>{ticket.priority}</Badge></TableCell>
+                <TableCell className="px-4 py-3"><Badge className={statusColor[ticket.status]}>{t(`entities.ticketStatus.${ticket.status}`)}</Badge></TableCell>
+                <TableCell className="px-4 py-3"><Badge className={priorityColor[ticket.priority]}>{t(`tickets.priority.${ticket.priority}`)}</Badge></TableCell>
                 <TableCell className="px-4 py-3 text-sm">{ticket.estimationHours}h</TableCell>
                 <TableCell className="px-4 py-3 text-sm">{ticket.effortHours}h</TableCell>
                 <TableCell className="px-4 py-3 text-sm">{ticket.dueDate ? new Date(ticket.dueDate).toLocaleDateString() : '-'}</TableCell>
                 <TableCell className="px-4 py-3 text-sm">
                   <div>{resolveUserName(ticket.assignedTo)}</div>
-                  {ticket.assignedToRole && <span className="block text-xs text-muted-foreground">{USER_ROLE_LABELS[ticket.assignedToRole]}</span>}
-                  {assignedBy && <span className="block text-[10px] text-muted-foreground border-t border-border/50 pt-0.5 mt-0.5">by: {assignedBy}</span>}
+                  {ticket.assignedToRole && <span className="block text-xs text-muted-foreground">{t(`roles.${ticket.assignedToRole}`)}</span>}
+                  {assignedBy && <span className="block text-[10px] text-muted-foreground border-t border-border/50 pt-0.5 mt-0.5">{t('tickets.details.assignedBy')}: {assignedBy}</span>}
                 </TableCell>
                 <TableCell className="px-4 py-3">
                   <div className="flex items-center gap-1.5">
@@ -124,12 +123,12 @@ export const TicketListView: React.FC<TicketListViewProps> = ({
               <TableCell colSpan={15} className="h-64 text-center">
                 <EmptyState
                   icon={TicketIcon}
-                  title="No tickets found"
-                  description="There are no tickets matching your current filters. Try adjusting your search or create a new ticket."
+                  title={t('tickets.list.empty.title')}
+                  description={t('tickets.list.empty.description')}
                   action={
                     <Button onClick={onCreateTicket} variant="outline" className="mt-2">
                       <Plus className="mr-2 h-4 w-4" />
-                      Create Ticket
+                      {t('tickets.list.empty.createTicket')}
                     </Button>
                   }
                 />

@@ -1,5 +1,6 @@
 import React from 'react';
 import { PageHeader } from '@/app/components/common/PageHeader';
+import { useTranslation } from 'react-i18next';
 import { useManagerTicketsViewModel } from '../hooks';
 import { TicketCreateDialog } from './TicketCreateDialog';
 import { TicketDrawer } from './TicketDrawer';
@@ -9,15 +10,16 @@ import { TicketTable } from './TicketTable';
 
 export const ManagerTicketsView: React.FC = () => {
   const vm = useManagerTicketsViewModel();
+  const { t } = useTranslation();
 
   return (
     <div className="min-h-screen bg-background">
       <PageHeader
-        title="Tickets Management"
-        subtitle="View, create, and manage all tickets across projects"
+        title={t('tickets.list.title')}
+        subtitle={t('tickets.list.subtitle')}
         breadcrumbs={[
-          { label: 'Home', path: `${vm.roleBasePath}/dashboard` },
-          { label: 'Tickets' },
+          { label: t('common.home'), path: `${vm.roleBasePath}/dashboard` },
+          { label: t('common.tickets') },
         ]}
       />
 

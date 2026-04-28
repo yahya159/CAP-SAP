@@ -1,4 +1,5 @@
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import {
   AlertCircle,
   CheckCircle2,
@@ -50,10 +51,6 @@ import {
   type WricefValidationStatus,
   type SAPModule,
   type TicketComplexity,
-  WRICEF_TYPE_LABELS,
-  WRICEF_VALIDATION_STATUS_LABELS,
-  SAP_MODULE_LABELS,
-  TICKET_COMPLEXITY_LABELS,
 } from '../../types/entities';
 
 // ── helpers ────────────────────────────────────────────────────────────────
@@ -67,7 +64,21 @@ const STATUS_COLORS: Record<WricefValidationStatus, string> = {
 
 const ALL_WRICEF_TYPES: WricefType[] = ['W', 'R', 'I', 'C', 'E', 'F'];
 const ALL_SAP_MODULES: SAPModule[] = [
-  'FI','CO','MM','SD','PP','PM','QM','HR','PS','WM','BASIS','ABAP','FIORI','BW','OTHER',
+  'FI',
+  'CO',
+  'MM',
+  'SD',
+  'PP',
+  'PM',
+  'QM',
+  'HR',
+  'PS',
+  'WM',
+  'BASIS',
+  'ABAP',
+  'FIORI',
+  'BW',
+  'OTHER',
 ];
 const ALL_COMPLEXITIES: TicketComplexity[] = ['SIMPLE', 'MOYEN', 'COMPLEXE', 'TRES_COMPLEXE'];
 
@@ -101,6 +112,7 @@ const STATUS_ORDER: Record<WricefValidationStatus, number> = {
 // ════════════════════════════════════════════════════════════════════════════
 
 export const WricefManagement: React.FC = () => {
+  const { t } = useTranslation();
 
   // ── data state ──
   const [wricefs, setWricefs] = useState<Wricef[]>([]);
@@ -154,23 +166,31 @@ export const WricefManagement: React.FC = () => {
       }
       setTicketsByWricef(tickMap);
     } catch {
-      toast.error('Failed to load data');
+      toast.error(t('dashboard.wricef.toasts.loadError'));
     } finally {
       setLoading(false);
     }
-  }, []);
+  }, [t]);
 
-  useEffect(() => { void loadData(); }, [loadData]);
+  useEffect(() => {
+    void loadData();
+  }, [loadData]);
 
   const projectName = useCallback(
     (id: string) => projects.find((p) => p.id === id)?.name ?? id,
-    [projects],
+    [projects]
   );
 
   // ── create WRICEF ──
   const handleCreateWricef = async () => {
-    if (!newProjectId) { toast.error('Select a project'); return; }
-    if (!newSourceFileName.trim()) { toast.error('Enter a source file name'); return; }
+    if (!newProjectId) {
+      toast.error(t('dashboard.wricef.toasts.validation.selectProject'));
+      return;
+    }
+    if (!newSourceFileName.trim()) {
+      toast.error(t('dashboard.wricef.toasts.validation.enterSourceFile'));
+      return;
+    }
     setCreating(true);
     try {
       await WricefsAPI.create({
@@ -180,13 +200,13 @@ export const WricefManagement: React.FC = () => {
         status: 'DRAFT',
         autoCreated: false,
       });
-      toast.success('WRICEF created');
+      toast.success(t('dashboard.wricef.toasts.createSuccess'));
       setCreateDialogOpen(false);
       setNewProjectId('');
       setNewSourceFileName('');
       await loadData();
     } catch {
-      toast.error('Failed to create WRICEF');
+      toast.error(t('dashboard.wricef.toasts.createError'));
     } finally {
       setCreating(false);
     }
@@ -194,7 +214,10 @@ export const WricefManagement: React.FC = () => {
 
   // ── add object to wricef ──
   const handleAddObject = async (wricefId: string) => {
-    if (!objectForm.title.trim()) { toast.error('Object title is required'); return; }
+    if (!objectForm.title.trim()) {
+      toast.error(t('dashboard.wricef.toasts.validation.enterObjectTitle'));
+      return;
+    }
     const wricef = wricefs.find((w) => w.id === wricefId);
     if (!wricef) return;
 
@@ -210,12 +233,12 @@ export const WricefManagement: React.FC = () => {
         module: objectForm.module,
         status: 'DRAFT',
       });
-      toast.success('Object added');
+      toast.success(t('dashboard.wricef.toasts.objectAdded'));
       setAddObjectTarget(null);
       setObjectForm({ ...EMPTY_OBJECT });
       await loadData();
     } catch {
-      toast.error('Failed to add object');
+      toast.error(t('dashboard.wricef.toasts.objectAddError'));
     } finally {
       setAddingObject(false);
     }
@@ -225,10 +248,10 @@ export const WricefManagement: React.FC = () => {
   const handleDeleteObject = async (objId: string) => {
     try {
       await WricefObjectsAPI.delete(objId);
-      toast.success('Object deleted');
+      toast.success(t('dashboard.wricef.toasts.objectDeleted'));
       await loadData();
     } catch {
-      toast.error('Failed to delete object');
+      toast.error(t('dashboard.wricef.toasts.objectDeleteError'));
     }
   };
 
@@ -236,18 +259,18 @@ export const WricefManagement: React.FC = () => {
   const handleSubmit = async (wricef: Wricef) => {
     const objects = objectsByWricef[wricef.id] ?? [];
     if (objects.length === 0) {
-      toast.error('Add at least one object before submitting');
+      toast.error(t('dashboard.wricef.toasts.validation.minOneObject'));
       return;
     }
     setSubmitting(wricef.id);
     try {
       await WricefsAPI.submitWricef(wricef.id);
-      toast.success('WRICEF submitted for validation', {
-        description: `"${wricef.sourceFileName}" is now pending approval.`,
+      toast.success(t('dashboard.wricef.toasts.submitSuccess'), {
+        description: t('dashboard.wricef.toasts.submitDescription', { name: wricef.sourceFileName }),
       });
       await loadData();
     } catch {
-      toast.error('Failed to submit WRICEF');
+      toast.error(t('dashboard.wricef.toasts.submitError'));
     } finally {
       setSubmitting(null);
     }
@@ -257,10 +280,10 @@ export const WricefManagement: React.FC = () => {
   const handleDeleteWricef = async (wricef: Wricef) => {
     try {
       await WricefsAPI.delete(wricef.id);
-      toast.success('WRICEF deleted');
+      toast.success(t('dashboard.wricef.toasts.deleteSuccess'));
       await loadData();
     } catch {
-      toast.error('Failed to delete WRICEF');
+      toast.error(t('dashboard.wricef.toasts.deleteError'));
     }
   };
 
@@ -268,7 +291,8 @@ export const WricefManagement: React.FC = () => {
   const toggleExpand = (id: string) => {
     setExpandedWricefs((prev) => {
       const next = new Set(prev);
-      if (next.has(id)) next.delete(id); else next.add(id);
+      if (next.has(id)) next.delete(id);
+      else next.add(id);
       return next;
     });
   };
@@ -276,7 +300,7 @@ export const WricefManagement: React.FC = () => {
   // ── sorting: draft first, then pending, then validated, then rejected ──
   const sortedWricefs = useMemo(
     () => [...wricefs].sort((a, b) => STATUS_ORDER[a.status] - STATUS_ORDER[b.status]),
-    [wricefs],
+    [wricefs]
   );
 
   // ── counts ──
@@ -297,16 +321,16 @@ export const WricefManagement: React.FC = () => {
   return (
     <div className="min-h-screen bg-transparent">
       <PageHeader
-        title="WRICEF Management"
-        subtitle="Create, manage, and submit WRICEFs for project manager approval"
+        title={t('dashboard.wricef.title')}
+        subtitle={t('dashboard.wricef.subtitle')}
         breadcrumbs={[
-          { label: 'Home', path: '/manager/dashboard' },
-          { label: 'WRICEF Management' },
+          { label: t('documentation.home'), path: '/manager/dashboard' },
+          { label: t('dashboard.wricef.title') },
         ]}
         actions={
           <Button onClick={() => setCreateDialogOpen(true)}>
             <Plus className="mr-1.5 h-4 w-4" />
-            New WRICEF
+            {t('dashboard.wricef.actions.newWricef')}
           </Button>
         }
       />
@@ -314,10 +338,30 @@ export const WricefManagement: React.FC = () => {
       {/* ── KPI row ── */}
       <div className="grid grid-cols-2 gap-3 p-4 sm:grid-cols-4 sm:p-6 lg:p-8">
         {[
-          { label: 'Draft', count: drafts, icon: FileText, color: 'text-slate-500' },
-          { label: 'Pending', count: pending, icon: Clock, color: 'text-amber-500' },
-          { label: 'Validated', count: validated, icon: CheckCircle2, color: 'text-emerald-500' },
-          { label: 'Rejected', count: rejected, icon: XCircle, color: 'text-red-500' },
+          {
+            label: t('dashboard.wricef.stats.draft'),
+            count: drafts,
+            icon: FileText,
+            color: 'text-slate-500',
+          },
+          {
+            label: t('dashboard.wricef.stats.pending'),
+            count: pending,
+            icon: Clock,
+            color: 'text-amber-500',
+          },
+          {
+            label: t('dashboard.wricef.stats.validated'),
+            count: validated,
+            icon: CheckCircle2,
+            color: 'text-emerald-500',
+          },
+          {
+            label: t('dashboard.wricef.stats.rejected'),
+            count: rejected,
+            icon: XCircle,
+            color: 'text-red-500',
+          },
         ].map((kpi) => (
           <Card key={kpi.label}>
             <CardContent className="flex items-center gap-3 p-4">
@@ -337,9 +381,9 @@ export const WricefManagement: React.FC = () => {
           <Card>
             <CardContent className="flex flex-col items-center justify-center py-12 text-center">
               <Layers className="mb-3 h-10 w-10 text-primary/40" />
-              <p className="text-sm font-medium">No WRICEFs yet</p>
+              <p className="text-sm font-medium">{t('dashboard.wricef.list.empty')}</p>
               <p className="mt-1 text-xs text-muted-foreground">
-                Click "New WRICEF" to create your first one.
+                {t('dashboard.wricef.list.emptyDescription')}
               </p>
             </CardContent>
           </Card>
@@ -367,25 +411,25 @@ export const WricefManagement: React.FC = () => {
                       )}
                       <div className="min-w-0">
                         <CardTitle className="text-sm font-semibold">
-                          {w.sourceFileName || 'Untitled WRICEF'}
+                          {w.sourceFileName || t('dashboard.wricef.list.untitled')}
                         </CardTitle>
                         <div className="mt-1 flex flex-wrap items-center gap-2 text-xs text-muted-foreground">
                           <Badge className={`text-[10px] ${STATUS_COLORS[w.status]}`}>
-                            {WRICEF_VALIDATION_STATUS_LABELS[w.status]}
+                            {t(`entities.wricefValidationStatus.${w.status}`)}
                           </Badge>
-                          <span>Project: {projectName(w.projectId)}</span>
-                          <span>{objects.length} object(s)</span>
+                          <span>{t('dashboard.wricef.list.project', { name: projectName(w.projectId) })}</span>
+                          <span>{t('dashboard.wricef.list.objects', { count: objects.length })}</span>
                           {wricefTickets.length > 0 && (
-                            <span>{wricefTickets.length} ticket(s)</span>
+                            <span>{t('dashboard.wricef.list.tickets', { count: wricefTickets.length })}</span>
                           )}
                           {w.importedAt && (
-                            <span>Created {new Date(w.importedAt).toLocaleDateString()}</span>
+                            <span>{t('dashboard.wricef.list.created', { date: new Date(w.importedAt).toLocaleDateString() })}</span>
                           )}
                         </div>
                         {w.status === 'REJECTED' && w.rejectionReason && (
                           <div className="mt-1.5 flex items-start gap-1 text-xs text-red-600 dark:text-red-400">
                             <AlertCircle className="mt-0.5 h-3 w-3 shrink-0" />
-                            <span>Rejected: {w.rejectionReason}</span>
+                            <span>{t('dashboard.wricef.list.rejected', { reason: w.rejectionReason })}</span>
                           </div>
                         )}
                       </div>
@@ -402,10 +446,10 @@ export const WricefManagement: React.FC = () => {
                             onClick={() => void handleSubmit(w)}
                           >
                             {submitting === w.id ? (
-                              'Submitting...'
+                              t('dashboard.wricef.buttons.submitting')
                             ) : (
                               <>
-                                <Send className="mr-1 h-3.5 w-3.5" /> Submit
+                                <Send className="mr-1 h-3.5 w-3.5" /> {t('dashboard.wricef.buttons.submit')}
                               </>
                             )}
                           </Button>
@@ -428,8 +472,8 @@ export const WricefManagement: React.FC = () => {
                   <CardContent className="border-t px-4 pb-4 pt-3">
                     {objects.length === 0 ? (
                       <p className="py-4 text-center text-xs text-muted-foreground">
-                        No objects yet.{' '}
-                        {isDraft && 'Add your first object below.'}
+                        {t('wricefValidation.noObjects')}{' '}
+                        {isDraft && t('dashboard.wricef.list.emptyDescription')}
                       </p>
                     ) : (
                       <div className="space-y-2">
@@ -445,11 +489,11 @@ export const WricefManagement: React.FC = () => {
                                 <div className="min-w-0 flex-1">
                                   <div className="flex items-center gap-2">
                                     <Badge variant="outline" className="shrink-0 text-[10px]">
-                                      {WRICEF_TYPE_LABELS[obj.type]}
+                                      {t(`entities.wricefType.${obj.type}`)}
                                     </Badge>
                                     <span className="text-sm font-medium">{obj.title}</span>
                                     <Badge className={`text-[10px] ${STATUS_COLORS[obj.status]}`}>
-                                      {WRICEF_VALIDATION_STATUS_LABELS[obj.status]}
+                                      {t(`entities.wricefValidationStatus.${obj.status}`)}
                                     </Badge>
                                   </div>
                                   {obj.description && (
@@ -458,10 +502,10 @@ export const WricefManagement: React.FC = () => {
                                     </p>
                                   )}
                                   <div className="mt-1.5 flex flex-wrap gap-2 text-[10px] text-muted-foreground">
-                                    <span>Module: {SAP_MODULE_LABELS[obj.module] ?? obj.module}</span>
-                                    <span>Complexity: {TICKET_COMPLEXITY_LABELS[obj.complexity]}</span>
+                                    <span>{t('wricefValidation.moduleLabel')} {t(`entities.sapModule.${obj.module}`)}</span>
+                                    <span>{t('wricefValidation.complexityLabel')} {t(`entities.ticketComplexity.${obj.complexity}`)}</span>
                                     {objTickets.length > 0 && (
-                                      <span>{objTickets.length} ticket(s)</span>
+                                      <span>{t('dashboard.wricef.list.tickets', { count: objTickets.length })}</span>
                                     )}
                                   </div>
                                   {obj.status === 'REJECTED' && obj.rejectionReason && (
@@ -487,7 +531,7 @@ export const WricefManagement: React.FC = () => {
                               {objTickets.length > 0 && (
                                 <div className="mt-2 space-y-1 border-t pt-2">
                                   <p className="text-[10px] font-semibold uppercase text-muted-foreground">
-                                    Linked Tickets
+                                    {t('wricefValidation.linkedTickets')}
                                   </p>
                                   {objTickets.map((t) => (
                                     <div
@@ -518,11 +562,11 @@ export const WricefManagement: React.FC = () => {
                         {addObjectTarget === w.id ? (
                           <div className="space-y-3 rounded-lg border border-dashed border-primary/40 bg-primary/5 p-3">
                             <p className="text-xs font-semibold text-primary">
-                              Add Object to {w.sourceFileName}
+                              {t('dashboard.wricef.form.addObjectTitle', { name: w.sourceFileName })}
                             </p>
                             <div className="grid gap-3 sm:grid-cols-2">
                               <div className="space-y-1">
-                                <Label className="text-xs">Type *</Label>
+                                <Label className="text-xs">{t('dashboard.wricef.form.type')}</Label>
                                 <Select
                                   value={objectForm.type}
                                   onValueChange={(v) =>
@@ -533,9 +577,9 @@ export const WricefManagement: React.FC = () => {
                                     <SelectValue />
                                   </SelectTrigger>
                                   <SelectContent>
-                                    {ALL_WRICEF_TYPES.map((t) => (
-                                      <SelectItem key={t} value={t}>
-                                        {WRICEF_TYPE_LABELS[t]}
+                                    {ALL_WRICEF_TYPES.map((t_code) => (
+                                      <SelectItem key={t_code} value={t_code}>
+                                        {t(`entities.wricefType.${t_code}`)}
                                       </SelectItem>
                                     ))}
                                   </SelectContent>
@@ -543,10 +587,10 @@ export const WricefManagement: React.FC = () => {
                               </div>
 
                               <div className="space-y-1">
-                                <Label className="text-xs">Title *</Label>
+                                <Label className="text-xs">{t('dashboard.wricef.form.title')}</Label>
                                 <Input
                                   className="h-8 text-xs"
-                                  placeholder="Object title"
+                                  placeholder={t('dashboard.wricef.form.title')}
                                   value={objectForm.title}
                                   onChange={(e) =>
                                     setObjectForm((p) => ({ ...p, title: e.target.value }))
@@ -555,7 +599,7 @@ export const WricefManagement: React.FC = () => {
                               </div>
 
                               <div className="space-y-1">
-                                <Label className="text-xs">Module</Label>
+                                <Label className="text-xs">{t('dashboard.wricef.form.module')}</Label>
                                 <Select
                                   value={objectForm.module}
                                   onValueChange={(v) =>
@@ -568,7 +612,7 @@ export const WricefManagement: React.FC = () => {
                                   <SelectContent>
                                     {ALL_SAP_MODULES.map((m) => (
                                       <SelectItem key={m} value={m}>
-                                        {SAP_MODULE_LABELS[m]}
+                                        {t(`entities.sapModule.${m}`)}
                                       </SelectItem>
                                     ))}
                                   </SelectContent>
@@ -576,7 +620,7 @@ export const WricefManagement: React.FC = () => {
                               </div>
 
                               <div className="space-y-1">
-                                <Label className="text-xs">Complexity</Label>
+                                <Label className="text-xs">{t('dashboard.wricef.form.complexity')}</Label>
                                 <Select
                                   value={objectForm.complexity}
                                   onValueChange={(v) =>
@@ -592,7 +636,7 @@ export const WricefManagement: React.FC = () => {
                                   <SelectContent>
                                     {ALL_COMPLEXITIES.map((c) => (
                                       <SelectItem key={c} value={c}>
-                                        {TICKET_COMPLEXITY_LABELS[c]}
+                                        {t(`entities.ticketComplexity.${c}`)}
                                       </SelectItem>
                                     ))}
                                   </SelectContent>
@@ -600,11 +644,11 @@ export const WricefManagement: React.FC = () => {
                               </div>
 
                               <div className="space-y-1 sm:col-span-2">
-                                <Label className="text-xs">Description</Label>
+                                <Label className="text-xs">{t('dashboard.wricef.form.description')}</Label>
                                 <Textarea
                                   className="text-xs"
                                   rows={2}
-                                  placeholder="Describe the object..."
+                                  placeholder={t('dashboard.wricef.form.descriptionPlaceholder')}
                                   value={objectForm.description}
                                   onChange={(e) =>
                                     setObjectForm((p) => ({
@@ -625,14 +669,14 @@ export const WricefManagement: React.FC = () => {
                                   setObjectForm({ ...EMPTY_OBJECT });
                                 }}
                               >
-                                Cancel
+                                {t('dashboard.wricef.buttons.cancel')}
                               </Button>
                               <Button
                                 size="sm"
                                 disabled={addingObject}
                                 onClick={() => void handleAddObject(w.id)}
                               >
-                                {addingObject ? 'Adding...' : 'Add Object'}
+                                {addingObject ? t('dashboard.wricef.buttons.adding') : t('dashboard.wricef.buttons.addObject')}
                               </Button>
                             </div>
                           </div>
@@ -647,7 +691,7 @@ export const WricefManagement: React.FC = () => {
                             }}
                           >
                             <PackagePlus className="mr-1.5 h-3.5 w-3.5" />
-                            Add Object
+                            {t('dashboard.wricef.buttons.addObject')}
                           </Button>
                         )}
                       </>
@@ -666,18 +710,18 @@ export const WricefManagement: React.FC = () => {
       <Dialog open={createDialogOpen} onOpenChange={setCreateDialogOpen}>
         <DialogContent className="sm:max-w-md">
           <DialogHeader>
-            <DialogTitle>Create WRICEF</DialogTitle>
+            <DialogTitle>{t('dashboard.wricef.dialog.title')}</DialogTitle>
             <DialogDescription>
-              Create a new WRICEF document. You can add objects to it after creation.
+              {t('dashboard.wricef.dialog.description')}
             </DialogDescription>
           </DialogHeader>
 
           <div className="space-y-4 py-2">
             <div className="space-y-1.5">
-              <Label htmlFor="wricef-project">Project *</Label>
+              <Label htmlFor="wricef-project">{t('dashboard.wricef.dialog.project')}</Label>
               <Select value={newProjectId} onValueChange={setNewProjectId}>
                 <SelectTrigger id="wricef-project">
-                  <SelectValue placeholder="Select a project" />
+                  <SelectValue placeholder={t('dashboard.wricef.dialog.projectPlaceholder')} />
                 </SelectTrigger>
                 <SelectContent>
                   {projects.map((p) => (
@@ -690,10 +734,10 @@ export const WricefManagement: React.FC = () => {
             </div>
 
             <div className="space-y-1.5">
-              <Label htmlFor="wricef-source-file">Source File Name *</Label>
+              <Label htmlFor="wricef-source-file">{t('dashboard.wricef.dialog.sourceFile')}</Label>
               <Input
                 id="wricef-source-file"
-                placeholder="e.g. S4HANA_Migration_WRICEF.xlsx"
+                placeholder={t('dashboard.wricef.dialog.sourceFilePlaceholder')}
                 value={newSourceFileName}
                 onChange={(e) => setNewSourceFileName(e.target.value)}
               />
@@ -706,10 +750,10 @@ export const WricefManagement: React.FC = () => {
               onClick={() => setCreateDialogOpen(false)}
               disabled={creating}
             >
-              Cancel
+              {t('dashboard.wricef.buttons.cancel')}
             </Button>
             <Button onClick={() => void handleCreateWricef()} disabled={creating}>
-              {creating ? 'Creating...' : 'Create'}
+              {creating ? t('dashboard.wricef.dialog.creating') : t('dashboard.wricef.dialog.create')}
             </Button>
           </DialogFooter>
         </DialogContent>

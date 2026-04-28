@@ -3,7 +3,8 @@ import { Badge } from '@/app/components/ui/badge';
 import { Button } from '@/app/components/ui/button';
 import { CheckCircle2, Circle, Reply } from 'lucide-react';
 import type { TicketComment, User } from '@/app/types/entities';
-import { COMMENT_TYPE_LABELS, USER_ROLE_LABELS } from '@/app/types/entities';
+import { COMMENT_TYPE_LABELS } from '@/app/types/entities';
+import { useTranslation } from 'react-i18next';
 import { commentTypeBadgeClass } from '@/app/features/comments/model';
 
 interface CommentBubbleProps {
@@ -40,6 +41,7 @@ export const CommentBubble: React.FC<CommentBubbleProps> = ({
   const isOwn = comment.authorId === currentUserId;
   const canResolve = isOwn || MANAGER_ROLES.has(currentRole);
   const showResolved = comment.commentType === 'BLOCKER' || comment.commentType === 'QUESTION';
+  const { t } = useTranslation();
 
   const bubbleBase = comment.isInternal
     ? 'border-l-4 border-amber-400 bg-amber-50 dark:bg-amber-950/30'
@@ -59,7 +61,7 @@ export const CommentBubble: React.FC<CommentBubbleProps> = ({
         )}
         <span className="font-medium text-xs">{author?.name ?? 'Unknown'}</span>
         <Badge variant="outline" className="text-[9px] px-1 py-0">
-          {author?.role ? USER_ROLE_LABELS[author.role] : '-'}
+          {author?.role ? t(`roles.${author.role}`) : '-'}
         </Badge>
         {comment.commentType !== 'GENERAL' && (
           <Badge className={`text-[9px] px-1 py-0 ${commentTypeBadgeClass[comment.commentType]}`}>
@@ -67,7 +69,7 @@ export const CommentBubble: React.FC<CommentBubbleProps> = ({
           </Badge>
         )}
         {comment.isInternal && (
-          <Badge className="text-[9px] px-1 py-0 bg-amber-200 text-amber-900">Internal</Badge>
+          <Badge className="text-[9px] px-1 py-0 bg-amber-200 text-amber-900">{t('comments.internal')}</Badge>
         )}
         <span className="text-[10px] text-muted-foreground ml-auto">
           {formatTime(comment.createdAt)}
@@ -85,7 +87,7 @@ export const CommentBubble: React.FC<CommentBubbleProps> = ({
             onClick={() => onReply(comment.id)}
           >
             <Reply className="h-3 w-3 mr-1" />
-            Reply
+            {t('comments.reply')}
           </Button>
         )}
         {showResolved && canResolve && onToggleResolve && (
@@ -100,7 +102,7 @@ export const CommentBubble: React.FC<CommentBubbleProps> = ({
             ) : (
               <Circle className="h-3 w-3 mr-1" />
             )}
-            {comment.resolved ? 'Resolved' : 'Mark resolved'}
+            {comment.resolved ? t('comments.resolved') : t('comments.markResolved')}
           </Button>
         )}
       </div>

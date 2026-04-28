@@ -1,4 +1,5 @@
 import React from 'react';
+import { useTranslation } from 'react-i18next';
 import { Input } from '@/app/components/ui/input';
 import { Label } from '@/app/components/ui/label';
 import {
@@ -12,7 +13,6 @@ import {
   SAPModule,
   SAP_MODULE_LABELS,
   TicketNature,
-  TICKET_NATURE_LABELS,
 } from '@/app/types/entities';
 import type { TicketCreateDialogViewModel } from '../../TicketCreateDialog';
 
@@ -21,15 +21,16 @@ interface TicketCreateCoreFieldsProps {
 }
 
 export const TicketCreateCoreFields: React.FC<TicketCreateCoreFieldsProps> = ({ vm }) => {
+  const { t } = useTranslation();
   const isFuncConsultant = vm.currentUserRole === 'CONSULTANT_FONCTIONNEL';
 
   return (
     <>
       <div className="space-y-1.5">
-        <Label>Project *</Label>
+        <Label>{t('tickets.create.project')}</Label>
         <Select value={vm.form.projectId} onValueChange={(value) => vm.onFormChange({ ...vm.form, projectId: value })}>
           <SelectTrigger>
-            <SelectValue placeholder="Select project" />
+            <SelectValue placeholder={t('tickets.create.selectProject')} />
           </SelectTrigger>
           <SelectContent>
             {vm.projects.map((project) => (
@@ -43,10 +44,10 @@ export const TicketCreateCoreFields: React.FC<TicketCreateCoreFieldsProps> = ({ 
       {/* Functional Consultants cannot assign — Manager assigns after approval */}
       {!isFuncConsultant && (
         <div className="space-y-1.5">
-          <Label>Assign To</Label>
+          <Label>{t('tickets.create.assignTo')}</Label>
           <Select value={vm.form.assignedTo} onValueChange={(value) => vm.onFormChange({ ...vm.form, assignedTo: value })}>
             <SelectTrigger>
-              <SelectValue placeholder="Unassigned" />
+              <SelectValue placeholder={t('tickets.create.unassigned')} />
             </SelectTrigger>
             <SelectContent>
               {vm.users.filter((user) => user.role !== 'ADMIN').map((user) => (
@@ -59,14 +60,14 @@ export const TicketCreateCoreFields: React.FC<TicketCreateCoreFieldsProps> = ({ 
         </div>
       )}
       <div className="space-y-1.5 sm:col-span-2">
-        <Label>Title *</Label>
+        <Label>{t('tickets.create.ticketTitle')}</Label>
         <Input value={vm.form.title} onChange={(event) => vm.onFormChange({ ...vm.form, title: event.target.value })} />
       </div>
       <div className="space-y-1.5 flex flex-col justify-end">
         <div className="flex items-center justify-between">
-          <Label>{vm.isManualWricef ? 'WRICEF ID' : 'Existing Object'}</Label>
+          <Label>{vm.isManualWricef ? t('tickets.create.wricefId') : t('tickets.create.existingObject')}</Label>
           <button type="button" onClick={() => vm.onManualWricefChange(!vm.isManualWricef)} className="text-[10px] text-primary hover:underline hover:text-primary/80">
-            {vm.isManualWricef ? 'Select Existing Object' : 'Manual Entry'}
+            {vm.isManualWricef ? t('tickets.create.selectExisting') : t('tickets.create.manualEntry')}
           </button>
         </div>
         {!vm.isManualWricef ? (
@@ -82,7 +83,7 @@ export const TicketCreateCoreFields: React.FC<TicketCreateCoreFieldsProps> = ({ 
             }}
           >
             <SelectTrigger>
-              <SelectValue placeholder="Select imported object" />
+              <SelectValue placeholder={t('tickets.create.selectImported')} />
             </SelectTrigger>
             <SelectContent>
               {vm.wricefObjects.length > 0 ? (
@@ -92,7 +93,7 @@ export const TicketCreateCoreFields: React.FC<TicketCreateCoreFieldsProps> = ({ 
                   </SelectItem>
                 ))
               ) : (
-                <div className="px-3 py-4 text-center text-sm text-muted-foreground">No objects imported for this project.</div>
+                <div className="px-3 py-4 text-center text-sm text-muted-foreground">{t('tickets.create.noObjects')}</div>
               )}
             </SelectContent>
           </Select>
@@ -101,7 +102,7 @@ export const TicketCreateCoreFields: React.FC<TicketCreateCoreFieldsProps> = ({ 
         )}
       </div>
       <div className="space-y-1.5">
-        <Label>Module *</Label>
+        <Label>{t('tickets.create.module')}</Label>
         <Select value={vm.form.module} onValueChange={(value) => vm.onFormChange({ ...vm.form, module: value as SAPModule })}>
           <SelectTrigger>
             <SelectValue />
@@ -109,14 +110,14 @@ export const TicketCreateCoreFields: React.FC<TicketCreateCoreFieldsProps> = ({ 
           <SelectContent>
             {(Object.keys(SAP_MODULE_LABELS) as SAPModule[]).map((module) => (
               <SelectItem key={module} value={module}>
-                {SAP_MODULE_LABELS[module]}
+                {t(`entities.sapModule.${module}`)}
               </SelectItem>
             ))}
           </SelectContent>
         </Select>
       </div>
       <div className="space-y-1.5">
-        <Label>Nature *</Label>
+        <Label>{t('tickets.create.nature')}</Label>
         <Select value={vm.form.nature} onValueChange={(value) => vm.onFormChange({ ...vm.form, nature: value as TicketNature })}>
           <SelectTrigger>
             <SelectValue />
@@ -124,7 +125,7 @@ export const TicketCreateCoreFields: React.FC<TicketCreateCoreFieldsProps> = ({ 
           <SelectContent>
             {(['WORKFLOW', 'FORMULAIRE', 'PROGRAMME', 'ENHANCEMENT', 'MODULE', 'REPORT'] as TicketNature[]).map((nature) => (
               <SelectItem key={nature} value={nature}>
-                {TICKET_NATURE_LABELS[nature]}
+                {t(`entities.ticketNature.${nature}`)}
               </SelectItem>
             ))}
           </SelectContent>

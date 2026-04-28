@@ -1,4 +1,5 @@
 import React, { useEffect, useMemo, useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { PageHeader } from '../../components/common/PageHeader';import { ProjectsAPI } from '../../services/odata/projectsApi';
 import { TicketsAPI } from '../../services/odata/ticketsApi';
 import { UsersAPI } from '../../services/odata/usersApi';
@@ -8,6 +9,7 @@ import { EmptyState } from '../../components/common/EmptyState';
 import { FolderKanban } from 'lucide-react';
 
 export const MyProjects: React.FC = () => {
+  const { t } = useTranslation();
   const { currentUser } = useAuth();
   const [projects, setProjects] = useState<Project[]>([]);
   const [tickets, setTickets] = useState<Ticket[]>([]);
@@ -65,22 +67,22 @@ export const MyProjects: React.FC = () => {
   return (
     <div className="min-h-screen bg-background">
       <PageHeader
-        title="My Projects"
-        subtitle="Read-only overview of your assigned projects and tickets"
+        title={t('consultant.myProjects.title')}
+        subtitle={t('consultant.myProjects.subtitle')}
         breadcrumbs={[
-          { label: 'Home', path: '/consultant-tech/dashboard' },
-          { label: 'My Projects' },
+          { label: t('common.home'), path: '/consultant-tech/dashboard' },
+          { label: t('consultant.myProjects.title') },
         ]}
       />
 
       <div className="p-6">
         {loading ? (
-          <div className="text-muted-foreground">Loading projects...</div>
+          <div className="text-muted-foreground">{t('consultant.myProjects.loading')}</div>
         ) : projectsWithStats.length === 0 ? (
           <EmptyState
             icon={FolderKanban}
-            title="No projects assigned"
-            description="You currently don't have any projects assigned to you. When a manager assigns you to a project, it will appear here."
+            title={t('consultant.myProjects.emptyTitle')}
+            description={t('consultant.myProjects.emptyDesc')}
             className="mt-8"
           />
         ) : (
@@ -94,11 +96,11 @@ export const MyProjects: React.FC = () => {
 
                 <div className="grid grid-cols-2 gap-3 text-sm">
                   <div className="p-3 rounded border border-border">
-                    <p className="text-muted-foreground text-xs">Manager</p>
+                    <p className="text-muted-foreground text-xs">{t('consultant.myProjects.manager')}</p>
                     <p className="font-medium text-foreground">{manager?.name ?? 'Unknown'}</p>
                   </div>
                   <div className="p-3 rounded border border-border">
-                    <p className="text-muted-foreground text-xs">Period</p>
+                    <p className="text-muted-foreground text-xs">{t('consultant.myProjects.period')}</p>
                     <p className="font-medium text-foreground">
                       {new Date(project.startDate).toLocaleDateString()} -{' '}
                       {new Date(project.endDate).toLocaleDateString()}
@@ -108,7 +110,7 @@ export const MyProjects: React.FC = () => {
 
                 <div>
                   <div className="flex justify-between text-sm mb-1">
-                    <span className="text-muted-foreground">My Progress</span>
+                    <span className="text-muted-foreground">{t('consultant.myProjects.myProgress')}</span>
                     <span className="font-medium text-foreground">{progress.toFixed(0)}%</span>
                   </div>
                   <div className="w-full h-2 rounded-full bg-muted">
@@ -122,15 +124,15 @@ export const MyProjects: React.FC = () => {
                 <div className="grid grid-cols-3 gap-2">
                   <div className="rounded border border-border p-2 text-center">
                     <div className="text-xl font-semibold text-foreground">{projectTickets.length}</div>
-                    <div className="text-xs text-muted-foreground">Assigned</div>
+                    <div className="text-xs text-muted-foreground">{t('consultant.myProjects.assigned')}</div>
                   </div>
                   <div className="rounded border border-border p-2 text-center">
                     <div className="text-xl font-semibold text-primary">{done}</div>
-                    <div className="text-xs text-muted-foreground">Done</div>
+                    <div className="text-xs text-muted-foreground">{t('consultant.myProjects.done')}</div>
                   </div>
                   <div className="rounded border border-border p-2 text-center">
                     <div className="text-xl font-semibold text-destructive">{blocked}</div>
-                    <div className="text-xs text-muted-foreground">Blocked</div>
+                    <div className="text-xs text-muted-foreground">{t('consultant.myProjects.blocked')}</div>
                   </div>
                 </div>
               </div>

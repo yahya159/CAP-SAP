@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router';
 import { CheckCircle2, ClipboardList, FileText, TicketCheck, Timer } from 'lucide-react';
+import { useTranslation } from 'react-i18next';
 import { toast } from 'sonner';
 import { PageHeader } from '../../components/common/PageHeader';
 import { KPICard } from '../../components/common/KPICard';
@@ -11,6 +12,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '../../components/ui/ca
 import { Button } from '../../components/ui/button';
 
 export const FuncDashboard: React.FC = () => {
+  const { t } = useTranslation();
   const { currentUser } = useAuth();
   const navigate = useNavigate();
 
@@ -37,7 +39,7 @@ export const FuncDashboard: React.FC = () => {
       } catch (error) {
         setDeliverables([]);
         setTickets([]);
-        const message = error instanceof Error ? error.message : 'Failed to load dashboard data.';
+        const message = error instanceof Error ? error.message : t('func.deliverables.toasts.loadFailed');
         setLoadError(message);
         toast.error(message);
       } finally {
@@ -46,7 +48,7 @@ export const FuncDashboard: React.FC = () => {
     };
 
     void loadData();
-  }, [currentUser]);
+  }, [currentUser, t]);
 
   const pendingDeliverables = deliverables.filter(
     (deliverable) => deliverable.validationStatus === 'PENDING'
@@ -62,9 +64,9 @@ export const FuncDashboard: React.FC = () => {
   return (
     <div className="min-h-screen bg-transparent">
       <PageHeader
-        title={`Welcome back, ${currentUser?.name.split(' ')[0] ?? 'Consultant'}`}
-        subtitle="Functional delivery cockpit for validations, tickets, and collaboration"
-        breadcrumbs={[{ label: 'My Dashboard' }]}
+        title={t('func.dashboard.welcome', { name: currentUser?.name.split(' ')[0] ?? 'Consultant' })}
+        subtitle={t('func.dashboard.subtitle')}
+        breadcrumbs={[{ label: t('func.dashboard.breadcrumb') }]}
       />
 
       <div className="space-y-6 p-6 lg:p-8">
@@ -74,10 +76,10 @@ export const FuncDashboard: React.FC = () => {
           </Card>
         )}
         <div className="grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-4">
-          <KPICard title="Pending Deliverables" value={pendingDeliverables} icon="document" color="yellow" />
-          <KPICard title="Approved Deliverables" value={approvedDeliverables} icon="accept" color="green" />
-          <KPICard title="Open Tickets" value={openTickets} icon="incident" color="blue" />
-          <KPICard title="Resolved Tickets" value={resolvedTickets} icon="history" color="purple" />
+          <KPICard title={t('func.dashboard.kpi.pendingDeliverables')} value={pendingDeliverables} icon="document" color="yellow" />
+          <KPICard title={t('func.dashboard.kpi.approvedDeliverables')} value={approvedDeliverables} icon="accept" color="green" />
+          <KPICard title={t('func.dashboard.kpi.openTickets')} value={openTickets} icon="incident" color="blue" />
+          <KPICard title={t('func.dashboard.kpi.resolvedTickets')} value={resolvedTickets} icon="history" color="purple" />
         </div>
 
         <div className="grid grid-cols-1 gap-6 xl:grid-cols-[1.05fr_0.95fr]">
@@ -85,15 +87,15 @@ export const FuncDashboard: React.FC = () => {
             <CardHeader className="flex-row items-center justify-between space-y-0">
               <CardTitle className="inline-flex items-center gap-2 text-lg">
                 <FileText className="h-4 w-4 text-primary" />
-                Deliverables Awaiting Validation
+                {t('func.dashboard.deliverables.title')}
               </CardTitle>
               <Button variant="secondary" size="sm" onClick={() => navigate('/consultant-func/deliverables')}>
-                View All
+                {t('common.viewAll')}
               </Button>
             </CardHeader>
             <CardContent className="space-y-3">
               {loading ? (
-                <p className="text-sm text-muted-foreground">Loading deliverables...</p>
+                <p className="text-sm text-muted-foreground">{t('func.dashboard.deliverables.loading')}</p>
               ) : (
                 deliverables
                   .filter((deliverable) => deliverable.validationStatus === 'PENDING')
@@ -109,7 +111,7 @@ export const FuncDashboard: React.FC = () => {
                       <p className="mt-1 text-xs text-muted-foreground">{deliverable.type}</p>
                       <div className="mt-3 flex items-center justify-between text-xs">
                         <span className="inline-flex items-center gap-1 text-primary">
-                          <Timer className="h-3.5 w-3.5" /> Pending Review
+                          <Timer className="h-3.5 w-3.5" /> {t('func.dashboard.deliverables.pendingReview')}
                         </span>
                         <span className="text-muted-foreground">
                           {new Date(deliverable.createdAt).toLocaleDateString()}
@@ -125,10 +127,10 @@ export const FuncDashboard: React.FC = () => {
             <CardHeader className="flex-row items-center justify-between space-y-0">
               <CardTitle className="inline-flex items-center gap-2 text-lg">
                 <ClipboardList className="h-4 w-4 text-primary" />
-                My Recent Tickets
+                {t('func.dashboard.tickets.title')}
               </CardTitle>
               <Button variant="secondary" size="sm" onClick={() => navigate('/consultant-func/tickets')}>
-                Manage Tickets
+                {t('func.dashboard.tickets.manage')}
               </Button>
             </CardHeader>
             <CardContent className="space-y-3">
@@ -148,14 +150,14 @@ export const FuncDashboard: React.FC = () => {
                       ) : (
                         <TicketCheck className="h-3.5 w-3.5 text-primary" />
                       )}
-                      {ticket.status}
+                      {t(`entities.ticketStatus.${ticket.status}`)}
                     </span>
                     <span>{new Date(ticket.createdAt).toLocaleDateString()}</span>
                   </div>
                 </div>
               ))}
               {tickets.length === 0 && (
-                <p className="text-sm text-muted-foreground">No tickets created yet.</p>
+                <p className="text-sm text-muted-foreground">{t('func.dashboard.tickets.empty')}</p>
               )}
             </CardContent>
           </Card>

@@ -1,4 +1,5 @@
 import React, { useEffect, useState, useCallback } from 'react';
+import { useTranslation } from 'react-i18next';
 import { Sparkles, UserCheck, ArrowLeft } from 'lucide-react';
 import { useNavigate } from 'react-router';
 import { PageHeader } from '../../components/common/PageHeader';
@@ -16,11 +17,11 @@ import {
   AssigneeRecommendation,
   TICKET_NATURE_LABELS,
   TICKET_STATUS_LABELS,
-  USER_ROLE_LABELS,
 } from '../../types/entities';
 
 const AIDispatchPage: React.FC = () => {
   const navigate = useNavigate();
+  const { t } = useTranslation();
   const [tickets, setTickets] = useState<Ticket[]>([]);
   const [users, setUsers] = useState<User[]>([]);
   const [selectedTicketId, setSelectedTicketId] = useState<string>('');
@@ -70,7 +71,7 @@ const AIDispatchPage: React.FC = () => {
       });
 
       toast.success('Ticket assigned', {
-        description: `"${selectedTicket.title}" assigned to ${user.name} (${USER_ROLE_LABELS[user.role]})`,
+        description: `"${selectedTicket.title}" assigned to ${user.name} (${t(`roles.${user.role}`)})`,
       });
 
       // Refresh data
@@ -98,20 +99,20 @@ const AIDispatchPage: React.FC = () => {
           <ArrowLeft className="h-5 w-5" />
         </Button>
         <PageHeader
-          title="AI Dispatch"
-          subtitle="Select an unassigned ticket and let the scoring engine recommend the best assignees"
+          title={t('coordinator.dispatch.title')}
+          subtitle={t('coordinator.dispatch.subtitle')}
         />
       </div>
 
       {/* Ticket Selection */}
       <Card className="border-border/80 bg-card">
-        <CardHeader>
-          <CardTitle className="text-lg">1. Select Ticket</CardTitle>
-        </CardHeader>
+          <CardHeader>
+            <CardTitle className="text-lg">{t('coordinator.dispatch.step1')}</CardTitle>
+          </CardHeader>
         <CardContent className="space-y-4">
           <Select value={selectedTicketId} onValueChange={setSelectedTicketId}>
             <SelectTrigger>
-              <SelectValue placeholder="Choose an unassigned ticket..." />
+              <SelectValue placeholder={t('coordinator.dispatch.selectPlaceholder')} />
             </SelectTrigger>
             <SelectContent>
               {unassignedTickets.map((t) => (
@@ -120,7 +121,7 @@ const AIDispatchPage: React.FC = () => {
                 </SelectItem>
               ))}
               {unassignedTickets.length === 0 && (
-                <SelectItem value="__none" disabled>No unassigned tickets</SelectItem>
+                <SelectItem value="__none" disabled>{t('coordinator.dispatch.noUnassigned')}</SelectItem>
               )}
             </SelectContent>
           </Select>
@@ -140,14 +141,14 @@ const AIDispatchPage: React.FC = () => {
             </div>
           )}
 
-          <Button
-            disabled={!selectedTicket || recommending}
-            onClick={runRecommendation}
-            className="w-full"
-          >
-            <Sparkles className="mr-2 h-4 w-4" />
-            {recommending ? 'Analyzing...' : 'Suggest Assignees'}
-          </Button>
+            <Button
+              disabled={!selectedTicket || recommending}
+              onClick={runRecommendation}
+              className="w-full"
+            >
+              <Sparkles className="mr-2 h-4 w-4" />
+              {recommending ? t('coordinator.dispatch.analyzing') : t('coordinator.dispatch.suggest')}
+            </Button>
         </CardContent>
       </Card>
 
@@ -171,7 +172,7 @@ const AIDispatchPage: React.FC = () => {
                         </span>
                         <div>
                           <p className="font-medium">{user.name}</p>
-                          <Badge className="mt-0.5 bg-primary/10 text-primary border border-primary/20 text-xs font-medium">{USER_ROLE_LABELS[user.role]}</Badge>
+                          <Badge className="mt-0.5 bg-primary/10 text-primary border border-primary/20 text-xs font-medium">{t(`roles.${user.role}`)}</Badge>
                         </div>
                       </div>
                       <div className="flex items-center gap-3">

@@ -1,4 +1,5 @@
 import React, { useEffect, useMemo, useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { useLocation, useNavigate } from 'react-router';
 import { toast } from 'sonner';
 import { ArrowRight } from 'lucide-react';
@@ -7,7 +8,7 @@ import { Button } from '../components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '../components/ui/card';
 import { Input } from '../components/ui/input';
 import { Label } from '../components/ui/label';import { AuthAPI } from '../services/odata/authApi';
-import { User, USER_ROLE_LABELS, UserRole } from '../types/entities';
+import { User, UserRole } from '../types/entities';
 import inetumLogoDark from '@/assets/inetum-logo-dark.svg';
 import inetumLogoLight from '@/assets/inetum-logo.svg';
 
@@ -22,7 +23,17 @@ const QUICK_ACCESS_PASSWORDS: Record<UserRole, string> = {
 const QUICK_ACCESS_AUTO_LOGIN = import.meta.env.VITE_ENABLE_QUICK_ACCESS_AUTO_LOGIN !== 'false'; // Enabled by default for now
 type QuickAccessUser = Pick<User, 'id' | 'name' | 'email' | 'role'>;
 
+const ROLES: UserRole[] = [
+  'ADMIN',
+  'MANAGER',
+  'CONSULTANT_TECHNIQUE',
+  'CONSULTANT_FONCTIONNEL',
+  'PROJECT_MANAGER',
+  'DEV_COORDINATOR',
+];
+
 export const Login: React.FC = () => {
+  const { t } = useTranslation();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);
@@ -61,11 +72,11 @@ export const Login: React.FC = () => {
 
     try {
       await login(userEmail, userPass);
-      toast.success('Welcome back', { description: 'Session started successfully.' });
+      toast.success(t('login.welcomeBack'), { description: t('login.sessionStarted') });
       navigate(fromPath || '/dashboard', { replace: true });
     } catch {
-      toast.error('Authentication failed', {
-        description: 'Please verify your credentials and try again.',
+      toast.error(t('login.authFailed'), {
+        description: t('login.authFailedDesc'),
       });
     } finally {
       setLoading(false);
@@ -95,16 +106,16 @@ export const Login: React.FC = () => {
 
               <div className="space-y-2">
                 <p className="text-xs font-semibold uppercase tracking-[0.14em] text-muted-foreground">
-                  SAP Performance Management
+                  {t('login.platformName')}
                 </p>
-                <CardTitle className="text-4xl leading-tight">Performance Hub</CardTitle>
-                <p className="max-w-sm text-sm text-muted-foreground">Sign in to continue.</p>
+                <CardTitle className="text-4xl leading-tight">{t('login.hubTitle')}</CardTitle>
+                <p className="max-w-sm text-sm text-muted-foreground">{t('login.signInToContinue')}</p>
               </div>
             </CardHeader>
 
             <CardContent className="pt-0">
               <div className="rounded-xl border border-border/70 bg-surface-2 px-4 py-3 text-sm text-muted-foreground">
-                Secure role-based workspace.
+                {t('login.secureWorkspace')}
               </div>
             </CardContent>
           </Card>
@@ -118,40 +129,40 @@ export const Login: React.FC = () => {
                 </div>
                 <div className="space-y-1">
                   <p className="text-xs font-semibold uppercase tracking-[0.12em] text-muted-foreground">
-                    Account Access
+                    {t('login.accountAccess')}
                   </p>
-                  <CardTitle className="text-2xl">Sign in</CardTitle>
-                  <p className="text-sm text-muted-foreground">Use your work account.</p>
+                  <CardTitle className="text-2xl">{t('login.signIn')}</CardTitle>
+                  <p className="text-sm text-muted-foreground">{t('login.useWorkAccount')}</p>
                 </div>
               </CardHeader>
               <CardContent>
                 <form className="space-y-4" onSubmit={onSubmit}>
                   <div className="space-y-1.5">
-                    <Label htmlFor="login-email">Email</Label>
+                    <Label htmlFor="login-email">{t('login.email')}</Label>
                     <Input
                       id="login-email"
                       type="email"
                       value={email}
                       onChange={(event) => setEmail(event.target.value)}
-                      placeholder="name@domain.com"
+                      placeholder={t('login.emailPlaceholder')}
                       required
                     />
                   </div>
 
                   <div className="space-y-1.5">
-                    <Label htmlFor="login-password">Password</Label>
+                    <Label htmlFor="login-password">{t('login.password')}</Label>
                     <Input
                       id="login-password"
                       type="password"
                       value={password}
                       onChange={(event) => setPassword(event.target.value)}
-                      placeholder="Enter your password"
+                      placeholder={t('login.passwordPlaceholder')}
                       required
                     />
                   </div>
 
                   <Button className="w-full" size="lg" type="submit" disabled={loading}>
-                    {loading ? 'Signing in...' : 'Enter Platform'}
+                    {loading ? t('login.signingIn') : t('login.enterPlatform')}
                     {!loading && <ArrowRight className="h-4 w-4" />}
                   </Button>
                 </form>
@@ -161,13 +172,13 @@ export const Login: React.FC = () => {
             <Card className="border-border/80 bg-card">
               <CardHeader className="pb-2">
                 <p className="text-xs font-semibold uppercase tracking-[0.12em] text-muted-foreground">
-                  Quick Access
+                  {t('login.quickAccess')}
                 </p>
               </CardHeader>
               <CardContent className="grid grid-cols-1 gap-2 sm:grid-cols-2">
                 {quickAccessUsers.length === 0 ? (
                   <p className="text-sm text-muted-foreground sm:col-span-2">
-                    No active users available for quick access.
+                    {t('login.noActiveUsers')}
                   </p>
                 ) : (
                   quickAccessUsers.map((user) => (
@@ -181,10 +192,10 @@ export const Login: React.FC = () => {
                         setEmail(user.email);
                         setPassword('');
                         if (!quickPassword || !QUICK_ACCESS_AUTO_LOGIN) {
-                          toast.info(`Selected ${USER_ROLE_LABELS[user.role]}. Enter password to continue.`);
+                          toast.info(t('login.selectedRole', { role: t(`roles.${user.role}`) }));
                           return;
                         }
-                        toast.info(`Signing in as ${USER_ROLE_LABELS[user.role]}...`);
+                        toast.info(t('login.signingInAs', { role: t(`roles.${user.role}`) }));
                         void handleLogin(user.email, quickPassword);
                       }}
                       className="group w-full rounded-lg border border-border/80 bg-surface-2 p-3 text-left transition-colors hover:border-primary/55 hover:bg-accent/45 disabled:opacity-60"
@@ -194,7 +205,7 @@ export const Login: React.FC = () => {
                           <span className="text-sm font-semibold">{user.name.slice(0, 1).toUpperCase()}</span>
                         </div>
                         <p className="min-w-0 flex-1 truncate text-sm font-semibold text-foreground">
-                          {USER_ROLE_LABELS[user.role]}
+                          {t(`roles.${user.role}`)}
                         </p>
                         <ArrowRight className="h-4 w-4 text-muted-foreground transition-transform group-hover:translate-x-0.5" />
                       </div>
@@ -208,11 +219,11 @@ export const Login: React.FC = () => {
               <Card className="border-border/80 bg-card">
                 <CardHeader className="pb-2">
                   <p className="text-xs font-semibold uppercase tracking-[0.12em] text-muted-foreground">
-                    Bypass Validation (Direct)
+                    {t('login.bypassValidation')}
                   </p>
                 </CardHeader>
                 <CardContent className="grid grid-cols-1 gap-2 sm:grid-cols-2">
-                  {(Object.keys(USER_ROLE_LABELS) as UserRole[]).map((role) => (
+                  {ROLES.map((role) => (
                     <button
                       key={role}
                       type="button"
@@ -220,17 +231,17 @@ export const Login: React.FC = () => {
                       onClick={() => {
                         if (loading) return;
                         directLogin(role);
-                        toast.success(`Direct login as ${USER_ROLE_LABELS[role]}`);
+                        toast.success(t('login.directLoginSuccess', { role: t(`roles.${role}`) }));
                         navigate(fromPath || '/dashboard', { replace: true });
                       }}
                       className="group w-full rounded-lg border border-border/80 bg-surface-2 p-3 text-left transition-colors hover:border-primary/55 hover:bg-accent/45 disabled:opacity-60"
                     >
                       <div className="flex items-center gap-2.5">
                         <div className="flex h-9 w-9 items-center justify-center rounded-md bg-secondary/40 text-secondary-foreground">
-                          <span className="text-sm font-semibold">{USER_ROLE_LABELS[role].slice(0, 1).toUpperCase()}</span>
+                          <span className="text-sm font-semibold">{t(`roles.${role}`).slice(0, 1).toUpperCase()}</span>
                         </div>
                         <p className="min-w-0 flex-1 truncate text-sm font-semibold text-foreground">
-                          {USER_ROLE_LABELS[role]}
+                          {t(`roles.${role}`)}
                         </p>
                         <ArrowRight className="h-4 w-4 text-muted-foreground transition-transform group-hover:translate-x-0.5" />
                       </div>

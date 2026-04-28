@@ -1,4 +1,5 @@
 import React, { useEffect, useMemo, useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { Navigate, useNavigate } from 'react-router';
 import { BookOpenText, ExternalLink, FilePlus2, Paperclip, Search } from 'lucide-react';
 import { toast } from 'sonner';
@@ -40,7 +41,6 @@ import {
   DocumentationAttachment,
   DocumentationObject,
   DocumentationObjectType,
-  DOCUMENTATION_OBJECT_TYPE_LABELS,
   Project,
   Ticket,
   User,
@@ -57,6 +57,8 @@ const homePathByRole: Record<UserRole, string> = {
   CONSULTANT_TECHNIQUE: '/consultant-tech/dashboard',
   CONSULTANT_FONCTIONNEL: '/consultant-func/dashboard',
 };
+
+const DOCUMENTATION_OBJECT_TYPES: DocumentationObjectType[] = ['SFD', 'GUIDE', 'ARCHITECTURE_DOC', 'GENERAL'];
 
 const formatDate = (value: string) => new Date(value).toLocaleString();
 
@@ -106,6 +108,7 @@ const EMPTY_FORM: CreateFormState = {
 };
 
 export const DocumentationObjectsPage: React.FC = () => {
+  const { t } = useTranslation();
   const navigate = useNavigate();
   const { currentUser } = useAuth();
   const [loading, setLoading] = useState(true);
@@ -144,7 +147,7 @@ export const DocumentationObjectsPage: React.FC = () => {
         setProjects([]);
         setTickets([]);
         setUsers([]);
-        const message = error instanceof Error ? error.message : 'Failed to load documentation objects.';
+        const message = error instanceof Error ? error.message : t('documentation.errors.loadFailed');
         setLoadError(message);
         toast.error(message);
       } finally {
@@ -153,7 +156,7 @@ export const DocumentationObjectsPage: React.FC = () => {
     };
 
     void loadData();
-  }, []);
+  }, [t]);
 
   const projectTickets = useMemo(
     () => tickets.filter((ticket) => ticket.projectId === form.projectId),
@@ -205,9 +208,10 @@ export const DocumentationObjectsPage: React.FC = () => {
 
     if (rejectedCount > 0) {
       toast.error(
-        `${rejectedCount} file(s) were skipped. Max size is ${formatFileSize(
-          MAX_ATTACHMENT_SIZE_BYTES
-        )} per file.`
+        t('documentation.errors.filesSkipped', {
+          count: rejectedCount,
+          size: formatFileSize(MAX_ATTACHMENT_SIZE_BYTES),
+        })
       );
     }
 
@@ -226,7 +230,7 @@ export const DocumentationObjectsPage: React.FC = () => {
       );
       setForm((prev) => ({ ...prev, attachedFiles: [...prev.attachedFiles, ...additions] }));
     } catch {
-      toast.error('Failed to attach one or more files');
+      toast.error(t('documentation.errors.attachFailed'));
     }
     input.value = '';
   };
@@ -243,15 +247,15 @@ export const DocumentationObjectsPage: React.FC = () => {
   const submitCreate = async () => {
     if (!currentUser) return;
     if (!form.title.trim()) {
-      toast.error('Title is required');
+      toast.error(t('documentation.errors.titleRequired'));
       return;
     }
     if (!form.projectId) {
-      toast.error('Project is required');
+      toast.error(t('documentation.errors.projectRequired'));
       return;
     }
     if (!form.content.trim()) {
-      toast.error('Content is required');
+      toast.error(t('documentation.errors.contentRequired'));
       return;
     }
 
@@ -274,9 +278,9 @@ export const DocumentationObjectsPage: React.FC = () => {
       );
       setIsCreateOpen(false);
       setForm(EMPTY_FORM);
-      toast.success('Object created');
+      toast.success(t('documentation.success.created'));
     } catch {
-      toast.error('Failed to create object');
+      toast.error(t('documentation.errors.createFailed'));
     } finally {
       setIsCreating(false);
     }
@@ -295,16 +299,16 @@ export const DocumentationObjectsPage: React.FC = () => {
   return (
     <div className="min-h-screen bg-background">
       <PageHeader
-        title="Documentation Objects"
-        subtitle="Centralized project documentation, SFDs, guides, and architecture notes"
+        title={t('documentation.title')}
+        subtitle={t('documentation.subtitle')}
         breadcrumbs={[
-          { label: 'Home', path: homePath },
-          { label: 'Objects' },
+          { label: t('documentation.home'), path: homePath },
+          { label: t('documentation.objects') },
         ]}
         actions={
           <Button onClick={openCreateDialog}>
             <FilePlus2 className="mr-1 h-4 w-4" />
-            New Object
+            {t('documentation.newObject')}
           </Button>
         }
       />
@@ -322,7 +326,7 @@ export const DocumentationObjectsPage: React.FC = () => {
                 <Search className="pointer-events-none absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
                 <Input
                   className="pl-8"
-                  placeholder="Search objects by title, content, project..."
+                  placeholder={t('documentation.searchPlaceholder')}
                   value={searchQuery}
                   onChange={(event) => setSearchQuery(event.target.value)}
                 />
@@ -334,10 +338,10 @@ export const DocumentationObjectsPage: React.FC = () => {
             <CardContent className="pt-6">
               <Select value={projectFilter} onValueChange={setProjectFilter}>
                 <SelectTrigger>
-                  <SelectValue placeholder="All projects" />
+                  <SelectValue placeholder={t('documentation.allProjects')} />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="ALL">All projects</SelectItem>
+                  <SelectItem value="ALL">{t('documentation.allProjects')}</SelectItem>
                   {projects.map((project) => (
                     <SelectItem key={project.id} value={project.id}>
                       {project.name}
@@ -352,13 +356,13 @@ export const DocumentationObjectsPage: React.FC = () => {
             <CardContent className="pt-6">
               <Select value={typeFilter} onValueChange={(value) => setTypeFilter(value as TypeFilter)}>
                 <SelectTrigger>
-                  <SelectValue placeholder="All types" />
+                  <SelectValue placeholder={t('documentation.allTypes')} />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="ALL">All types</SelectItem>
-                  {(Object.keys(DOCUMENTATION_OBJECT_TYPE_LABELS) as DocumentationObjectType[]).map((type) => (
+                  <SelectItem value="ALL">{t('documentation.allTypes')}</SelectItem>
+                  {DOCUMENTATION_OBJECT_TYPES.map((type) => (
                     <SelectItem key={type} value={type}>
-                      {DOCUMENTATION_OBJECT_TYPE_LABELS[type]}
+                      {t(`documentation.types.${type}`)}
                     </SelectItem>
                   ))}
                 </SelectContent>
@@ -368,19 +372,19 @@ export const DocumentationObjectsPage: React.FC = () => {
 
           <Card>
             <CardContent className="pt-6">
-              <p className="text-xs uppercase tracking-wide text-muted-foreground">Objects</p>
+              <p className="text-xs uppercase tracking-wide text-muted-foreground">{t('documentation.objects')}</p>
               <p className="text-2xl font-semibold text-foreground">{filteredObjects.length}</p>
             </CardContent>
           </Card>
         </div>
 
         <div className="grid grid-cols-2 gap-4 md:grid-cols-4">
-          {(Object.keys(DOCUMENTATION_OBJECT_TYPE_LABELS) as DocumentationObjectType[]).map((type) => (
+          {DOCUMENTATION_OBJECT_TYPES.map((type) => (
             <Card key={type}>
               <CardContent className="flex items-center justify-between pt-6">
                 <div>
                   <p className="text-xs uppercase tracking-wide text-muted-foreground">
-                    {DOCUMENTATION_OBJECT_TYPE_LABELS[type]}
+                    {t(`documentation.types.${type}`)}
                   </p>
                   <p className="text-lg font-semibold text-foreground">{countsByType[type]}</p>
                 </div>
@@ -392,34 +396,34 @@ export const DocumentationObjectsPage: React.FC = () => {
 
         <Card className="overflow-hidden">
           <CardHeader className="border-b border-border/70">
-            <CardTitle className="text-base">Knowledge Base Objects</CardTitle>
+            <CardTitle className="text-base">{t('documentation.kbObjects')}</CardTitle>
           </CardHeader>
           <CardContent className="p-0">
             <Table>
               <TableHeader className="bg-muted/55">
                 <TableRow>
-                  <TableHead className="px-4">Title</TableHead>
-                  <TableHead className="px-4">Type</TableHead>
-                  <TableHead className="px-4">Source</TableHead>
-                  <TableHead className="px-4">Project</TableHead>
-                  <TableHead className="px-4">Linked Tickets</TableHead>
-                  <TableHead className="px-4">Files</TableHead>
-                  <TableHead className="px-4">Author</TableHead>
-                  <TableHead className="px-4">Updated</TableHead>
-                  <TableHead className="px-4 text-right">Action</TableHead>
+                  <TableHead className="px-4">{t('documentation.table.title')}</TableHead>
+                  <TableHead className="px-4">{t('documentation.table.type')}</TableHead>
+                  <TableHead className="px-4">{t('documentation.table.source')}</TableHead>
+                  <TableHead className="px-4">{t('documentation.table.project')}</TableHead>
+                  <TableHead className="px-4">{t('documentation.table.linkedTickets')}</TableHead>
+                  <TableHead className="px-4">{t('documentation.table.files')}</TableHead>
+                  <TableHead className="px-4">{t('documentation.table.author')}</TableHead>
+                  <TableHead className="px-4">{t('documentation.table.updated')}</TableHead>
+                  <TableHead className="px-4 text-right">{t('documentation.table.action')}</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
                 {loading ? (
                   <TableRow>
                     <TableCell colSpan={9} className="h-24 text-center text-muted-foreground">
-                      Loading objects...
+                      {t('documentation.loading')}
                     </TableCell>
                   </TableRow>
                 ) : filteredObjects.length === 0 ? (
                   <TableRow>
                     <TableCell colSpan={9} className="h-24 text-center text-muted-foreground">
-                      No objects found for current filters.
+                      {t('documentation.noObjects')}
                     </TableCell>
                   </TableRow>
                 ) : (
@@ -432,11 +436,11 @@ export const DocumentationObjectsPage: React.FC = () => {
                         </div>
                       </TableCell>
                       <TableCell className="px-4 py-3">
-                        <Badge variant="outline">{DOCUMENTATION_OBJECT_TYPE_LABELS[doc.type]}</Badge>
+                        <Badge variant="outline">{t(`documentation.types.${doc.type}`)}</Badge>
                       </TableCell>
                       <TableCell className="px-4 py-3">
                         <Badge variant={doc.sourceSystem === 'WRICEF' ? 'secondary' : 'outline'}>
-                          {doc.sourceSystem === 'WRICEF' ? 'WRICEF' : 'Manual'}
+                          {doc.sourceSystem === 'WRICEF' ? 'WRICEF' : t('documentation.manual')}
                         </Badge>
                       </TableCell>
                       <TableCell className="px-4 py-3 text-sm text-muted-foreground">
@@ -464,7 +468,7 @@ export const DocumentationObjectsPage: React.FC = () => {
                           onClick={() => navigate(`/shared/documentation/${doc.id}`)}
                         >
                           <ExternalLink className="mr-1 h-3.5 w-3.5" />
-                          Open
+                          {t('documentation.open')}
                         </Button>
                       </TableCell>
                     </TableRow>
@@ -479,13 +483,13 @@ export const DocumentationObjectsPage: React.FC = () => {
       <Dialog open={isCreateOpen} onOpenChange={setIsCreateOpen}>
         <DialogContent className="max-w-3xl max-h-[85vh] overflow-y-auto">
           <DialogHeader>
-            <DialogTitle>Create Documentation Object</DialogTitle>
+            <DialogTitle>{t('documentation.createTitle')}</DialogTitle>
           </DialogHeader>
 
           <div className="space-y-4">
             <div className="grid grid-cols-1 gap-3 md:grid-cols-3">
               <div className="md:col-span-2">
-                <Label htmlFor="new-object-title">Title *</Label>
+                <Label htmlFor="new-object-title">{t('documentation.titleLabel')}</Label>
                 <Input
                   id="new-object-title"
                   value={form.title}
@@ -497,11 +501,11 @@ export const DocumentationObjectsPage: React.FC = () => {
                       content: prev.content || buildDefaultContent(value || 'Documentation Object'),
                     }));
                   }}
-                  placeholder="Documentation object title"
+                  placeholder={t('documentation.titlePlaceholder')}
                 />
               </div>
               <div>
-                <Label htmlFor="new-object-type">Type</Label>
+                <Label htmlFor="new-object-type">{t('documentation.typeLabel')}</Label>
                 <Select
                   value={form.type}
                   onValueChange={(value) =>
@@ -512,9 +516,9 @@ export const DocumentationObjectsPage: React.FC = () => {
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
-                    {(Object.keys(DOCUMENTATION_OBJECT_TYPE_LABELS) as DocumentationObjectType[]).map((type) => (
+                    {DOCUMENTATION_OBJECT_TYPES.map((type) => (
                       <SelectItem key={type} value={type}>
-                        {DOCUMENTATION_OBJECT_TYPE_LABELS[type]}
+                        {t(`documentation.types.${type}`)}
                       </SelectItem>
                     ))}
                   </SelectContent>
@@ -523,7 +527,7 @@ export const DocumentationObjectsPage: React.FC = () => {
             </div>
 
             <div>
-              <Label htmlFor="new-object-project">Project *</Label>
+              <Label htmlFor="new-object-project">{t('documentation.projectLabel')}</Label>
               <Select
                 value={form.projectId}
                 onValueChange={(value) =>
@@ -537,7 +541,7 @@ export const DocumentationObjectsPage: React.FC = () => {
                 }
               >
                 <SelectTrigger id="new-object-project">
-                  <SelectValue placeholder="Select project" />
+                  <SelectValue placeholder={t('documentation.selectProject')} />
                 </SelectTrigger>
                 <SelectContent>
                   {projects.map((project) => (
@@ -550,30 +554,30 @@ export const DocumentationObjectsPage: React.FC = () => {
             </div>
 
             <div>
-              <Label htmlFor="new-object-description">Overview</Label>
+              <Label htmlFor="new-object-description">{t('documentation.overviewLabel')}</Label>
               <Textarea
                 id="new-object-description"
                 rows={2}
                 value={form.description}
                 onChange={(event) => setForm((prev) => ({ ...prev, description: event.target.value }))}
-                placeholder="High-level summary of this object"
+                placeholder={t('documentation.overviewPlaceholder')}
               />
             </div>
 
             <div>
-              <Label htmlFor="new-object-content">Content *</Label>
+              <Label htmlFor="new-object-content">{t('documentation.contentLabel')}</Label>
               <Textarea
                 id="new-object-content"
                 rows={12}
                 className="font-mono text-sm"
                 value={form.content}
                 onChange={(event) => setForm((prev) => ({ ...prev, content: event.target.value }))}
-                placeholder="Write markdown-like content for this documentation object"
+                placeholder={t('documentation.contentPlaceholder')}
               />
             </div>
 
             <div>
-              <Label htmlFor="new-object-files">Attached Files</Label>
+              <Label htmlFor="new-object-files">{t('documentation.attachedFilesLabel')}</Label>
               <Input id="new-object-files" type="file" multiple onChange={handleFileAttach} />
               {form.attachedFiles.length > 0 && (
                 <div className="mt-2 space-y-1 rounded-md border border-border/70 bg-muted/20 p-2">
@@ -587,11 +591,11 @@ export const DocumentationObjectsPage: React.FC = () => {
             </div>
 
             <div>
-              <Label>Related Tickets</Label>
+              <Label>{t('documentation.relatedTicketsLabel')}</Label>
               {!form.projectId ? (
-                <p className="text-xs text-muted-foreground">Select a project first to link tickets.</p>
+                <p className="text-xs text-muted-foreground">{t('documentation.selectProjectFirst')}</p>
               ) : projectTickets.length === 0 ? (
-                <p className="text-xs text-muted-foreground">No tickets found for this project.</p>
+                <p className="text-xs text-muted-foreground">{t('documentation.noTicketsFound')}</p>
               ) : (
                 <div className="mt-1 max-h-40 space-y-2 overflow-y-auto rounded-md border border-border/70 bg-muted/20 p-2">
                   {projectTickets.map((ticket) => (
@@ -615,10 +619,10 @@ export const DocumentationObjectsPage: React.FC = () => {
 
           <DialogFooter>
             <Button variant="outline" onClick={() => setIsCreateOpen(false)}>
-              Cancel
+              {t('documentation.cancel')}
             </Button>
             <Button onClick={() => void submitCreate()} disabled={isCreating}>
-              {isCreating ? 'Creating...' : 'Create Object'}
+              {isCreating ? t('documentation.creating') : t('documentation.createObject')}
             </Button>
           </DialogFooter>
         </DialogContent>

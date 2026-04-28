@@ -1,4 +1,5 @@
 import React from 'react';
+import { useTranslation } from 'react-i18next';
 import { CalendarDays, Filter, KanbanSquare, List, Plus } from 'lucide-react';
 import { Button } from '@/app/components/ui/button';
 import { Input } from '@/app/components/ui/input';
@@ -15,7 +16,6 @@ import {
   Ticket,
   TicketComplexity,
   TICKET_COMPLEXITY_LABELS,
-  TICKET_STATUS_LABELS,
   User,
 } from '@/app/types/entities';
 import { STATUS_ORDER } from '../ticketView.constants';
@@ -60,59 +60,61 @@ export const TicketFiltersMainBar: React.FC<TicketFiltersMainBarProps> = ({
   onToggleAdvancedFilters,
   onCreateTicket,
 }) => {
+  const { t } = useTranslation();
+
   return (
     <div className="flex flex-wrap items-center gap-3">
       <Input
-        placeholder="Search tickets, WRICEF, code..."
+        placeholder={t('tickets.list.filters.searchPlaceholder')}
         value={searchQuery}
         onChange={(event) => onSearchQueryChange(event.target.value)}
         className="w-60"
       />
       <Select value={statusFilter} onValueChange={(value) => onStatusFilterChange(value as Ticket['status'] | 'ALL')}>
         <SelectTrigger className="w-44">
-          <SelectValue placeholder="Status" />
+          <SelectValue placeholder={t('tickets.list.filters.status')} />
         </SelectTrigger>
         <SelectContent>
-          <SelectItem value="ALL">All Statuses</SelectItem>
+          <SelectItem value="ALL">{t('tickets.list.filters.allStatuses')}</SelectItem>
           {STATUS_ORDER.map((status) => (
             <SelectItem key={status} value={status}>
-              {TICKET_STATUS_LABELS[status]}
+              {t(`entities.ticketStatus.${status}`)}
             </SelectItem>
           ))}
         </SelectContent>
       </Select>
       <Select value={moduleFilter} onValueChange={(value) => onModuleFilterChange(value as SAPModule | 'ALL')}>
         <SelectTrigger className="w-40">
-          <SelectValue placeholder="Module" />
+          <SelectValue placeholder={t('tickets.list.filters.module')} />
         </SelectTrigger>
         <SelectContent>
-          <SelectItem value="ALL">All Modules</SelectItem>
+          <SelectItem value="ALL">{t('tickets.list.filters.allModules')}</SelectItem>
           {(Object.keys(SAP_MODULE_LABELS) as SAPModule[]).map((module) => (
             <SelectItem key={module} value={module}>
-              {SAP_MODULE_LABELS[module]}
+              {t(`entities.sapModule.${module}`)}
             </SelectItem>
           ))}
         </SelectContent>
       </Select>
       <Select value={complexityFilter} onValueChange={(value) => onComplexityFilterChange(value as TicketComplexity | 'ALL')}>
         <SelectTrigger className="w-40">
-          <SelectValue placeholder="Complexity" />
+          <SelectValue placeholder={t('tickets.list.filters.complexity')} />
         </SelectTrigger>
         <SelectContent>
-          <SelectItem value="ALL">All Complexity</SelectItem>
+          <SelectItem value="ALL">{t('tickets.list.filters.allComplexity')}</SelectItem>
           {(Object.keys(TICKET_COMPLEXITY_LABELS) as TicketComplexity[]).map((complexity) => (
             <SelectItem key={complexity} value={complexity}>
-              {TICKET_COMPLEXITY_LABELS[complexity]}
+              {t(`entities.ticketComplexity.${complexity}`)}
             </SelectItem>
           ))}
         </SelectContent>
       </Select>
       <Select value={assigneeFilter} onValueChange={onAssigneeFilterChange}>
         <SelectTrigger className="w-44">
-          <SelectValue placeholder="Assigned" />
+          <SelectValue placeholder={t('tickets.list.filters.assigned')} />
         </SelectTrigger>
         <SelectContent>
-          <SelectItem value="ALL">All Assigned</SelectItem>
+          <SelectItem value="ALL">{t('tickets.list.filters.allAssigned')}</SelectItem>
           {users
             .filter((user) => user.role !== 'ADMIN')
             .map((user) => (
@@ -123,7 +125,7 @@ export const TicketFiltersMainBar: React.FC<TicketFiltersMainBarProps> = ({
         </SelectContent>
       </Select>
       <Button variant="outline" size="sm" onClick={onToggleAdvancedFilters}>
-        <Filter className="h-4 w-4 mr-1" /> {showAdvancedFilters ? 'Hide' : 'More'}
+        <Filter className="h-4 w-4 mr-1" /> {showAdvancedFilters ? t('tickets.list.filters.hide') : t('tickets.list.filters.more')}
       </Button>
       <div className="flex gap-1 rounded-lg border border-border p-0.5">
         {([['list', List], ['calendar', CalendarDays], ['kanban', KanbanSquare]] as const).map(
@@ -137,7 +139,7 @@ export const TicketFiltersMainBar: React.FC<TicketFiltersMainBarProps> = ({
       <div className="flex-1" />
       {!isViewOnly && (
         <Button onClick={onCreateTicket}>
-          <Plus className="mr-1 h-4 w-4" /> New Ticket
+          <Plus className="mr-1 h-4 w-4" /> {t('tickets.list.filters.newTicket')}
         </Button>
       )}
     </div>

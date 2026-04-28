@@ -1,16 +1,19 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import { useNavigate } from 'react-router';
+import { useTranslation } from 'react-i18next';
 import { AlertTriangle, CheckCircle2 } from 'lucide-react';
 import { PageHeader } from '../../components/common/PageHeader';
 import { KPICard } from '../../components/common/KPICard';
 import { Card, CardContent, CardHeader, CardTitle } from '../../components/ui/card';
-import { Button } from '../../components/ui/button';import { AllocationsAPI } from '../../services/odata/allocationsApi';
+import { Button } from '../../components/ui/button';
+import { AllocationsAPI } from '../../services/odata/allocationsApi';
 import { TicketsAPI } from '../../services/odata/ticketsApi';
 import { UsersAPI } from '../../services/odata/usersApi';
 import { Allocation, Ticket, TicketStatus, User } from '../../types/entities';
 
 export const ManagerDashboard: React.FC = () => {
   const navigate = useNavigate();
+  const { t } = useTranslation();
   const [tickets, setTickets] = useState<Ticket[]>([]);
   const [users, setUsers] = useState<User[]>([]);
   const [allocations, setAllocations] = useState<Allocation[]>([]);
@@ -28,7 +31,7 @@ export const ManagerDashboard: React.FC = () => {
       setUsers(fetchedUsers);
       setAllocations(fetchedAllocations);
     } catch {
-      setLoadError('Unable to load dashboard data. Some metrics may be outdated.');
+      setLoadError(t('dashboard.manager.errorLoading'));
     }
   };
 
@@ -74,17 +77,6 @@ export const ManagerDashboard: React.FC = () => {
   }, [tickets]);
 
   const ticketBreakdown = useMemo(() => {
-    const labels: Record<TicketStatus, string> = {
-      PENDING_APPROVAL: 'Pending Approval',
-      APPROVED: 'Approved',
-      NEW: 'New',
-      IN_PROGRESS: 'In Progress',
-      IN_TEST: 'In Test',
-      BLOCKED: 'Blocked',
-      DONE: 'Done',
-      REJECTED: 'Rejected',
-    };
-
     const counts = tickets.reduce<Record<TicketStatus, number>>(
       (acc, ticket) => {
         acc[ticket.status] += 1;
@@ -105,8 +97,11 @@ export const ManagerDashboard: React.FC = () => {
     return (Object.entries(counts) as Array<[TicketStatus, number]>)
       .filter(([, count]) => count > 0)
       .sort((a, b) => b[1] - a[1])
-      .map(([status, count]) => ({ label: labels[status], count }));
-  }, [tickets]);
+      .map(([status, count]) => ({
+        label: t(`entities.ticketStatus.${status}`),
+        count,
+      }));
+  }, [tickets, t]);
 
   const criticalAlerts = useMemo(() => {
     const today = new Date();
@@ -115,7 +110,7 @@ export const ManagerDashboard: React.FC = () => {
       .slice(0, 3)
       .map((ticket) => ({
         type: 'blocked' as const,
-        label: 'Ticket Blocked',
+        label: t('dashboard.manager.criticalAlerts.labels.blocked'),
         message: ticket.title,
       }));
 
@@ -130,21 +125,23 @@ export const ManagerDashboard: React.FC = () => {
       .slice(0, 3)
       .map((ticket) => ({
         type: 'deadline' as const,
-        label: 'Deadline Risk',
-        message: `${ticket.title} - overdue since ${new Date(ticket.dueDate as string).toLocaleDateString()}`,
+        label: t('dashboard.manager.criticalAlerts.labels.deadline'),
+        message: `${ticket.title} - ${t('dashboard.manager.criticalAlerts.messages.overdue', {
+          date: new Date(ticket.dueDate as string).toLocaleDateString(),
+        })}`,
       }));
 
     return [...blocked, ...overdue].slice(0, 4);
-  }, [tickets]);
+  }, [tickets, t]);
 
   return (
     <div className="min-h-screen bg-transparent">
       <PageHeader
-        title="Manager Dashboard"
-        subtitle="Delivery progress, workload, and allocation in one view"
+        title={t('dashboard.manager.title')}
+        subtitle={t('dashboard.manager.subtitle')}
         breadcrumbs={[
-          { label: 'Home', path: '/manager/dashboard' },
-          { label: 'Manager Dashboard' },
+          { label: t('documentation.home'), path: '/manager/dashboard' },
+          { label: t('dashboard.manager.title') },
         ]}
       />
 
@@ -154,7 +151,7 @@ export const ManagerDashboard: React.FC = () => {
             <CardContent className="flex flex-col items-start justify-between gap-3 p-4 sm:flex-row sm:items-center">
               <p className="text-sm text-destructive">{loadError}</p>
               <Button type="button" variant="outline" onClick={() => void loadData()}>
-                Retry
+                {t('dashboard.manager.retry')}
               </Button>
             </CardContent>
           </Card>
@@ -162,36 +159,45 @@ export const ManagerDashboard: React.FC = () => {
 
         <section className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4">
           <KPICard
-            title="TACE"
+            title={t('dashboard.manager.kpi.tace.title')}
             value={tace}
             unit="%"
-            subtitle="Taux d'Activite (Conges Exclus)"
+            subtitle={t('dashboard.manager.kpi.tace.subtitle')}
             icon="performance"
             state={tace >= 80 ? 'Positive' : tace >= 50 ? 'Warning' : 'Error'}
             progress={tace}
           />
           <KPICard
-            title="SLA Respect"
+            title={t('dashboard.manager.kpi.sla.title')}
             value={Math.round(productivityMetrics.slaRate)}
             unit="%"
-            subtitle={`${productivityMetrics.slaOnTime}/${productivityMetrics.slaTotal} delivered on time`}
+            subtitle={t('dashboard.manager.kpi.sla.subtitle', {
+              onTime: productivityMetrics.slaOnTime,
+              total: productivityMetrics.slaTotal,
+            })}
             icon="accept"
-            state={productivityMetrics.slaRate >= 90 ? 'Positive' : productivityMetrics.slaRate >= 70 ? 'Warning' : 'Error'}
+            state={
+              productivityMetrics.slaRate >= 90
+                ? 'Positive'
+                : productivityMetrics.slaRate >= 70
+                ? 'Warning'
+                : 'Error'
+            }
             progress={productivityMetrics.slaRate}
           />
           <KPICard
-            title="Throughput"
+            title={t('dashboard.manager.kpi.throughput.title')}
             value={Math.round(productivityMetrics.throughputRate)}
             unit="%"
-            subtitle="Completed tickets ratio"
+            subtitle={t('dashboard.manager.kpi.throughput.subtitle')}
             icon="trend-up"
             state={productivityMetrics.throughputRate >= 70 ? 'Positive' : 'Warning'}
             progress={productivityMetrics.throughputRate}
           />
           <KPICard
-            title="Risk Hotspots"
+            title={t('dashboard.manager.kpi.risks.title')}
             value={productivityMetrics.criticalIssues}
-            subtitle="Critical or blocked tickets"
+            subtitle={t('dashboard.manager.kpi.risks.subtitle')}
             icon="warning"
             state={productivityMetrics.criticalIssues > 0 ? 'Error' : 'Positive'}
           />
@@ -200,11 +206,11 @@ export const ManagerDashboard: React.FC = () => {
         <div className="grid items-start gap-4 sm:gap-6 xl:grid-cols-2">
           <Card className="border-border/80 bg-card">
             <CardHeader>
-              <CardTitle className="text-lg">Delivery Snapshot</CardTitle>
+              <CardTitle className="text-lg">{t('dashboard.manager.deliverySnapshot.title')}</CardTitle>
             </CardHeader>
             <CardContent className="space-y-3">
               {ticketBreakdown.length === 0 ? (
-                <p className="text-sm text-muted-foreground">No ticket data available.</p>
+                <p className="text-sm text-muted-foreground">{t('dashboard.manager.deliverySnapshot.noData')}</p>
               ) : (
                 ticketBreakdown.map((entry) => (
                   <div key={entry.label} className="flex items-center justify-between rounded-md border border-border/70 p-3">
@@ -221,14 +227,14 @@ export const ManagerDashboard: React.FC = () => {
               <CardHeader>
                 <CardTitle className="flex items-center gap-2 text-lg">
                   <AlertTriangle className="h-4 w-4 text-destructive" />
-                  Critical Alerts
+                  {t('dashboard.manager.criticalAlerts.title')}
                 </CardTitle>
               </CardHeader>
               <CardContent className="space-y-3">
                 {criticalAlerts.length === 0 ? (
                   <div className="flex items-center gap-2 text-sm text-primary">
                     <CheckCircle2 className="h-4 w-4" />
-                    No critical alerts at this time.
+                    {t('dashboard.manager.criticalAlerts.noAlerts')}
                   </div>
                 ) : (
                   criticalAlerts.map((alert, index) => (
@@ -256,7 +262,7 @@ export const ManagerDashboard: React.FC = () => {
 
             <Card className="border-primary/20 bg-primary/5">
               <CardHeader>
-                <CardTitle className="text-primary">Quick Actions</CardTitle>
+                <CardTitle className="text-primary">{t('dashboard.manager.quickActions.title')}</CardTitle>
               </CardHeader>
               <CardContent className="space-y-2 sm:space-y-3">
                 <Button
@@ -264,21 +270,23 @@ export const ManagerDashboard: React.FC = () => {
                   variant="default"
                   onClick={() => navigate('/manager/pending-approvals')}
                 >
-                  Pending Approvals ({tickets.filter((t) => t.status === 'PENDING_APPROVAL').length})
+                  {t('dashboard.manager.quickActions.pendingApprovals', {
+                    count: tickets.filter((t) => t.status === 'PENDING_APPROVAL').length,
+                  })}
                 </Button>
                 <Button
                   className="w-full justify-start"
                   variant="secondary"
                   onClick={() => navigate('/manager/allocations')}
                 >
-                  View Allocations
+                  {t('dashboard.manager.quickActions.viewAllocations')}
                 </Button>
                 <Button
                   className="w-full justify-start"
                   variant="secondary"
                   onClick={() => navigate('/manager/risks')}
                 >
-                  Open Risks & Critical Tickets
+                  {t('dashboard.manager.quickActions.openRisks')}
                 </Button>
               </CardContent>
             </Card>

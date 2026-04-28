@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { CalendarClock, CheckCircle2, Clock3, FolderKanban } from 'lucide-react';
 import { useNavigate } from 'react-router';
+import { useTranslation } from 'react-i18next';
 import { toast } from 'sonner';
 import { PageHeader } from '../../components/common/PageHeader';
 import { KPICard } from '../../components/common/KPICard';
@@ -14,6 +15,7 @@ import { Progress } from '../../components/ui/progress';
 import { getFridayOfWeek, getMondayOfWeek, toLocalDateKey } from '../../utils/date';
 
 export const TechDashboard: React.FC = () => {
+  const { t } = useTranslation();
   const { currentUser } = useAuth();
   const navigate = useNavigate();
 
@@ -45,7 +47,7 @@ export const TechDashboard: React.FC = () => {
         setTickets([]);
         setProjects([]);
         setTimesheets([]);
-        const message = error instanceof Error ? error.message : 'Failed to load dashboard data.';
+        const message = error instanceof Error ? error.message : t('common.errors.loadFailed');
         setLoadError(message);
         toast.error(message);
       } finally {
@@ -54,7 +56,7 @@ export const TechDashboard: React.FC = () => {
     };
 
     void loadDashboardData();
-  }, [currentUser]);
+  }, [currentUser, t]);
 
   const myTicketsCount = tickets.length;
   const overdueTickets = tickets.filter(
@@ -96,9 +98,9 @@ export const TechDashboard: React.FC = () => {
   return (
     <div className="min-h-screen bg-transparent">
       <PageHeader
-        title={`Welcome back, ${currentUser?.name.split(' ')[0] ?? 'Consultant'}`}
-        subtitle="Execution cockpit for your deliveries and workload"
-        breadcrumbs={[{ label: 'My Dashboard' }]}
+        title={t('consultant.techDashboard.welcome', { name: currentUser?.name.split(' ')[0] ?? 'Consultant' })}
+        subtitle={t('consultant.techDashboard.subtitle')}
+        breadcrumbs={[{ label: t('consultant.techDashboard.breadcrumb') }]}
       />
 
       <div className="space-y-6 p-6 lg:p-8">
@@ -108,11 +110,11 @@ export const TechDashboard: React.FC = () => {
           </Card>
         )}
         <div className="grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-4">
-          <KPICard title="My Tickets" value={myTicketsCount} icon="ticket" color="blue" />
-          <KPICard title="Overdue Tickets" value={overdueTickets} icon="alert" color="red" />
-          <KPICard title="Hours This Week" value={hoursThisWeek} icon="timesheet" color="green" />
+          <KPICard title={t('consultant.techDashboard.kpi.myTickets')} value={myTicketsCount} icon="ticket" color="blue" />
+          <KPICard title={t('consultant.techDashboard.kpi.overdueTickets')} value={overdueTickets} icon="alert" color="red" />
+          <KPICard title={t('consultant.techDashboard.kpi.hoursThisWeek')} value={hoursThisWeek} icon="timesheet" color="green" />
           <KPICard
-            title="Active Projects"
+            title={t('consultant.techDashboard.kpi.activeProjects')}
             value={activeProjects}
             icon="project-definition-triangle-2"
             color="yellow"
@@ -122,16 +124,16 @@ export const TechDashboard: React.FC = () => {
         <div className="grid grid-cols-1 gap-6 xl:grid-cols-[1.1fr_1fr]">
           <Card className="bg-card/92">
             <CardHeader className="flex-row items-center justify-between space-y-0">
-              <CardTitle className="text-lg">Upcoming Tickets</CardTitle>
+              <CardTitle className="text-lg">{t('consultant.techDashboard.upcomingTickets.title')}</CardTitle>
               <Button variant="secondary" size="sm" onClick={() => navigate('/consultant-tech/tickets')}>
-                View All
+                {t('common.viewAll')}
               </Button>
             </CardHeader>
             <CardContent className="space-y-3">
               {loading ? (
-                <p className="text-sm text-muted-foreground">Loading tickets...</p>
+                <p className="text-sm text-muted-foreground">{t('consultant.techDashboard.upcomingTickets.loading')}</p>
               ) : upcomingTickets.length === 0 ? (
-                <p className="text-sm text-muted-foreground">No upcoming tickets.</p>
+                <p className="text-sm text-muted-foreground">{t('consultant.techDashboard.upcomingTickets.empty')}</p>
               ) : (
                 upcomingTickets.map((ticket) => (
                   <button
@@ -152,9 +154,9 @@ export const TechDashboard: React.FC = () => {
                     <div className="mt-3 flex items-center justify-between text-xs text-muted-foreground">
                       <span className="inline-flex items-center gap-1">
                         <CalendarClock className="h-3.5 w-3.5" />
-                        Due {ticket.dueDate ? new Date(ticket.dueDate).toLocaleDateString() : 'n/a'}
+                        {t('consultant.techDashboard.upcomingTickets.due', { date: ticket.dueDate ? new Date(ticket.dueDate).toLocaleDateString() : 'n/a' })}
                       </span>
-                      <span>{progressByStatus[ticket.status]}% done</span>
+                      <span>{t('consultant.techDashboard.upcomingTickets.done', { percent: progressByStatus[ticket.status] })}</span>
                     </div>
                     <Progress className="mt-2" value={progressByStatus[ticket.status]} />
                   </button>
@@ -165,18 +167,18 @@ export const TechDashboard: React.FC = () => {
 
           <Card className="bg-card/92">
             <CardHeader className="flex-row items-center justify-between space-y-0">
-              <CardTitle className="text-lg">Assigned Projects</CardTitle>
+              <CardTitle className="text-lg">{t('consultant.techDashboard.assignedProjects.title')}</CardTitle>
               <Button
                 variant="secondary"
                 size="sm"
                 onClick={() => navigate('/consultant-tech/projects')}
               >
-                Open Projects
+                {t('consultant.techDashboard.assignedProjects.openProjects')}
               </Button>
             </CardHeader>
             <CardContent className="space-y-3">
               {projects.length === 0 ? (
-                <p className="text-sm text-muted-foreground">No assigned projects.</p>
+                <p className="text-sm text-muted-foreground">{t('consultant.techDashboard.assignedProjects.empty')}</p>
               ) : (
                 projects.map((project) => (
                   <div key={project.id} className="rounded-xl border border-border/70 bg-surface-1 p-4">
@@ -194,7 +196,7 @@ export const TechDashboard: React.FC = () => {
                     </div>
                     <div className="mt-3">
                       <div className="mb-1 flex items-center justify-between text-xs text-muted-foreground">
-                        <span>Progress</span>
+                        <span>{t('consultant.techDashboard.assignedProjects.progress')}</span>
                         <span>{project.progress ?? 0}%</span>
                       </div>
                       <Progress value={project.progress ?? 0} />
@@ -208,25 +210,25 @@ export const TechDashboard: React.FC = () => {
 
         <Card className="bg-card/92">
           <CardHeader>
-            <CardTitle className="text-lg">Productivity Snapshot</CardTitle>
+            <CardTitle className="text-lg">{t('consultant.techDashboard.productivity.title')}</CardTitle>
           </CardHeader>
           <CardContent className="grid grid-cols-1 gap-3 sm:grid-cols-3">
             <div className="rounded-xl border border-border/70 bg-surface-1 p-4">
-              <p className="text-xs uppercase tracking-[0.1em] text-muted-foreground">This Week</p>
+              <p className="text-xs uppercase tracking-[0.1em] text-muted-foreground">{t('consultant.techDashboard.productivity.thisWeek')}</p>
               <p className="mt-2 inline-flex items-center gap-2 text-2xl font-semibold text-foreground">
                 <Clock3 className="h-5 w-5 text-primary" />
                 {hoursThisWeek}h
               </p>
             </div>
             <div className="rounded-xl border border-border/70 bg-surface-1 p-4">
-              <p className="text-xs uppercase tracking-[0.1em] text-muted-foreground">Tickets Completed</p>
+              <p className="text-xs uppercase tracking-[0.1em] text-muted-foreground">{t('consultant.techDashboard.productivity.ticketsCompleted')}</p>
               <p className="mt-2 inline-flex items-center gap-2 text-2xl font-semibold text-foreground">
                 <CheckCircle2 className="h-5 w-5 text-primary" />
                 {doneTickets}
               </p>
             </div>
             <div className="rounded-xl border border-border/70 bg-surface-1 p-4">
-              <p className="text-xs uppercase tracking-[0.1em] text-muted-foreground">Completion Rate</p>
+              <p className="text-xs uppercase tracking-[0.1em] text-muted-foreground">{t('consultant.techDashboard.productivity.completionRate')}</p>
               <p className="mt-2 text-2xl font-semibold text-foreground">{completionRate.toFixed(0)}%</p>
             </div>
           </CardContent>

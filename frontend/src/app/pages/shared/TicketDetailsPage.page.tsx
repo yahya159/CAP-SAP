@@ -1,4 +1,5 @@
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { useNavigate, useParams } from 'react-router';
 import { ArrowLeft } from 'lucide-react';
 import { toast } from 'sonner';
@@ -22,9 +23,7 @@ import {
   TicketEvent,
   TICKET_COMPLEXITY_LABELS,
   TICKET_NATURE_LABELS,
-  TICKET_STATUS_LABELS,
   User,
-  USER_ROLE_LABELS,
 } from '../../types/entities';
 
 const canAccessTicket = (ticket: Ticket, userId: string, role: User['role']): boolean => {
@@ -37,35 +36,8 @@ const canAccessTicket = (ticket: Ticket, userId: string, role: User['role']): bo
   return true;
 };
 
-const renderEventText = (event: TicketEvent, userName: (id?: string) => string): React.ReactNode => {
-  if (event.action === 'CREATED') return 'created this ticket';
-  if (event.action === 'STATUS_CHANGE') {
-    return (
-      <>
-        changed status from{' '}
-        <Badge variant="outline" className="text-[10px] mx-0.5">
-          {event.fromValue ?? '-'}
-        </Badge>{' '}
-        to{' '}
-        <Badge variant="outline" className="text-[10px] mx-0.5">
-          {event.toValue ?? '-'}
-        </Badge>
-      </>
-    );
-  }
-  if (event.action === 'ASSIGNED') return `assigned to ${userName(event.toValue)}`;
-  if (event.action === 'EFFORT_CHANGE') {
-    return `updated effort from ${event.fromValue ?? '-'}h to ${event.toValue ?? '-'}h`;
-  }
-  if (event.action === 'PRIORITY_CHANGE') {
-    return `changed priority from ${event.fromValue ?? '-'} to ${event.toValue ?? '-'}`;
-  }
-  if (event.action === 'SENT_TO_TEST') return 'sent ticket to functional testing';
-  if (event.action === 'COMMENT') return event.comment ? `commented: ${event.comment}` : 'added a comment';
-  return event.action;
-};
-
 export const TicketDetailsPage: React.FC = () => {
+  const { t } = useTranslation();
   const { currentUser } = useAuth();
   const { ticketId } = useParams();
   const navigate = useNavigate();
@@ -82,6 +54,47 @@ export const TicketDetailsPage: React.FC = () => {
     (id?: string) => users.find((user) => user.id === id)?.name ?? '-',
     [users]
   );
+
+  const renderEventText = useCallback((event: TicketEvent, userName: (id?: string) => string): React.ReactNode => {
+    if (event.action === 'CREATED') return t('tickets.details.events.created');
+    if (event.action === 'STATUS_CHANGE') {
+      return (
+        <>
+          {t('tickets.details.events.changedStatus', {
+            from: '',
+            to: '',
+          }).split('  ').map((part, index) => (
+            <React.Fragment key={index}>
+              {part}
+              {index === 0 && (
+                <Badge variant="outline" className="text-[10px] mx-0.5">
+                  {event.fromValue ? t(`tickets.status.${event.fromValue}`) : '-'}
+                </Badge>
+              )}
+              {index === 1 && (
+                <Badge variant="outline" className="text-[10px] mx-0.5">
+                  {event.toValue ? t(`tickets.status.${event.toValue}`) : '-'}
+                </Badge>
+              )}
+            </React.Fragment>
+          ))}
+        </>
+      );
+    }
+    if (event.action === 'ASSIGNED') return t('tickets.details.events.assigned', { user: userName(event.toValue) });
+    if (event.action === 'EFFORT_CHANGE') {
+      return t('tickets.details.events.updatedEffort', { from: event.fromValue ?? '-', to: event.toValue ?? '-' });
+    }
+    if (event.action === 'PRIORITY_CHANGE') {
+      return t('tickets.details.events.changedPriority', {
+        from: event.fromValue ? t(`tickets.priority.${event.fromValue}`) : '-',
+        to: event.toValue ? t(`tickets.priority.${event.toValue}`) : '-',
+      });
+    }
+    if (event.action === 'SENT_TO_TEST') return t('tickets.details.events.sentToTest');
+    if (event.action === 'COMMENT') return event.comment ? t('tickets.details.events.commented', { comment: event.comment }) : t('tickets.details.events.addedComment');
+    return event.action;
+  }, [t]);
 
   const sortedHistory = useMemo(
     () =>
@@ -114,12 +127,12 @@ export const TicketDetailsPage: React.FC = () => {
         ]);
         const found = allTickets.find((item) => item.id === ticketId);
         if (!found) {
-          toast.error('Ticket not found');
+          toast.error(t('tickets.details.notFound'));
           navigate(ticketsPath, { replace: true });
           return;
         }
         if (!canAccessTicket(found, currentUser.id, currentUser.role)) {
-          toast.error('You do not have access to this ticket');
+          toast.error(t('tickets.details.noAccess'));
           navigate(ticketsPath, { replace: true });
           return;
         }
@@ -133,12 +146,12 @@ export const TicketDetailsPage: React.FC = () => {
     };
 
     void load();
-  }, [currentUser, navigate, ticketId, ticketsPath]);
+  }, [currentUser, navigate, ticketId, ticketsPath, t]);
 
   if (loading) {
     return (
       <div className="min-h-screen bg-background">
-        <div className="p-8 text-muted-foreground">Loading ticket details...</div>
+        <div className="p-8 text-muted-foreground">{t('tickets.details.loading')}</div>
       </div>
     );
   }
@@ -147,19 +160,19 @@ export const TicketDetailsPage: React.FC = () => {
     return (
       <div className="min-h-screen bg-background">
         <PageHeader
-          title="Ticket Details"
-          subtitle="Unable to load ticket"
+          title={t('tickets.details.title')}
+          subtitle={t('tickets.details.unableToLoad')}
           breadcrumbs={[
-            { label: 'Home', path: `${roleBasePath}/dashboard` },
-            { label: 'Tickets', path: ticketsPath },
+            { label: t('common.home'), path: `${roleBasePath}/dashboard` },
+            { label: t('common.tickets'), path: ticketsPath },
           ]}
         />
         <div className="p-6">
           <div className="rounded-lg border bg-card p-5">
-            <p className="text-sm text-muted-foreground">This ticket could not be loaded.</p>
+            <p className="text-sm text-muted-foreground">{t('tickets.details.couldNotBeLoaded')}</p>
             <Button className="mt-3" variant="outline" onClick={() => navigate(ticketsPath)}>
               <ArrowLeft className="h-4 w-4 mr-1" />
-              Back to Tickets
+              {t('tickets.details.backToTickets')}
             </Button>
           </div>
         </div>
@@ -173,10 +186,10 @@ export const TicketDetailsPage: React.FC = () => {
     <div className="min-h-screen bg-background">
       <PageHeader
         title={`${ticket.ticketCode} - ${ticket.title}`}
-        subtitle="Detailed ticket view"
+        subtitle={t('tickets.details.detailedView')}
         breadcrumbs={[
-          { label: 'Home', path: `${roleBasePath}/dashboard` },
-          { label: 'Tickets', path: ticketsPath },
+          { label: t('common.home'), path: `${roleBasePath}/dashboard` },
+          { label: t('common.tickets'), path: ticketsPath },
           { label: ticket.ticketCode },
         ]}
       />
@@ -185,14 +198,14 @@ export const TicketDetailsPage: React.FC = () => {
         <div>
           <Button variant="outline" size="sm" onClick={() => navigate(ticketsPath)}>
             <ArrowLeft className="h-4 w-4 mr-1" />
-            Back to Tickets
+            {t('tickets.details.backToTickets')}
           </Button>
         </div>
 
         <section className="rounded-lg border bg-card p-5 space-y-4">
           <div className="flex flex-wrap gap-2">
-            <Badge className={statusColor[ticket.status]}>{TICKET_STATUS_LABELS[ticket.status]}</Badge>
-            <Badge className={priorityColor[ticket.priority]}>{ticket.priority}</Badge>
+            <Badge className={statusColor[ticket.status]}>{t(`tickets.status.${ticket.status}`)}</Badge>
+            <Badge className={priorityColor[ticket.priority]}>{t(`tickets.priority.${ticket.priority}`)}</Badge>
             <Badge variant="outline">{TICKET_NATURE_LABELS[ticket.nature]}</Badge>
             <Badge variant="outline">{ticket.module ? SAP_MODULE_LABELS[ticket.module] : '-'}</Badge>
             <Badge variant="outline">{TICKET_COMPLEXITY_LABELS[ticket.complexity]}</Badge>
@@ -201,29 +214,29 @@ export const TicketDetailsPage: React.FC = () => {
           <div className="text-sm text-muted-foreground">{ticket.description || '-'}</div>
 
           <div className="grid grid-cols-1 gap-3 text-sm sm:grid-cols-2 lg:grid-cols-3">
-            <div><span className="text-muted-foreground">Project:</span> {project?.name ?? ticket.projectId}</div>
-            <div><span className="text-muted-foreground">WRICEF:</span> {ticket.wricefId ?? '-'}</div>
-            <div><span className="text-muted-foreground">Ticket ID:</span> {ticket.ticketCode}</div>
-            <div><span className="text-muted-foreground">Created by:</span> {userName(ticket.createdBy)}</div>
-            <div><span className="text-muted-foreground">Assigned to:</span> {userName(ticket.assignedTo)}</div>
+            <div><span className="text-muted-foreground">{t('tickets.details.project')}</span> {project?.name ?? ticket.projectId}</div>
+            <div><span className="text-muted-foreground">{t('tickets.details.wricef')}</span> {ticket.wricefId ?? '-'}</div>
+            <div><span className="text-muted-foreground">{t('tickets.details.ticketId')}</span> {ticket.ticketCode}</div>
+            <div><span className="text-muted-foreground">{t('tickets.details.createdBy')}</span> {userName(ticket.createdBy)}</div>
+            <div><span className="text-muted-foreground">{t('tickets.details.assignedTo')}</span> {userName(ticket.assignedTo)}</div>
             <div>
-              <span className="text-muted-foreground">Assigned role:</span>{' '}
-              {ticket.assignedToRole ? USER_ROLE_LABELS[ticket.assignedToRole] : '-'}
+              <span className="text-muted-foreground">{t('tickets.details.assignedRole')}</span>{' '}
+              {ticket.assignedToRole ? t(`roles.${ticket.assignedToRole}`) : '-'}
             </div>
-            <div><span className="text-muted-foreground">Estimation:</span> {ticket.estimationHours}h</div>
-            <div><span className="text-muted-foreground">Effort:</span> {ticket.effortHours}h</div>
-            <div><span className="text-muted-foreground">Due date:</span> {ticket.dueDate ?? '-'}</div>
-            <div><span className="text-muted-foreground">Created at:</span> {new Date(ticket.createdAt).toLocaleString()}</div>
-            <div><span className="text-muted-foreground">Updated at:</span> {ticket.updatedAt ? new Date(ticket.updatedAt).toLocaleString() : '-'}</div>
+            <div><span className="text-muted-foreground">{t('tickets.details.estimation')}</span> {ticket.estimationHours}h</div>
+            <div><span className="text-muted-foreground">{t('tickets.details.effort')}</span> {ticket.effortHours}h</div>
+            <div><span className="text-muted-foreground">{t('tickets.details.dueDate')}</span> {ticket.dueDate ?? '-'}</div>
+            <div><span className="text-muted-foreground">{t('tickets.details.createdAt')}</span> {new Date(ticket.createdAt).toLocaleString()}</div>
+            <div><span className="text-muted-foreground">{t('tickets.details.updatedAt')}</span> {ticket.updatedAt ? new Date(ticket.updatedAt).toLocaleString() : '-'}</div>
             <div>
-              <span className="text-muted-foreground">Estimated via abaque:</span>{' '}
-              {ticket.estimatedViaAbaque ? 'Yes' : 'No'}
+              <span className="text-muted-foreground">{t('tickets.details.estimatedViaAbaque')}</span>{' '}
+              {ticket.estimatedViaAbaque ? t('tickets.details.yes') : t('tickets.details.no')}
             </div>
           </div>
 
           {ticket.effortComment && (
             <div className="text-sm">
-              <span className="text-muted-foreground">Effort note:</span> {ticket.effortComment}
+              <span className="text-muted-foreground">{t('tickets.details.effortNote')}</span> {ticket.effortComment}
             </div>
           )}
 
@@ -244,7 +257,7 @@ export const TicketDetailsPage: React.FC = () => {
         </section>
 
         <section className="rounded-lg border bg-card p-5">
-          <h3 className="text-sm font-semibold text-foreground mb-3">History</h3>
+          <h3 className="text-sm font-semibold text-foreground mb-3">{t('tickets.details.history')}</h3>
           <div className="space-y-2">
             {sortedHistory.map((event) => (
               <div
@@ -264,7 +277,7 @@ export const TicketDetailsPage: React.FC = () => {
               </div>
             ))}
             {sortedHistory.length === 0 && (
-              <p className="text-xs text-muted-foreground">No history available.</p>
+              <p className="text-xs text-muted-foreground">{t('tickets.details.noHistory')}</p>
             )}
           </div>
         </section>

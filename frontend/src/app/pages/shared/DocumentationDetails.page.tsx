@@ -1,4 +1,5 @@
 import React, { useEffect, useMemo, useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import {
   ArrowLeft,
   CalendarDays,
@@ -27,8 +28,6 @@ import { TicketsAPI } from '../../services/odata/ticketsApi';
 import { UsersAPI } from '../../services/odata/usersApi';
 import {
   DocumentationObject,
-  DOCUMENTATION_OBJECT_TYPE_LABELS,
-  TICKET_STATUS_LABELS,
   Ticket,
   UserRole,
   User,
@@ -151,6 +150,7 @@ const renderMarkdown = (content: string) => {
 };
 
 export const DocumentationDetails: React.FC = () => {
+  const { t } = useTranslation();
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
   const { currentUser } = useAuth();
@@ -205,16 +205,16 @@ export const DocumentationDetails: React.FC = () => {
   return (
     <div className="min-h-screen bg-background">
       <PageHeader
-        title={documentation ? documentation.title : 'Documentation Details'}
-        subtitle={documentation ? documentation.description : 'Knowledge base article details'}
+        title={documentation ? documentation.title : t('documentation.details.title')}
+        subtitle={documentation ? documentation.description : t('documentation.details.subtitle')}
         breadcrumbs={[
-          { label: 'Home', path: roleHome },
-          { label: 'Documentation' },
+          { label: t('documentation.home'), path: roleHome },
+          { label: t('documentation.objects') },
         ]}
         actions={
           <Button variant="outline" onClick={() => navigate(-1)}>
             <ArrowLeft className="mr-1 h-4 w-4" />
-            Back
+            {t('documentation.details.back')}
           </Button>
         }
       />
@@ -223,15 +223,15 @@ export const DocumentationDetails: React.FC = () => {
         {loading ? (
           <Card className="lg:col-span-3">
             <CardContent className="py-10 text-center text-muted-foreground">
-              Loading documentation...
+              {t('documentation.details.loading')}
             </CardContent>
           </Card>
         ) : !documentation ? (
           <Card className="lg:col-span-3">
             <CardContent className="py-10 text-center">
-              <p className="text-lg font-medium text-foreground">Documentation not found</p>
+              <p className="text-lg font-medium text-foreground">{t('documentation.details.notFound')}</p>
               <p className="mt-1 text-sm text-muted-foreground">
-                The requested article does not exist in the knowledge base.
+                {t('documentation.details.notFoundDesc')}
               </p>
             </CardContent>
           </Card>
@@ -241,17 +241,15 @@ export const DocumentationDetails: React.FC = () => {
               <CardHeader className="pb-3">
                 <div className="flex flex-wrap items-center gap-2">
                   <Badge variant="outline">
-                    {DOCUMENTATION_OBJECT_TYPE_LABELS[documentation.type]}
+                    {t(`documentation.types.${documentation.type}`)}
                   </Badge>
                   <Badge variant="secondary">
                     <Link2 className="mr-1 h-3 w-3" />
-                    {documentation.relatedTicketIds.length} ticket
-                    {documentation.relatedTicketIds.length > 1 ? 's' : ''}
+                    {documentation.relatedTicketIds.length} {t(`documentation.details.ticket${documentation.relatedTicketIds.length > 1 ? 's' : ''}`)}
                   </Badge>
                   <Badge variant="secondary">
                     <FileText className="mr-1 h-3 w-3" />
-                    {documentation.attachedFiles.length} file
-                    {documentation.attachedFiles.length > 1 ? 's' : ''}
+                    {documentation.attachedFiles.length} {t(`documentation.details.file${documentation.attachedFiles.length > 1 ? 's' : ''}`)}
                   </Badge>
                 </div>
               </CardHeader>
@@ -265,26 +263,26 @@ export const DocumentationDetails: React.FC = () => {
             <div className="space-y-6">
               <Card>
                 <CardHeader>
-                  <CardTitle className="text-base">Metadata</CardTitle>
+                  <CardTitle className="text-base">{t('documentation.details.metadata')}</CardTitle>
                 </CardHeader>
                 <CardContent className="space-y-2 text-sm">
                   <div className="flex items-center gap-2 text-muted-foreground">
                     <UserRound className="h-3.5 w-3.5" />
-                    <span>Author:</span>
+                    <span>{t('documentation.details.author')}</span>
                     <span className="font-medium text-foreground">{authorName}</span>
                   </div>
                   <div className="flex items-center gap-2 text-muted-foreground">
                     <CalendarDays className="h-3.5 w-3.5" />
-                    <span>Created:</span>
+                    <span>{t('documentation.details.created')}</span>
                     <span className="font-medium text-foreground">{formatDate(documentation.createdAt)}</span>
                   </div>
                   <div className="flex items-center gap-2 text-muted-foreground">
                     <CalendarDays className="h-3.5 w-3.5" />
-                    <span>Updated:</span>
+                    <span>{t('documentation.details.updated')}</span>
                     <span className="font-medium text-foreground">{formatDate(documentation.updatedAt ?? documentation.createdAt)}</span>
                   </div>
                   <div className="text-muted-foreground">
-                    <span>Project:</span>
+                    <span>{t('documentation.details.project')}</span>
                     <span className="ml-1 font-medium text-foreground">{projectName}</span>
                   </div>
                 </CardContent>
@@ -292,11 +290,11 @@ export const DocumentationDetails: React.FC = () => {
 
               <Card>
                 <CardHeader>
-                  <CardTitle className="text-base">Attached Files</CardTitle>
+                  <CardTitle className="text-base">{t('documentation.details.attachedFiles')}</CardTitle>
                 </CardHeader>
                 <CardContent className="space-y-2">
                   {documentation.attachedFiles.length === 0 ? (
-                    <p className="text-sm text-muted-foreground">No files attached.</p>
+                    <p className="text-sm text-muted-foreground">{t('documentation.details.noFiles')}</p>
                   ) : (
                     documentation.attachedFiles.map((file, index) => (
                       <div
@@ -311,12 +309,12 @@ export const DocumentationDetails: React.FC = () => {
                           <a href={file.url} download={file.filename} target="_blank" rel="noreferrer">
                             <Button variant="outline" size="sm">
                               <Download className="mr-1 h-3.5 w-3.5" />
-                              Download
+                              {t('documentation.details.download')}
                             </Button>
                           </a>
                         ) : (
                           <Button variant="outline" size="sm" disabled>
-                            Unavailable
+                            {t('documentation.details.unavailable')}
                           </Button>
                         )}
                       </div>
@@ -328,17 +326,17 @@ export const DocumentationDetails: React.FC = () => {
 
             <Card className="lg:col-span-3">
               <CardHeader>
-                <CardTitle className="text-base">Linked Tickets</CardTitle>
+                <CardTitle className="text-base">{t('documentation.details.linkedTickets')}</CardTitle>
               </CardHeader>
               <CardContent className="p-0">
                 <Table>
                   <TableHeader className="bg-muted/50">
                     <TableRow>
-                      <TableHead className="px-4">Code</TableHead>
-                      <TableHead className="px-4">Title</TableHead>
-                      <TableHead className="px-4">Status</TableHead>
-                      <TableHead className="px-4">Priority</TableHead>
-                      <TableHead className="px-4">Project</TableHead>
+                      <TableHead className="px-4">{t('documentation.details.table.code')}</TableHead>
+                      <TableHead className="px-4">{t('documentation.details.table.title')}</TableHead>
+                      <TableHead className="px-4">{t('documentation.details.table.status')}</TableHead>
+                      <TableHead className="px-4">{t('documentation.details.table.priority')}</TableHead>
+                      <TableHead className="px-4">{t('documentation.details.table.project')}</TableHead>
                     </TableRow>
                   </TableHeader>
                   <TableBody>
@@ -346,8 +344,8 @@ export const DocumentationDetails: React.FC = () => {
                       <TableRow key={ticket.id} className="cursor-pointer hover:bg-accent/40" onClick={() => navigate(`${currentUser ? getBaseRouteForRole(currentUser.role) : ''}/tickets/${ticket.id}`)}>
                         <TableCell className="px-4 py-3 font-mono text-xs">{ticket.ticketCode}</TableCell>
                         <TableCell className="px-4 py-3 font-medium">{ticket.title}</TableCell>
-                        <TableCell className="px-4 py-3">{TICKET_STATUS_LABELS[ticket.status]}</TableCell>
-                        <TableCell className="px-4 py-3">{ticket.priority}</TableCell>
+                        <TableCell className="px-4 py-3">{t(`tickets.status.${ticket.status}`)}</TableCell>
+                        <TableCell className="px-4 py-3">{t(`tickets.priority.${ticket.priority}`)}</TableCell>
                         <TableCell className="px-4 py-3 text-muted-foreground">
                           {projects.find((project) => project.id === ticket.projectId)?.name ?? ticket.projectId}
                         </TableCell>
@@ -356,7 +354,7 @@ export const DocumentationDetails: React.FC = () => {
                     {relatedTickets.length === 0 && (
                       <TableRow>
                         <TableCell colSpan={5} className="h-20 text-center text-muted-foreground">
-                          No tickets are currently linked to this document.
+                          {t('documentation.details.noLinkedTickets')}
                         </TableCell>
                       </TableRow>
                     )}

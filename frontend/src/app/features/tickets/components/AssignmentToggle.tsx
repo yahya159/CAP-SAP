@@ -14,8 +14,8 @@ import {
   AssigneeRecommendation,
   Ticket,
   User,
-  USER_ROLE_LABELS,
 } from '@/app/types/entities';
+import { useTranslation } from 'react-i18next';
 import { assigneeRecommender } from '@/app/services/aiRecommender';
 
 interface AssignmentToggleProps {
@@ -65,6 +65,8 @@ export const AssignmentToggle: React.FC<AssignmentToggleProps> = ({
     }
   }, [mode, recommendations.length, loading, runAI]);
 
+  const { t } = useTranslation();
+
   return (
     <div className="space-y-3">
       {/* Mode toggle */}
@@ -76,7 +78,7 @@ export const AssignmentToggle: React.FC<AssignmentToggleProps> = ({
           onClick={() => setMode('manual')}
         >
           <UserCheck className="mr-1.5 h-3.5 w-3.5" />
-          Manual
+          {t('assignment.manual')}
         </Button>
         <Button
           type="button"
@@ -85,7 +87,7 @@ export const AssignmentToggle: React.FC<AssignmentToggleProps> = ({
           onClick={() => setMode('ai')}
         >
           <Sparkles className="mr-1.5 h-3.5 w-3.5" />
-          AI Suggest
+          {t('assignment.aiSuggest')}
         </Button>
       </div>
 
@@ -93,12 +95,12 @@ export const AssignmentToggle: React.FC<AssignmentToggleProps> = ({
       {mode === 'manual' && (
         <Select value={value} onValueChange={onChange}>
           <SelectTrigger>
-            <SelectValue placeholder="Select assignee..." />
+            <SelectValue placeholder={t('assignment.selectPlaceholder')} />
           </SelectTrigger>
           <SelectContent>
             {candidates.map((u) => (
               <SelectItem key={u.id} value={u.id}>
-                {u.name} ({USER_ROLE_LABELS[u.role]})
+                {u.name} ({t(`roles.${u.role}`)})
               </SelectItem>
             ))}
           </SelectContent>
@@ -110,11 +112,11 @@ export const AssignmentToggle: React.FC<AssignmentToggleProps> = ({
         <div className="space-y-2">
           {loading && (
             <p className="text-sm text-muted-foreground animate-pulse">
-              Analyzing candidates...
+              {t('assignment.analyzing')}
             </p>
           )}
           {!loading && recommendations.length === 0 && (
-            <p className="text-sm text-muted-foreground">No recommendations available.</p>
+            <p className="text-sm text-muted-foreground">{t('assignment.noRecommendations')}</p>
           )}
           {recommendations.map((rec, i) => {
             const user = users.find((u) => u.id === rec.userId);
@@ -138,7 +140,7 @@ export const AssignmentToggle: React.FC<AssignmentToggleProps> = ({
                     </span>
                     <span className="text-sm font-medium">{user.name}</span>
                     <Badge variant="outline" className="text-[10px]">
-                      {USER_ROLE_LABELS[user.role]}
+                      {t(`roles.${user.role}`)}
                     </Badge>
                   </div>
                   <span className="text-sm font-bold text-primary">
@@ -146,10 +148,10 @@ export const AssignmentToggle: React.FC<AssignmentToggleProps> = ({
                   </span>
                 </div>
                 <div className="mt-2 grid grid-cols-2 gap-2">
-                  <ScoreMini label="Availability" value={rec.factors.availabilityScore} color="emerald" />
-                  <ScoreMini label="Skills" value={rec.factors.skillsMatchScore} color="blue" />
-                  <ScoreMini label="Perf." value={rec.factors.performanceScore} color="amber" />
-                  <ScoreMini label="Similar" value={rec.factors.similarTicketsScore} color="violet" />
+                  <ScoreMini label={t('assignment.availability')} value={rec.factors.availabilityScore} color="emerald" />
+                  <ScoreMini label={t('assignment.skills')} value={rec.factors.skillsMatchScore} color="blue" />
+                  <ScoreMini label={t('assignment.performance')} value={rec.factors.performanceScore} color="amber" />
+                  <ScoreMini label={t('assignment.similar')} value={rec.factors.similarTicketsScore} color="violet" />
                 </div>
               </button>
             );

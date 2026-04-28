@@ -1,4 +1,5 @@
 import React, { useEffect, useState, useMemo } from 'react';
+import { useTranslation } from 'react-i18next';
 import { useNavigate } from 'react-router';
 import { Sparkles, Ticket, BarChart3, AlertTriangle, CheckCircle2, Clock } from 'lucide-react';
 import { PageHeader } from '../../components/common/PageHeader';
@@ -7,10 +8,11 @@ import { Card, CardContent, CardHeader, CardTitle } from '../../components/ui/ca
 import { Button } from '../../components/ui/button';
 import { Badge } from '../../components/ui/badge';import { TicketsAPI } from '../../services/odata/ticketsApi';
 import { UsersAPI } from '../../services/odata/usersApi';
-import { Ticket as TicketType, User, TICKET_STATUS_LABELS, TICKET_NATURE_LABELS, USER_ROLE_LABELS } from '../../types/entities';
+import { Ticket as TicketType, User, TICKET_STATUS_LABELS, TICKET_NATURE_LABELS } from '../../types/entities';
 
 const DevCoordinatorDashboard: React.FC = () => {
   const navigate = useNavigate();
+  const { t } = useTranslation();
   const [tickets, setTickets] = useState<TicketType[]>([]);
   const [users, setUsers] = useState<User[]>([]);
   const [loading, setLoading] = useState(true);
@@ -66,24 +68,24 @@ const DevCoordinatorDashboard: React.FC = () => {
   return (
     <div className="space-y-6 p-6">
       <PageHeader
-        title="Dev Coordinator Dashboard"
-        subtitle="Ticket dispatch, workload monitoring, and consultant availability"
+        title={t('coordinator.dashboard.title')}
+        subtitle={t('coordinator.dashboard.subtitle')}
       />
 
       {/* KPIs */}
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-        <KPICard title="Unassigned Tickets" value={unassignedTickets.length} icon={Ticket} variant="warning" />
-        <KPICard title="In Progress" value={inProgressTickets.length} icon={Clock} variant="info" />
-        <KPICard title="Blocked" value={blockedTickets.length} icon={AlertTriangle} variant="danger" />
-        <KPICard title="Total Effort (h)" value={totalEffort.toFixed(1)} icon={BarChart3} variant="default" />
+        <KPICard title={t('coordinator.dashboard.kpi.unassigned')} value={unassignedTickets.length} icon={Ticket} variant="warning" />
+        <KPICard title={t('coordinator.dashboard.kpi.inProgress')} value={inProgressTickets.length} icon={Clock} variant="info" />
+        <KPICard title={t('coordinator.dashboard.kpi.blocked')} value={blockedTickets.length} icon={AlertTriangle} variant="danger" />
+        <KPICard title={t('coordinator.dashboard.kpi.totalEffort')} value={totalEffort.toFixed(1)} icon={BarChart3} variant="default" />
       </div>
 
       {/* Consultant Workload */}
       <Card className="border-border/80 bg-card">
         <CardHeader className="flex flex-row items-center justify-between">
-          <CardTitle className="text-lg">Consultant Workload</CardTitle>
+          <CardTitle className="text-lg">{t('coordinator.workload.title')}</CardTitle>
           <Button variant="outline" size="sm" onClick={() => navigate('/dev-coordinator/workload')}>
-            Details
+            {t('coordinator.workload.details')}
           </Button>
         </CardHeader>
         <CardContent>
@@ -92,13 +94,13 @@ const DevCoordinatorDashboard: React.FC = () => {
               <div key={user.id} className="flex items-center justify-between rounded-lg border p-3">
                 <div>
                   <p className="text-sm font-medium">{user.name}</p>
-                  <Badge variant="outline" className="text-xs">{USER_ROLE_LABELS[user.role]}</Badge>
+                  <Badge variant="outline" className="text-xs">{t(`roles.${user.role}`)}</Badge>
                 </div>
-                <div className="flex items-center gap-4 text-sm">
-                  <span className="text-muted-foreground">{ticketCount} tickets</span>
-                  <span className="font-medium">{effortHours}h effort</span>
+                  <div className="flex items-center gap-4 text-sm">
+                  <span className="text-muted-foreground">{t('coordinator.workload.tickets', { count: ticketCount })}</span>
+                  <span className="font-medium">{t('coordinator.workload.effort', { hours: effortHours })}</span>
                   <span className={`text-xs ${user.availabilityPercent >= 80 ? 'text-green-600' : user.availabilityPercent >= 50 ? 'text-yellow-600' : 'text-red-600'}`}>
-                    {user.availabilityPercent}% avail.
+                    {t('coordinator.workload.avail', { percent: user.availabilityPercent })}
                   </span>
                 </div>
               </div>
@@ -110,17 +112,17 @@ const DevCoordinatorDashboard: React.FC = () => {
       {/* Unassigned tickets ready for dispatch */}
       <Card className="border-border/80 bg-card">
         <CardHeader className="flex flex-row items-center justify-between">
-          <CardTitle className="text-lg">Tickets Awaiting Assignment</CardTitle>
+          <CardTitle className="text-lg">{t('coordinator.dispatch.title')}</CardTitle>
           <Button variant="default" size="sm" onClick={() => navigate('/dev-coordinator/ai-dispatch')}>
-            <Sparkles className="mr-2 h-4 w-4" /> AI Dispatch
+            <Sparkles className="mr-2 h-4 w-4" /> {t('coordinator.dispatch.aiDispatch')}
           </Button>
         </CardHeader>
         <CardContent>
           <div className="space-y-3">
             {unassignedTickets.length === 0 ? (
-              <div className="flex items-center justify-center py-8 text-sm text-muted-foreground">
+                <div className="flex items-center justify-center py-8 text-sm text-muted-foreground">
                 <CheckCircle2 className="mr-2 h-5 w-5 text-green-500" />
-                All tickets are assigned
+                {t('coordinator.dispatch.allAssigned')}
               </div>
             ) : (
               unassignedTickets.map((ticket) => (
@@ -144,10 +146,10 @@ const DevCoordinatorDashboard: React.FC = () => {
 
       {/* Recent tickets */}
       <Card className="border-border/80 bg-card">
-        <CardHeader className="flex flex-row items-center justify-between">
-          <CardTitle className="text-lg">Recent Tickets</CardTitle>
+          <CardHeader className="flex flex-row items-center justify-between">
+          <CardTitle className="text-lg">{t('coordinator.recentTickets.title')}</CardTitle>
           <Button variant="outline" size="sm" onClick={() => navigate('/dev-coordinator/tickets')}>
-            View all
+            {t('coordinator.recentTickets.viewAll')}
           </Button>
         </CardHeader>
         <CardContent>

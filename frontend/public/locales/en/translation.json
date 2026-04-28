@@ -1,0 +1,1289 @@
+{
+  "common": {
+    "search": "Search projects, users, tickets...",
+    "notifications": "Notifications",
+    "noNotifications": "No notifications",
+    "profile": "Profile",
+    "settings": "Settings",
+    "logout": "Logout",
+    "english": "English",
+    "french": "French",
+    "switchLanguage": "Switch Language",
+    "lightMode": "Switch to light mode",
+    "darkMode": "Switch to dark mode",
+    "compactDensity": "Switch to compact density",
+    "comfortableDensity": "Switch to comfortable density",
+    "expandSidebar": "Expand sidebar",
+    "collapseSidebar": "Collapse sidebar",
+    "toggleNavigation": "Toggle navigation",
+    "loading": "Loading...",
+    "loadingSession": "Loading session...",
+    "pageNotFound": "Page not found",
+    "pageNotFoundDesc": "The page you requested does not exist.",
+    "cancel": "Cancel",
+    "save": "Save",
+    "delete": "Delete",
+    "actions": "Actions",
+    "home": "Home",
+    "viewAll": "View All",
+    "status": "Status",
+    "type": "Type",
+    "name": "Name",
+    "description": "Description",
+    "all": "All",
+    "edit": "Edit",
+    "create": "Create",
+    "back": "Back",
+    "tickets": "Tickets",
+    "errors": {
+      "loadFailed": "Failed to load data. Please try again later."
+    }
+  },
+  "entities": {
+    "userRole": {
+      "ADMIN": "Administrator",
+      "MANAGER": "Manager",
+      "CONSULTANT_TECHNIQUE": "Technical Consultant",
+      "CONSULTANT_FONCTIONNEL": "Functional Consultant",
+      "PROJECT_MANAGER": "Project Manager",
+      "DEV_COORDINATOR": "Dev Coordinator"
+    },
+    "projectDeliveryType": {
+      "TMA": "TMA",
+      "BUILD": "Build"
+    },
+    "sapModule": {
+      "FI": "FI – Finance",
+      "CO": "CO – Controlling",
+      "MM": "MM – Materials Mgmt",
+      "SD": "SD – Sales & Dist.",
+      "PP": "PP – Production",
+      "PM": "PM – Plant Maint.",
+      "QM": "QM – Quality Mgmt",
+      "HR": "HR – Human Resources",
+      "PS": "PS – Project System",
+      "WM": "WM – Warehouse Mgmt",
+      "BASIS": "BASIS – Admin",
+      "ABAP": "ABAP – Development",
+      "FIORI": "Fiori / UI5",
+      "BW": "BW – Business Warehouse",
+      "OTHER": "Other"
+    },
+    "ticketComplexity": {
+      "SIMPLE": "Simple",
+      "MOYEN": "Medium",
+      "COMPLEXE": "Complex",
+      "TRES_COMPLEXE": "Very Complex"
+    },
+    "imputationValidation": {
+      "DRAFT": "Draft",
+      "SUBMITTED": "Submitted",
+      "VALIDATED": "Validated",
+      "REJECTED": "Rejected"
+    },
+    "ticketNature": {
+      "WORKFLOW": "Workflow",
+      "FORMULAIRE": "Formulaire",
+      "PROGRAMME": "Programme",
+      "ENHANCEMENT": "Enhancement",
+      "MODULE": "Module",
+      "REPORT": "Report"
+    },
+    "ticketStatus": {
+      "PENDING_APPROVAL": "Pending Approval",
+      "APPROVED": "Approved",
+      "NEW": "New",
+      "IN_PROGRESS": "In Progress",
+      "IN_TEST": "In Test",
+      "BLOCKED": "Blocked",
+      "DONE": "Done",
+      "REJECTED": "Rejected"
+    },
+    "commentType": {
+      "GENERAL": "General",
+      "BLOCKER": "Blocker",
+      "QUESTION": "Question",
+      "UPDATE": "Update",
+      "FEEDBACK": "Feedback"
+    },
+    "wricefValidationStatus": {
+      "DRAFT": "Draft",
+      "PENDING_VALIDATION": "Pending Validation",
+      "VALIDATED": "Validated",
+      "REJECTED": "Rejected"
+    },
+    "wricefType": {
+      "W": "W – Workflow",
+      "R": "R – Report",
+      "I": "I – Interface",
+      "C": "C – Conversion",
+      "E": "E – Enhancement",
+      "F": "F – Form"
+    },
+    "certificationStatus": {
+      "VALID": "Valid",
+      "EXPIRING_SOON": "Expiring Soon",
+      "EXPIRED": "Expired"
+    },
+    "leaveStatus": {
+      "PENDING": "Pending",
+      "APPROVED": "Approved",
+      "REJECTED": "Rejected"
+    },
+    "documentationObjectType": {
+      "SFD": "SFD",
+      "GUIDE": "Guide",
+      "ARCHITECTURE_DOC": "Architecture Doc",
+      "GENERAL": "General"
+    }
+  },
+  "consultant": {
+    "techDashboard": {
+      "welcome": "Welcome back, {{name}}",
+      "subtitle": "Execution cockpit for your deliveries and workload",
+      "breadcrumb": "My Dashboard",
+      "kpi": {
+        "myTickets": "My Tickets",
+        "overdueTickets": "Overdue Tickets",
+        "hoursThisWeek": "Hours This Week",
+        "activeProjects": "Active Projects"
+      },
+      "upcomingTickets": {
+        "title": "Upcoming Tickets",
+        "loading": "Loading tickets...",
+        "empty": "No upcoming tickets.",
+        "due": "Due {{date}}",
+        "done": "{{percent}}% done"
+      },
+      "assignedProjects": {
+        "title": "Assigned Projects",
+        "empty": "No assigned projects.",
+        "openProjects": "Open Projects",
+        "progress": "Progress"
+      },
+      "productivity": {
+        "title": "Productivity Snapshot",
+        "thisWeek": "This Week",
+        "ticketsCompleted": "Tickets Completed",
+        "completionRate": "Completion Rate"
+      }
+    },
+    "myProjects": {
+      "title": "My Projects",
+      "subtitle": "Read-only overview of your assigned projects and tickets",
+      "loading": "Loading projects...",
+      "emptyTitle": "No projects assigned",
+      "emptyDesc": "You currently don't have any projects assigned to you. When a manager assigns you to a project, it will appear here.",
+      "manager": "Manager",
+      "period": "Period",
+      "myProgress": "My Progress",
+      "assigned": "Assigned",
+      "done": "Done",
+      "blocked": "Blocked"
+    },
+    "certifications": {
+      "title": "My Certifications",
+      "subtitle": "Manage your professional certifications",
+      "stats": {
+        "total": "Total",
+        "valid": "Valid",
+        "expired": "Expired"
+      },
+      "addCertification": "Add Certification",
+      "table": {
+        "name": "Name",
+        "body": "Issuing Body",
+        "obtained": "Obtained",
+        "expires": "Expires",
+        "status": "Status",
+        "actions": "Actions",
+        "empty": "No certifications yet. Click \"Add Certification\" to get started."
+      },
+      "dialog": {
+        "title": "Add Certification",
+        "name": "Certificate Name *",
+        "namePlaceholder": "e.g. SAP Certified Application Associate",
+        "body": "Issuing Body *",
+        "bodyPlaceholder": "e.g. SAP",
+        "obtained": "Date Obtained *",
+        "expires": "Expiry Date",
+        "status": "Status",
+        "cancel": "Cancel",
+        "add": "Add"
+      },
+      "toasts": {
+        "requiredFields": "Name, issuing body and date obtained are required",
+        "added": "Certification added",
+        "addFailed": "Failed to add certification",
+        "removed": "Certification removed",
+        "removeFailed": "Failed to remove certification"
+      }
+    },
+    "leaves": {
+      "title": "My Leave Requests",
+      "subtitle": "Submit and track your leave requests",
+      "stats": {
+        "total": "Total Requests",
+        "pending": "Pending",
+        "approved": "Approved",
+        "daysTaken": "Days Approved"
+      },
+      "newRequest": "New Request",
+      "table": {
+        "start": "Start",
+        "end": "End",
+        "days": "Days",
+        "reason": "Reason",
+        "status": "Status",
+        "submitted": "Submitted",
+        "empty": "No leave requests yet."
+      },
+      "dialog": {
+        "title": "New Leave Request",
+        "startDate": "Start Date *",
+        "endDate": "End Date *",
+        "reason": "Reason",
+        "reasonPlaceholder": "Optional reason...",
+        "cancel": "Cancel",
+        "submit": "Submit"
+      },
+      "toasts": {
+        "requiredFields": "Start and end date are required",
+        "invalidDates": "End date must be after start date",
+        "submitted": "Leave request submitted",
+        "submitFailed": "Failed to submit request"
+      }
+    }
+  },
+  "func": {
+    "dashboard": {
+      "welcome": "Welcome back, {{name}}",
+      "subtitle": "Functional delivery cockpit for validations, tickets, and collaboration",
+      "breadcrumb": "My Dashboard",
+      "kpi": {
+        "pendingDeliverables": "Pending Deliverables",
+        "approvedDeliverables": "Approved Deliverables",
+        "openTickets": "Open Tickets",
+        "resolvedTickets": "Resolved Tickets"
+      },
+      "deliverables": {
+        "title": "Deliverables Awaiting Validation",
+        "loading": "Loading deliverables...",
+        "pendingReview": "Pending Review"
+      },
+      "tickets": {
+        "title": "My Recent Tickets",
+        "manage": "Manage Tickets",
+        "empty": "No tickets created yet."
+      }
+    },
+    "projects": {
+      "title": "Projects",
+      "subtitle": "Functional perimeter, deliverables status and collaboration entry points",
+      "loading": "Loading projects...",
+      "manager": "Manager",
+      "techContact": "Tech Contact",
+      "notAssigned": "Not assigned",
+      "pending": "Pending",
+      "changesReq": "Changes Req.",
+      "blockedTickets": "Blocked Tickets",
+      "openTeams": "Open Teams Chat",
+      "feedback": {
+        "title": "Project Feedback",
+        "placeholder": "Share business feedback, blockers, or requested adjustments...",
+        "submit": "Submit Feedback",
+        "errorShort": "Project feedback must contain at least 10 characters",
+        "success": "Project feedback submitted",
+        "saveFailed": "Failed to save feedback."
+      }
+    },
+    "deliverables": {
+      "title": "Deliverables & Specifications",
+      "subtitle": "Manage, review, and validate project deliverables",
+      "search": "Search deliverables...",
+      "allStatuses": "All Statuses",
+      "deposit": "Deposit Deliverable",
+      "loading": "Loading deliverables...",
+      "empty": {
+        "title": "No deliverables found",
+        "descSearch": "Try adjusting your search or filters.",
+        "descEmpty": "There are no deliverables uploaded yet. Click the button above to deposit your first functional specification.",
+        "upload": "Upload Document"
+      },
+      "waitingReview": "{{count}} waiting for review",
+      "project": "Project",
+      "reference": "Reference",
+      "feedback": "Feedback",
+      "review": "Review Deliverable",
+      "depositDialog": {
+        "title": "Deposit Deliverable",
+        "desc": "Submit a new functional specification or project deliverable for validation.",
+        "targetProject": "Target Project",
+        "projectPlaceholder": "Select the associated project...",
+        "docType": "Document Type",
+        "docTitle": "Title",
+        "docTitlePlaceholder": "e.g. Scope Def v1.2",
+        "fileRef": "File Link / Reference (Optional)",
+        "fileRefPlaceholder": "https://sharepoint.com/...",
+        "submitting": "Submitting...",
+        "submit": "Submit Deliverable"
+      },
+      "reviewDialog": {
+        "title": "Review Deliverable",
+        "desc": "Validate the specification and provide actionable feedback if changes are needed.",
+        "name": "Name",
+        "type": "Type",
+        "link": "Link",
+        "feedbackLabel": "Validation Notes / Feedback",
+        "feedbackPlaceholder": "Provide any feedback for the author...",
+        "requestChanges": "Request Changes",
+        "approve": "Approve",
+        "saving": "Saving..."
+      },
+      "toasts": {
+        "loadFailed": "Failed to load deliverables.",
+        "notAllowed": "You are not allowed to review deliverables",
+        "updated": "Deliverable status updated",
+        "updateFailed": "Failed to update deliverable",
+        "requiredFields": "Project, name and type are required",
+        "submitted": "Specification submitted successfully",
+        "submitFailed": "Failed to submit specification"
+      }
+    }
+  },
+  "pm": {
+    "dashboard": {
+      "title": "Project Manager Dashboard",
+      "subtitle": "Core mission: validate team imputations and send validated periods to Stratime",
+      "kpi": {
+        "activeProjects": "Active Projects",
+        "openTickets": "Open Tickets",
+        "inTest": "In Test",
+        "blocked": "Blocked"
+      },
+      "stratime": {
+        "title": "Stratime Validation Pipeline",
+        "openHub": "Open Validation Hub",
+        "submitted": "Submitted Periods",
+        "waiting": "Waiting for project manager validation",
+        "ready": "Ready for Stratime",
+        "pendingDispatch": "Validated periods pending dispatch"
+      },
+      "recentTickets": {
+        "title": "Recent Tickets",
+        "viewAll": "View all",
+        "noTickets": "No tickets yet",
+        "effort": "{{hours}}h effort"
+      },
+      "projects": {
+        "title": "Projects",
+        "viewAll": "View all",
+        "ticketsCount": "{{count}} tickets"
+      }
+    }
+  },
+  "coordinator": {
+    "dashboard": {
+      "title": "Dev Coordinator Dashboard",
+      "subtitle": "Ticket dispatch, workload monitoring, and consultant availability",
+      "kpi": {
+        "unassigned": "Unassigned Tickets",
+        "inProgress": "In Progress",
+        "blocked": "Blocked",
+        "totalEffort": "Total Effort (h)"
+      },
+      "workload": {
+        "title": "Consultant Workload",
+        "details": "Details",
+        "tickets": "{{count}} tickets",
+        "effort": "{{hours}}h effort",
+        "avail": "{{percent}}% avail.",
+        "subtitle": "Consultant ticket assignments, effort hours, and availability",
+        "ticketLoad": "Ticket Load"
+      },
+      "dispatch": {
+        "title": "Tickets Awaiting Assignment",
+        "aiDispatch": "AI Dispatch",
+        "allAssigned": "All tickets are assigned"
+      },
+      "recentTickets": {
+        "title": "Recent Tickets",
+        "viewAll": "View all",
+        "effort": "{{hours}}h effort"
+      }
+    },
+    "dispatch": {
+      "title": "AI Dispatch",
+      "subtitle": "Select an unassigned ticket and let the scoring engine recommend the best assignees",
+      "step1": "1. Select Ticket",
+      "selectPlaceholder": "Choose an unassigned ticket...",
+      "noUnassigned": "No unassigned tickets",
+      "analyzing": "Analyzing...",
+      "suggest": "Suggest Assignees",
+      "step2": "2. Recommended Assignees (Top 5)",
+      "assign": "Assign",
+      "factors": {
+        "availability": "Availability",
+        "skillsMatch": "Skills Match",
+        "performance": "Performance",
+        "similarTickets": "Similar Tickets"
+      },
+      "algorithm": {
+        "title": "Scoring Algorithm",
+        "formula": "Weighted Score = Availability (30%) + Skills Match (35%) + Performance (15%) + Similar Tickets (20%)",
+        "availability": "Availability: User availability % minus penalty for open ticket count",
+        "skillsMatch": "Skills Match: Fuzzy match between user skills and ticket nature/tags",
+        "performance": "Performance: Count of resolved tickets (capped at 100)",
+        "similarTickets": "Similar Tickets: Past tickets of same nature resolved by this user",
+        "engine": "Recommendations are generated by the configured scoring engine."
+      },
+      "toasts": {
+        "assigned": "Ticket assigned",
+        "assignedDesc": "\"{{title}}\" assigned to {{name}} ({{role}})",
+        "assignFailed": "Failed to assign ticket"
+      }
+    },
+    "workload": {
+      "title": "Workload Overview",
+      "subtitle": "Consultant ticket assignments, effort hours, and availability",
+      "available": "{{percent}}% available",
+      "counts": "{{active}} active / {{done}} done",
+      "effort": "{{total}}h total effort ({{active}}h active)",
+      "ticketLoad": "Ticket Load",
+      "noConsultants": "No consultants found"
+    }
+  },
+  "admin": {
+    "dashboard": {
+      "title": "Admin Command Center",
+      "subtitle": "Platform health, user governance, and data integrity overview",
+      "breadcrumb": "Admin Dashboard",
+      "kpi": {
+        "totalUsers": "Total Users",
+        "activeUsers": "Active Users",
+        "projects": "Projects",
+        "tickets": "Tickets",
+        "definitions": "KPI Definitions",
+        "table": {
+          "kpi": "KPI",
+          "formula": "Formula",
+          "source": "Source",
+          "refresh": "Refresh"
+        }
+      },
+      "backendMode": "Backend mode",
+      "odataEndpoint": "OData endpoint",
+      "activitySnapshot": "Activity snapshot",
+      "auditLog": "Audit & Activity Log"
+    },
+    "users": {
+      "title": "Users Management",
+      "subtitle": "Manage user accounts, roles, and permissions",
+      "newUser": "New User",
+      "searchPlaceholder": "Search users by name or email...",
+      "role": "Role",
+      "allRoles": "All Roles",
+      "table": {
+        "user": "User",
+        "role": "Role",
+        "skills": "Skills",
+        "availability": "Availability",
+        "status": "Status",
+        "actions": "Actions",
+        "rate": "Rate",
+        "active": "Active",
+        "inactive": "Inactive",
+        "loading": "Loading users...",
+        "empty": "No users match your filters."
+      },
+      "dialog": {
+        "createTitle": "Create User",
+        "editTitle": "Edit User",
+        "desc": "Manage account profile, role assignment, and staffing attributes.",
+        "name": "Name",
+        "email": "Email",
+        "role": "Role",
+        "selectRole": "Select role",
+        "availability": "Availability %",
+        "skills": "Skills (comma-separated)",
+        "certifications": "Certifications (comma-separated)",
+        "active": "Active account",
+        "saving": "Saving..."
+      },
+      "deleteDialog": {
+        "title": "Delete user",
+        "desc": "This will permanently remove \"{{name}}\" from the current dataset.",
+        "fallback": "This action cannot be undone."
+      },
+      "toasts": {
+        "activated": "User activated",
+        "deactivated": "User deactivated",
+        "updateStatusFailed": "Failed to update user status",
+        "requiredFields": "Name and email are required",
+        "invalidEmail": "Please enter a valid email address",
+        "invalidAvailability": "Availability must be between 0 and 100",
+        "updated": "User updated",
+        "created": "User created",
+        "saveFailed": "Failed to save user",
+        "deleteSelf": "You cannot delete the currently connected user",
+        "deleted": "User deleted",
+        "deleteFailed": "Failed to delete user"
+      }
+    },
+    "reference": {
+      "title": "Reference Data Management",
+      "subtitle": "Manage ticket statuses, priorities, project types and skills",
+      "createTitle": "Create Reference Item",
+      "editTitle": "Edit Reference Item",
+      "type": "Type",
+      "selectType": "Select type",
+      "code": "Code",
+      "codePlaceholder": "EX: IN_PROGRESS",
+      "label": "Label",
+      "labelPlaceholder": "Ex: In Progress",
+      "order": "Order",
+      "active": "Active",
+      "updating": "Updating",
+      "creating": "Creating",
+      "saving": "Saving...",
+      "search": "Search code or label...",
+      "allTypes": "All Types",
+      "table": {
+        "type": "Type",
+        "code": "Code",
+        "label": "Label",
+        "order": "Order",
+        "status": "Status",
+        "actions": "Actions",
+        "loading": "Loading reference data...",
+        "empty": "No reference entries found",
+        "active": "Active",
+        "inactive": "Inactive"
+      },
+      "deleteDialog": {
+        "title": "Delete reference item",
+        "desc": "Delete \"{{label}}\" ({{code}}) from reference data?",
+        "fallback": "This action cannot be undone."
+      },
+      "toasts": {
+        "requiredFields": "Code and label are required",
+        "invalidOrder": "Order must be at least 1",
+        "duplicate": "A reference item with this type and code already exists",
+        "updated": "Reference item updated",
+        "created": "Reference item created",
+        "saveFailed": "Failed to save reference item",
+        "statusFailed": "Failed to update status",
+        "deleted": "Reference item deleted",
+        "deleteFailed": "Failed to delete reference item"
+      }
+    }
+  },
+  "profile": {
+    "title": "My Profile",
+    "subtitle": "Manage personal details, skill stack, and availability",
+    "editProfile": "Edit Profile",
+    "editProfileDesc": "Changes are persisted through the configured backend API.",
+    "fullName": "Full Name",
+    "email": "Email",
+    "skills": "Skills (comma-separated)",
+    "skillsPlaceholder": "SAP CAP, Fiori, ABAP",
+    "certifications": "Certifications (comma-separated)",
+    "certificationsPlaceholder": "SAP Developer, AWS Architect",
+    "availability": "Availability",
+    "saving": "Saving...",
+    "saveProfile": "Save Profile",
+    "updated": "Profile updated",
+    "updateFailed": "Failed to update profile"
+  },
+  "login": {
+    "welcomeBack": "Welcome back",
+    "sessionStarted": "Session started successfully.",
+    "authFailed": "Authentication failed",
+    "authFailedDesc": "Please verify your credentials and try again.",
+    "platformName": "SAP Performance Management",
+    "hubTitle": "Performance Hub",
+    "signInToContinue": "Sign in to continue.",
+    "secureWorkspace": "Secure role-based workspace.",
+    "accountAccess": "Account Access",
+    "signIn": "Sign in",
+    "useWorkAccount": "Use your work account.",
+    "email": "Email",
+    "emailPlaceholder": "name@domain.com",
+    "password": "Password",
+    "passwordPlaceholder": "Enter your password",
+    "signingIn": "Signing in...",
+    "enterPlatform": "Enter Platform",
+    "quickAccess": "Quick Access",
+    "noActiveUsers": "No active users available for quick access.",
+    "selectedRole": "Selected {{role}}. Enter password to continue.",
+    "signingInAs": "Signing in as {{role}}...",
+    "bypassValidation": "Bypass Validation (Direct)",
+    "directLoginSuccess": "Direct login as {{role}}"
+  },
+  "roles": {
+    "ADMIN": "Administrator",
+    "MANAGER": "Manager",
+    "CONSULTANT_TECHNIQUE": "Technical Consultant",
+    "CONSULTANT_FONCTIONNEL": "Functional Consultant",
+    "PROJECT_MANAGER": "Project Manager",
+    "DEV_COORDINATOR": "Dev Coordinator"
+  },
+  "documentation": {
+    "title": "Documentation Objects",
+    "subtitle": "Centralized project documentation, SFDs, guides, and architecture notes",
+    "home": "Home",
+    "objects": "Objects",
+    "newObject": "New Object",
+    "searchPlaceholder": "Search objects by title, content, project...",
+    "allProjects": "All projects",
+    "allTypes": "All types",
+    "kbObjects": "Knowledge Base Objects",
+    "table": {
+      "title": "Title",
+      "type": "Type",
+      "source": "Source",
+      "project": "Project",
+      "linkedTickets": "Linked Tickets",
+      "files": "Files",
+      "author": "Author",
+      "updated": "Updated",
+      "action": "Action"
+    },
+    "loading": "Loading objects...",
+    "noObjects": "No objects found for current filters.",
+    "manual": "Manual",
+    "open": "Open",
+    "createTitle": "Create Documentation Object",
+    "titleLabel": "Title *",
+    "titlePlaceholder": "Documentation object title",
+    "typeLabel": "Type",
+    "projectLabel": "Project *",
+    "selectProject": "Select project",
+    "overviewLabel": "Overview",
+    "overviewPlaceholder": "High-level summary of this object",
+    "contentLabel": "Content *",
+    "contentPlaceholder": "Write markdown-like content for this documentation object",
+    "attachedFilesLabel": "Attached Files",
+    "relatedTicketsLabel": "Related Tickets",
+    "selectProjectFirst": "Select a project first to link tickets.",
+    "noTicketsFound": "No tickets found for this project.",
+    "cancel": "Cancel",
+    "creating": "Creating...",
+    "createObject": "Create Object",
+    "errors": {
+      "loadFailed": "Failed to load documentation objects.",
+      "filesSkipped": "{{count}} file(s) were skipped. Max size is {{size}} per file.",
+      "attachFailed": "Failed to attach one or more files",
+      "titleRequired": "Title is required",
+      "projectRequired": "Project is required",
+      "contentRequired": "Content is required",
+      "createFailed": "Failed to create object"
+    },
+    "success": {
+      "created": "Object created"
+    },
+    "types": {
+      "SFD": "SFD",
+      "GUIDE": "Guide",
+      "ARCHITECTURE_DOC": "Architecture Doc",
+      "GENERAL": "General"
+    },
+    "details": {
+      "title": "Documentation Details",
+      "subtitle": "Knowledge base article details",
+      "back": "Back",
+      "loading": "Loading documentation...",
+      "notFound": "Documentation not found",
+      "notFoundDesc": "The requested article does not exist in the knowledge base.",
+      "ticket": "ticket",
+      "tickets": "tickets",
+      "file": "file",
+      "files": "files",
+      "metadata": "Metadata",
+      "author": "Author:",
+      "created": "Created:",
+      "updated": "Updated:",
+      "project": "Project:",
+      "attachedFiles": "Attached Files",
+      "noFiles": "No files attached.",
+      "download": "Download",
+      "unavailable": "Unavailable",
+      "linkedTickets": "Linked Tickets",
+      "noLinkedTickets": "No tickets are currently linked to this document.",
+      "table": {
+        "code": "Code",
+        "title": "Title",
+        "status": "Status",
+        "priority": "Priority",
+        "project": "Project"
+      }
+    }
+  },
+  "tickets": {
+    "status": {
+      "PENDING_APPROVAL": "Pending Approval",
+      "APPROVED": "Approved",
+      "NEW": "New",
+      "IN_PROGRESS": "In Progress",
+      "IN_TEST": "In Test",
+      "BLOCKED": "Blocked",
+      "DONE": "Done",
+      "REJECTED": "Rejected"
+    },
+    "priority": {
+      "LOW": "Low",
+      "MEDIUM": "Medium",
+      "HIGH": "High",
+      "CRITICAL": "Critical"
+    },
+    "details": {
+      "events": {
+        "created": "Created",
+        "changedStatus": "Changed status from {{from}} to {{to}}",
+        "assigned": "Assigned to {{user}}",
+        "updatedEffort": "Updated effort from {{from}}h to {{to}}h",
+        "changedPriority": "Changed priority from {{from}} to {{to}}",
+        "sentToTest": "Sent to test",
+        "commented": "Commented: {{comment}}",
+        "addedComment": "Added a comment"
+      },
+      "notFound": "Ticket not found",
+      "noAccess": "No access to this ticket",
+      "loading": "Loading ticket details...",
+      "title": "Ticket Details",
+      "unableToLoad": "Unable to load ticket",
+      "couldNotBeLoaded": "The requested ticket could not be loaded.",
+      "backToTickets": "Back to Tickets",
+      "detailedView": "Detailed View",
+      "project": "Project",
+      "wricef": "WRICEF",
+      "ticketId": "Ticket ID",
+      "createdBy": "Created By",
+      "assignedTo": "Assigned To",
+      "assignedRole": "Assigned Role",
+      "assignedBy": "Assigned by",
+      "estimation": "Estimation",
+      "effort": "Actual Effort",
+      "dueDate": "Due Date",
+      "createdAt": "Created At",
+      "updatedAt": "Updated At",
+      "estimatedViaAbaque": "Estimated via Abaque",
+      "yes": "Yes",
+      "no": "No",
+      "effortNote": "Effort Note",
+      "estVsActual": "Est. vs Actual",
+      "history": "History / Events",
+      "noHistory": "No events recorded for this ticket."
+    },
+    "list": {
+      "title": "Tickets Management",
+      "subtitle": "View, create, and manage all tickets across projects",
+      "filters": {
+        "searchPlaceholder": "Search tickets, WRICEF, code...",
+        "status": "Status",
+        "allStatuses": "All Statuses",
+        "module": "Module",
+        "allModules": "All Modules",
+        "complexity": "Complexity",
+        "allComplexity": "All Complexity",
+        "assigned": "Assigned",
+        "allAssigned": "All Assigned",
+        "more": "More",
+        "hide": "Hide",
+        "newTicket": "New Ticket"
+      },
+      "table": {
+        "code": "Code",
+        "title": "Title",
+        "wricef": "WRICEF",
+        "module": "Module",
+        "complexity": "Complexity",
+        "nature": "Nature",
+        "project": "Project",
+        "status": "Status",
+        "priority": "Priority",
+        "estimation": "Est.",
+        "actual": "Actual",
+        "due": "Due",
+        "assigned": "Assigned",
+        "indicators": "Indicators",
+        "actions": "Actions"
+      },
+      "empty": {
+        "title": "No tickets found",
+        "description": "There are no tickets matching your current filters. Try adjusting your search or create a new ticket.",
+        "createTicket": "Create Ticket"
+      }
+    },
+    "create": {
+      "title": "Create Ticket",
+      "project": "Project *",
+      "selectProject": "Select project",
+      "assignTo": "Assign To",
+      "unassigned": "Unassigned",
+      "ticketTitle": "Title *",
+      "wricefId": "WRICEF ID",
+      "existingObject": "Existing Object",
+      "selectExisting": "Select Existing Object",
+      "manualEntry": "Manual Entry",
+      "selectImported": "Select imported object",
+      "noObjects": "No objects imported for this project.",
+      "module": "Module *",
+      "nature": "Nature *",
+      "complexity": "Complexity *",
+      "estimation": "Estimation (hours)",
+      "useAbaque": "Use Matrix Estimate",
+      "abaqueSuggest": "Matrix suggests {{hours}}h for the selected nature and complexity.",
+      "abaqueApplied": "Matrix applied",
+      "priority": "Priority",
+      "dueDate": "Due Date",
+      "description": "Description",
+      "submit": "Create Ticket",
+      "submitting": "Creating..."
+    }
+  },
+  "pendingApprovals": {
+    "title": "Pending Approvals",
+    "subtitle": "{{count}} ticket(s) awaiting your review & assignment",
+    "breadcrumbHome": "Home",
+    "allCaughtUp": "All caught up!",
+    "noPending": "No tickets pending approval right now.",
+    "ticketsWithCount": "Tickets ({{count}})",
+    "selectToReview": "Select a ticket from the list to review",
+    "unassigned": "Unassigned",
+    "project": "Project",
+    "module": "Module",
+    "nature": "Nature",
+    "complexity": "Complexity",
+    "estimation": "Estimation",
+    "abaque": "(abaque)",
+    "dueDate": "Due Date",
+    "createdBy": "Created By",
+    "createdAt": "Created At",
+    "wricefId": "WRICEF ID",
+    "assignConsultant": "Assign Technical Consultant",
+    "assignConsultantDesc": "Choose a consultant manually or let the AI dispatcher recommend the best fit based on skills, availability, and current workload.",
+    "allocatedHoursBudget": "Allocated Hours Budget",
+    "estimatedHours": "Estimated: {{hours}}h",
+    "approving": "Approving...",
+    "approveAssign": "Approve & Assign",
+    "reject": "Reject",
+    "rejectTicket": "Reject Ticket",
+    "rejectTicketDesc": "Provide a reason for rejecting \"{{name}}\".",
+    "reasonLabel": "Reason",
+    "reasonPlaceholder": "Explain why this ticket is being rejected...",
+    "cancel": "Cancel",
+    "rejecting": "Rejecting...",
+    "activeTickets_one": "{{count}} active ticket",
+    "activeTickets_other": "{{count}} active tickets",
+    "currentWorkload": "Current workload",
+    "toasts": {
+      "loadFailed": "Failed to load data",
+      "selectConsultant": "Please select a technical consultant before approving",
+      "invalidHours": "Allocated hours must be greater than 0",
+      "approved": "Ticket approved & assigned",
+      "approvedDesc": "\"{{title}}\" → {{name}} ({{hours}}h)",
+      "approveFailed": "Failed to approve ticket",
+      "reasonRequired": "Please provide a rejection reason",
+      "rejected": "Ticket rejected",
+      "rejectFailed": "Failed to reject ticket"
+    }
+  },
+  "projects": {
+    "title": "Projects",
+    "subtitle": "Portfolio pipeline with smart filtering, quick edits, and KPI context",
+    "breadcrumbHome": "Home",
+    "refresh": "Refresh",
+    "newProject": "New Project",
+    "searchPlaceholder": "Search by name or description",
+    "allStatuses": "All statuses",
+    "allPriorities": "All priorities",
+    "reset": "Reset",
+    "table": {
+      "project": "Project",
+      "type": "Type",
+      "status": "Status",
+      "priority": "Priority",
+      "timeline": "Timeline",
+      "progress": "Progress",
+      "actions": "Actions"
+    },
+    "loading": "Loading projects...",
+    "noProjects": "No projects match the current filters.",
+    "createProject": "Create project",
+    "dialog": {
+      "createTitle": "Create Project",
+      "editTitle": "Edit Project",
+      "description": "Capture project planning metadata and portfolio tracking fields.",
+      "nameLabel": "Project Name",
+      "namePlaceholder": "S/4HANA Migration Program",
+      "descLabel": "Description",
+      "descPlaceholder": "Describe project scope, outcomes, and execution context",
+      "typeLabel": "Project Type",
+      "statusLabel": "Status",
+      "priorityLabel": "Priority",
+      "startDateLabel": "Start Date",
+      "endDateLabel": "End Date",
+      "progressLabel": "Progress (%)",
+      "wricefImport": "WRICEF Import (Optional)",
+      "wricefImportDesc": "Upload an Excel file containing WRICEF objects and tickets",
+      "parsing": "Parsing...",
+      "uploadExcel": "Upload Excel",
+      "objects": "{{count}} Objects",
+      "tickets": "{{count}} Tickets",
+      "noWricef": "No WRICEF file uploaded. You can add one now or later from the project details page.",
+      "cancel": "Cancel",
+      "creating": "Creating...",
+      "saving": "Saving...",
+      "saveChanges": "Save Changes"
+    },
+    "deleteDialog": {
+      "title": "Delete project",
+      "description": "This will remove \"{{name}}\" from the portfolio.",
+      "fallbackDescription": "This action cannot be undone.",
+      "delete": "Delete"
+    },
+    "toasts": {
+      "loadFailed": "Failed to load projects",
+      "invalidFile": "Please upload an Excel file (.xlsx or .xls)",
+      "wricefImported": "WRICEF imported: {{count}} objects found",
+      "parseFailed": "Failed to parse WRICEF file",
+      "nameRequired": "Project name is required",
+      "datesRequired": "Start and end dates are required",
+      "invalidDates": "End date cannot be before start date",
+      "created": "Project created successfully",
+      "updated": "Project updated successfully",
+      "saveFailed": "Failed to save project",
+      "deleted": "Project deleted",
+      "deleteFailed": "Failed to delete project"
+    }
+  },
+  "wricefValidation": {
+    "title": "WRICEF Validation",
+    "subtitle": "{{count}} WRICEF(s) pending your approval",
+    "breadcrumbHome": "Home",
+    "allReviewed": "All WRICEFs have been reviewed. Nothing pending.",
+    "selectFromList": "Select a WRICEF from the list",
+    "untitled": "Untitled",
+    "objCount": "{{count}} obj",
+    "untitledWricef": "Untitled WRICEF",
+    "projectLabel": "Project:",
+    "autoCreated": "Auto-created",
+    "imported": "Imported",
+    "submittedBy": "Submitted by",
+    "submittedAt": "Submitted at",
+    "objects": "Objects",
+    "objectsWithCount": "Objects ({{count}})",
+    "processing": "Processing...",
+    "approveWricef": "Approve WRICEF",
+    "rejectWricef": "Reject WRICEF",
+    "noObjects": "No objects in this WRICEF.",
+    "moduleLabel": "Module:",
+    "complexityLabel": "Complexity:",
+    "ticketsLabel": "Tickets:",
+    "linkedTickets": "Linked Tickets",
+    "approve": "Approve",
+    "reject": "Reject",
+    "rejectReasonTitle": "Reject WRICEF",
+    "rejectReasonDesc": "Provide a reason for rejecting \"{{name}}\".",
+    "rejectObjectTitle": "Reject Object",
+    "rejectObjectDesc": "Provide a reason for rejecting \"{{name}}\".",
+    "reasonLabel": "Reason *",
+    "reasonPlaceholder": "Explain why this WRICEF is being rejected...",
+    "objReasonPlaceholder": "Explain why this object is being rejected...",
+    "cancel": "Cancel",
+    "rejecting": "Rejecting...",
+    "toasts": {
+      "loadFailed": "Failed to load WRICEFs",
+      "validated": "WRICEF validated",
+      "validatedDesc": "\"{{name}}\" approved successfully.",
+      "validateFailed": "Failed to validate WRICEF",
+      "reasonRequired": "Please provide a rejection reason",
+      "rejected": "WRICEF rejected",
+      "rejectFailed": "Failed to reject WRICEF",
+      "objectApproved": "Object \"{{title}}\" approved",
+      "objectApproveFailed": "Failed to approve object",
+      "objectRejected": "Object \"{{title}}\" rejected",
+      "objectRejectFailed": "Failed to reject object"
+    }
+  },
+  "settings": {
+    "subtitle": "Personalize your workspace behavior and interface preferences",
+    "appearance": "Appearance",
+    "appearanceDesc": "Choose your visual environment.",
+    "theme": "Theme",
+    "currentMode": "Current mode",
+    "light": "Light",
+    "dark": "Dark",
+    "notifications": "Notifications",
+    "notificationsDesc": "Control the way updates reach you.",
+    "emailNotifications": "Email notifications",
+    "emailNotificationsDesc": "Receive direct project alerts by email.",
+    "desktopNotifications": "Desktop notifications",
+    "desktopNotificationsDesc": "Get real-time updates while active in the app.",
+    "weeklyDigest": "Weekly KPI digest",
+    "weeklyDigestDesc": "Summary of performance indicators each week.",
+    "locale": "Locale",
+    "localeDesc": "Select your preferred language format.",
+    "displayLanguage": "Display language",
+    "selectLocale": "Select locale",
+    "storageNote": "Settings are stored locally in your browser.",
+    "saveButton": "Save Settings",
+    "saved": "Settings saved",
+    "savedDesc": "Preferences are already applied and stored locally."
+  },
+  "dashboard": {
+    "manager": {
+      "title": "Manager Dashboard",
+      "subtitle": "Delivery progress, workload, and allocation in one view",
+      "errorLoading": "Unable to load dashboard data. Some metrics may be outdated.",
+      "retry": "Retry",
+      "kpi": {
+        "tace": {
+          "title": "TACE",
+          "subtitle": "Activity Rate (Excluding Leaves)"
+        },
+        "sla": {
+          "title": "SLA Respect",
+          "subtitle": "{{onTime}}/{{total}} delivered on time"
+        },
+        "throughput": {
+          "title": "Throughput",
+          "subtitle": "Completed tickets ratio"
+        },
+        "risks": {
+          "title": "Risk Hotspots",
+          "subtitle": "Critical or blocked tickets"
+        }
+      },
+      "deliverySnapshot": {
+        "title": "Delivery Snapshot",
+        "noData": "No ticket data available."
+      },
+      "criticalAlerts": {
+        "title": "Critical Alerts",
+        "noAlerts": "No critical alerts at this time.",
+        "labels": {
+          "blocked": "Ticket Blocked",
+          "deadline": "Deadline Risk"
+        },
+        "messages": {
+          "overdue": "overdue since {{date}}"
+        }
+      },
+      "quickActions": {
+        "title": "Quick Actions",
+        "pendingApprovals": "Pending Approvals ({{count}})",
+        "viewAllocations": "View Allocations",
+        "openRisks": "Open Risks & Critical Tickets"
+      }
+    },
+    "leaves": {
+      "title": "Leave Management",
+      "subtitle": "Approve or reject team leave requests",
+      "stats": {
+        "total": "Total Requests",
+        "pending": "Pending",
+        "approved": "Approved",
+        "rejected": "Rejected"
+      },
+      "filters": {
+        "status": "Status",
+        "allStatuses": "All Statuses"
+      },
+      "table": {
+        "consultant": "Consultant",
+        "start": "Start",
+        "end": "End",
+        "days": "Days",
+        "reason": "Reason",
+        "actions": "Actions",
+        "noRequests": "No leave requests found."
+      },
+      "availability": {
+        "title": "Team Availability (Approved Leaves)",
+        "unknown": "Unknown"
+      },
+      "notifications": {
+        "decisionTitle": "Leave {{decision}}",
+        "decisionMessage": "Your leave request ({{start}} → {{end}}) has been {{decision}}."
+      },
+      "toasts": {
+        "success": "Request {{decision}}",
+        "error": "Failed to process request"
+      }
+    },
+    "certifications": {
+      "title": "Certified Consultants",
+      "subtitle": "Browse team certifications and their status",
+      "stats": {
+        "total": "Total Certifications",
+        "valid": "Valid",
+        "expiring": "Expiring Soon"
+      },
+      "filters": {
+        "searchPlaceholder": "Search by name, cert or body...",
+        "allStatuses": "All Statuses"
+      },
+      "table": {
+        "consultant": "Consultant",
+        "certification": "Certification",
+        "issuingBody": "Issuing Body",
+        "obtained": "Obtained",
+        "expires": "Expires",
+        "noCerts": "No certifications found."
+      }
+    },
+    "risks": {
+      "title": "Risks & Critical Tickets",
+      "subtitle": "Track blocked work, risk level and mitigation actions",
+      "stats": {
+        "blocked": "Blocked Tickets",
+        "highRisk": "High Risk",
+        "criticalRisk": "Critical Risk",
+        "criticalTickets": "Critical Tickets"
+      },
+      "filters": {
+        "showCritical": "Show only critical or risky tickets",
+        "count": "{{count}} tickets displayed"
+      },
+      "table": {
+        "ticket": "Ticket",
+        "project": "Project",
+        "assignee": "Assignee",
+        "status": "Status",
+        "risk": "Risk",
+        "deadline": "Deadline",
+        "mitigation": "Mitigation",
+        "loading": "Loading risk register...",
+        "noTickets": "No matching tickets."
+      },
+      "labels": {
+        "critical": "Critical",
+        "due": "Due: {{date}}",
+        "unassigned": "Unassigned"
+      },
+      "placeholders": {
+        "mitigation": "Mitigation action / blocker details"
+      },
+      "notifications": {
+        "mitigationTitle": "Mitigation Updated",
+        "mitigationMessage": "{{title}}: mitigation notes were updated by manager.",
+        "statusTitle": "Ticket Status Updated",
+        "statusMessage": "{{title}}: status changed to {{status}}.",
+        "riskTitle": "Risk Level Updated",
+        "riskMessage": "{{title}}: risk level changed to {{risk}}.",
+        "reassignedTitle": "Ticket Reassigned",
+        "reassignedMessage": "{{title}}: you have been assigned as mitigation owner.",
+        "deadlineTitle": "Deadline Updated",
+        "deadlineMessage": "{{title}}: deadline changed to {{date}}."
+      },
+      "toasts": {
+        "invalidTransition": "Invalid status transition: {{from}} -> {{to}}",
+        "ticketNotFound": "Ticket no longer exists"
+      },
+      "errors": {
+        "updateFailed": "Failed to update ticket"
+      }
+    },
+    "wricef": {
+      "title": "WRICEF Management",
+      "subtitle": "Create, manage, and submit WRICEFs for project manager approval",
+      "actions": {
+        "newWricef": "New WRICEF"
+      },
+      "stats": {
+        "draft": "Draft",
+        "pending": "Pending",
+        "validated": "Validated",
+        "rejected": "Rejected"
+      },
+      "list": {
+        "empty": "No WRICEFs yet",
+        "emptyDescription": "Click \"New WRICEF\" to create your first one.",
+        "untitled": "Untitled WRICEF",
+        "project": "Project: {{name}}",
+        "objects": "{{count}} object(s)",
+        "tickets": "{{count}} ticket(s)",
+        "created": "Created {{date}}",
+        "rejected": "Rejected: {{reason}}"
+      },
+      "buttons": {
+        "submit": "Submit",
+        "submitting": "Submitting...",
+        "addObject": "Add Object",
+        "adding": "Adding...",
+        "cancel": "Cancel"
+      },
+      "form": {
+        "addObjectTitle": "Add Object to {{name}}",
+        "type": "Type *",
+        "title": "Title *",
+        "module": "Module",
+        "complexity": "Complexity",
+        "description": "Description",
+        "descriptionPlaceholder": "Describe the object..."
+      },
+      "dialog": {
+        "title": "Create WRICEF",
+        "description": "Create a new WRICEF document. You can add objects to it after creation.",
+        "project": "Project *",
+        "projectPlaceholder": "Select a project",
+        "sourceFile": "Source File Name *",
+        "sourceFilePlaceholder": "e.g. S4HANA_Migration_WRICEF.xlsx",
+        "creating": "Creating...",
+        "create": "Create"
+      },
+      "toasts": {
+        "loadError": "Failed to load data",
+        "createSuccess": "WRICEF created",
+        "createError": "Failed to create WRICEF",
+        "objectAdded": "Object added",
+        "objectAddError": "Failed to add object",
+        "objectDeleted": "Object deleted",
+        "objectDeleteError": "Failed to delete object",
+        "submitSuccess": "WRICEF submitted for validation",
+        "submitDescription": "\"{{name}}\" is now pending approval.",
+        "submitError": "Failed to submit WRICEF",
+        "deleteSuccess": "WRICEF deleted",
+        "deleteError": "Failed to delete WRICEF",
+        "validation": {
+          "selectProject": "Select a project",
+          "enterSourceFile": "Enter a source file name",
+          "enterObjectTitle": "Object title is required",
+          "minOneObject": "Add at least one object before submitting"
+        }
+      }
+    }
+  },
+  "sidebar": {
+    "sections": {
+      "Administration": "Administration",
+      "Manager": "Manager",
+      "Tech Consultant": "Tech Consultant",
+      "Functional Consultant": "Functional Consultant",
+      "Project Manager": "Project Manager",
+      "Dev Coordinator": "Dev Coordinator"
+    },
+    "items": {
+      "Dashboard": "Dashboard",
+      "Users": "Users",
+      "Reference Data": "Reference Data",
+      "Performance": "Performance",
+      "Projects": "Projects",
+      "Allocations": "Allocations",
+      "Risks": "Risks",
+      "Tickets": "Tickets",
+      "Objects": "Objects",
+      "Certifications": "Certifications",
+      "Leave": "Leave",
+      "Imputations": "Imputations",
+      "Approvals": "Approvals",
+      "WRICEF": "WRICEF",
+      "WRICEF Review": "WRICEF Review",
+      "Deliverables": "Deliverables",
+      "AI Dispatch": "AI Dispatch",
+      "Workload": "Workload"
+    }
+  }
+}

@@ -1,4 +1,5 @@
 import React, { useEffect, useMemo, useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { PageHeader } from '../../components/common/PageHeader';import { DeliverablesAPI } from '../../services/odata/deliverablesApi';
 import { NotificationsAPI } from '../../services/odata/notificationsApi';
 import { ProjectFeedbackAPI } from '../../services/odata/projectFeedbackApi';
@@ -15,6 +16,7 @@ import { toast } from 'sonner';
 import { openTeamsChat } from '../../utils/teamsChat';
 
 export const FuncProjects: React.FC = () => {
+  const { t } = useTranslation();
   const { currentUser } = useAuth();
   const [projects, setProjects] = useState<Project[]>([]);
   const [deliverables, setDeliverables] = useState<Deliverable[]>([]);
@@ -60,7 +62,7 @@ export const FuncProjects: React.FC = () => {
       setDeliverables([]);
       setTickets([]);
       setUsers([]);
-      const message = error instanceof Error ? error.message : 'Failed to load project data.';
+      const message = error instanceof Error ? error.message : t('func.deliverables.toasts.loadFailed');
       setLoadError(message);
       toast.error(message);
     } finally {
@@ -100,7 +102,7 @@ export const FuncProjects: React.FC = () => {
     const content = (feedbackDrafts[project.id] ?? '').trim();
 
     if (content.length < 10) {
-      toast.error('Project feedback must contain at least 10 characters');
+      toast.error(t('func.projects.feedback.errorShort'));
       return;
     }
 
@@ -131,9 +133,9 @@ export const FuncProjects: React.FC = () => {
         }
       }
 
-      toast.success('Project feedback submitted');
+      toast.success(t('func.projects.feedback.success'));
     } catch (error) {
-      const message = error instanceof Error ? error.message : 'Failed to save feedback.';
+      const message = error instanceof Error ? error.message : t('func.projects.feedback.saveFailed');
       toast.error(message);
     }
   };
@@ -141,11 +143,11 @@ export const FuncProjects: React.FC = () => {
   return (
     <div className="min-h-screen bg-background">
       <PageHeader
-        title="Projects"
-        subtitle="Functional perimeter, deliverables status and collaboration entry points"
+        title={t('func.projects.title')}
+        subtitle={t('func.projects.subtitle')}
         breadcrumbs={[
-          { label: 'Home', path: '/consultant-func/dashboard' },
-          { label: 'Projects' },
+          { label: t('common.home'), path: '/consultant-func/dashboard' },
+          { label: t('func.projects.title') },
         ]}
       />
 
@@ -156,7 +158,7 @@ export const FuncProjects: React.FC = () => {
           </Card>
         )}
         {loading ? (
-          <div className="text-muted-foreground">Loading projects...</div>
+          <div className="text-muted-foreground">{t('func.projects.loading')}</div>
         ) : (
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
             {rows.map(({ project, pending, changes, blocked, manager, technicalConsultant }) => (
@@ -169,13 +171,13 @@ export const FuncProjects: React.FC = () => {
 
                 <div className="grid grid-cols-2 gap-3 text-sm">
                   <div className="p-3 rounded border border-border">
-                    <div className="text-xs text-muted-foreground">Manager</div>
+                    <div className="text-xs text-muted-foreground">{t('func.projects.manager')}</div>
                     <div className="font-medium text-foreground">{manager?.name ?? 'Unknown'}</div>
                   </div>
                   <div className="p-3 rounded border border-border">
-                    <div className="text-xs text-muted-foreground">Tech Contact</div>
+                    <div className="text-xs text-muted-foreground">{t('func.projects.techContact')}</div>
                     <div className="font-medium text-foreground">
-                      {technicalConsultant?.name ?? 'Not assigned'}
+                      {technicalConsultant?.name ?? t('func.projects.notAssigned')}
                     </div>
                   </div>
                 </div>
@@ -183,15 +185,15 @@ export const FuncProjects: React.FC = () => {
                 <div className="grid grid-cols-3 gap-2">
                   <div className="rounded border border-border p-2 text-center">
                     <div className="text-xl font-semibold text-primary">{pending}</div>
-                    <div className="text-xs text-muted-foreground">Pending</div>
+                    <div className="text-xs text-muted-foreground">{t('func.projects.pending')}</div>
                   </div>
                   <div className="rounded border border-border p-2 text-center">
                     <div className="text-xl font-semibold text-destructive">{changes}</div>
-                    <div className="text-xs text-muted-foreground">Changes Req.</div>
+                    <div className="text-xs text-muted-foreground">{t('func.projects.changesReq')}</div>
                   </div>
                   <div className="rounded border border-border p-2 text-center">
                     <div className="text-xl font-semibold text-accent-foreground">{blocked}</div>
-                    <div className="text-xs text-muted-foreground">Blocked Tickets</div>
+                    <div className="text-xs text-muted-foreground">{t('func.projects.blockedTickets')}</div>
                   </div>
                 </div>
 
@@ -202,12 +204,12 @@ export const FuncProjects: React.FC = () => {
                   onClick={() => openTeamsDiscussion(technicalConsultant)}
                 >
                   <ExternalLink className="w-4 h-4" />
-                  Open Teams Chat
+                  {t('func.projects.openTeams')}
                 </Button>
 
                 <div className="space-y-2 rounded border border-border p-3">
                   <p className="text-xs font-semibold uppercase tracking-[0.08em] text-muted-foreground">
-                    Project Feedback
+                    {t('func.projects.feedback.title')}
                   </p>
                   <Textarea
                     value={feedbackDrafts[project.id] ?? ''}
@@ -215,14 +217,14 @@ export const FuncProjects: React.FC = () => {
                       setFeedbackDrafts((prev) => ({ ...prev, [project.id]: event.target.value }))
                     }
                     rows={3}
-                    placeholder="Share business feedback, blockers, or requested adjustments..."
+                    placeholder={t('func.projects.feedback.placeholder')}
                   />
                   <Button
                     type="button"
                     size="sm"
                     onClick={() => void submitFeedback(project, manager)}
                   >
-                    Submit Feedback
+                    {t('func.projects.feedback.submit')}
                   </Button>
 
                   {(feedbackHistory[project.id] ?? []).slice(0, 2).map((feedback, index) => (

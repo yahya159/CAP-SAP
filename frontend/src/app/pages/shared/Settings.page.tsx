@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { Save, Bell, Globe, Palette } from 'lucide-react';
+import { useTranslation } from 'react-i18next';
 import { toast } from 'sonner';
 import { PageHeader } from '../../components/common/PageHeader';
 import { useTheme } from '../../context/ThemeContext';
@@ -19,7 +20,6 @@ interface LocalSettings {
   emailNotifications: boolean;
   desktopNotifications: boolean;
   weeklyDigest: boolean;
-  locale: string;
 }
 
 const STORAGE_KEY = 'appSettings';
@@ -28,10 +28,10 @@ const DEFAULT_SETTINGS: LocalSettings = {
   emailNotifications: true,
   desktopNotifications: true,
   weeklyDigest: true,
-  locale: 'en-US',
 };
 
 export const SettingsPage: React.FC = () => {
+  const { t, i18n } = useTranslation();
   const { theme, setTheme } = useTheme();
   const [settings, setSettings] = useState<LocalSettings>(DEFAULT_SETTINGS);
 
@@ -52,17 +52,22 @@ export const SettingsPage: React.FC = () => {
   }, [settings]);
 
   const save = () => {
-    toast.success('Settings saved', {
-      description: 'Preferences are already applied and stored locally.',
+    toast.success(t('settings.saved'), {
+      description: t('settings.savedDesc'),
     });
+  };
+
+  const changeLanguage = (lng: string) => {
+    void i18n.changeLanguage(lng);
+    localStorage.setItem('i18nextLng', lng);
   };
 
   return (
     <div className="min-h-screen bg-transparent">
       <PageHeader
-        title="Settings"
-        subtitle="Personalize your workspace behavior and interface preferences"
-        breadcrumbs={[{ label: 'Settings' }]}
+        title={t('common.settings')}
+        subtitle={t('settings.subtitle')}
+        breadcrumbs={[{ label: t('common.settings') }]}
       />
 
       <div className="mx-auto grid max-w-4xl gap-6 p-6 lg:p-8">
@@ -70,17 +75,17 @@ export const SettingsPage: React.FC = () => {
           <CardHeader>
             <CardTitle className="inline-flex items-center gap-2 text-xl">
               <Palette className="h-4 w-4 text-primary" />
-              Appearance
+              {t('settings.appearance')}
             </CardTitle>
-            <CardDescription>Choose your visual environment.</CardDescription>
+            <CardDescription>{t('settings.appearanceDesc')}</CardDescription>
           </CardHeader>
           <CardContent className="flex items-center justify-between rounded-xl border border-border/70 bg-surface-2 p-4">
             <div>
               <p id="settings-theme-label" className="font-semibold text-foreground">
-                Theme
+                {t('settings.theme')}
               </p>
               <p className="text-sm text-muted-foreground">
-                Current mode: {theme === 'dark' ? 'Dark' : 'Light'}
+                {t('settings.currentMode')}: {theme === 'dark' ? t('settings.dark') : t('settings.light')}
               </p>
             </div>
             <Switch
@@ -96,17 +101,17 @@ export const SettingsPage: React.FC = () => {
           <CardHeader>
             <CardTitle className="inline-flex items-center gap-2 text-xl">
               <Bell className="h-4 w-4 text-primary" />
-              Notifications
+              {t('settings.notifications')}
             </CardTitle>
-            <CardDescription>Control the way updates reach you.</CardDescription>
+            <CardDescription>{t('settings.notificationsDesc')}</CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
             <div className="flex items-center justify-between rounded-xl border border-border/70 bg-surface-2 p-4">
               <div>
                 <p id="settings-email-label" className="font-semibold text-foreground">
-                  Email notifications
+                  {t('settings.emailNotifications')}
                 </p>
-                <p className="text-sm text-muted-foreground">Receive direct project alerts by email.</p>
+                <p className="text-sm text-muted-foreground">{t('settings.emailNotificationsDesc')}</p>
               </div>
               <Switch
                 id="settings-email-toggle"
@@ -121,9 +126,9 @@ export const SettingsPage: React.FC = () => {
             <div className="flex items-center justify-between rounded-xl border border-border/70 bg-surface-2 p-4">
               <div>
                 <p id="settings-desktop-label" className="font-semibold text-foreground">
-                  Desktop notifications
+                  {t('settings.desktopNotifications')}
                 </p>
-                <p className="text-sm text-muted-foreground">Get real-time updates while active in the app.</p>
+                <p className="text-sm text-muted-foreground">{t('settings.desktopNotificationsDesc')}</p>
               </div>
               <Switch
                 id="settings-desktop-toggle"
@@ -138,9 +143,9 @@ export const SettingsPage: React.FC = () => {
             <div className="flex items-center justify-between rounded-xl border border-border/70 bg-surface-2 p-4">
               <div>
                 <p id="settings-weekly-label" className="font-semibold text-foreground">
-                  Weekly KPI digest
+                  {t('settings.weeklyDigest')}
                 </p>
-                <p className="text-sm text-muted-foreground">Summary of performance indicators each week.</p>
+                <p className="text-sm text-muted-foreground">{t('settings.weeklyDigestDesc')}</p>
               </div>
               <Switch
                 id="settings-weekly-toggle"
@@ -158,40 +163,41 @@ export const SettingsPage: React.FC = () => {
           <CardHeader>
             <CardTitle className="inline-flex items-center gap-2 text-xl">
               <Globe className="h-4 w-4 text-primary" />
-              Locale
+              {t('settings.locale')}
             </CardTitle>
-            <CardDescription>Select your preferred language format.</CardDescription>
+            <CardDescription>{t('settings.localeDesc')}</CardDescription>
           </CardHeader>
           <CardContent className="rounded-xl border border-border/70 bg-surface-2 p-4">
             <Label htmlFor="settings-locale" className="mb-1 block text-sm text-muted-foreground">
-              Display language
+              {t('settings.displayLanguage')}
             </Label>
             <Select
-              value={settings.locale}
-              onValueChange={(value) => setSettings((prev) => ({ ...prev, locale: value }))}
+              value={i18n.language}
+              onValueChange={changeLanguage}
             >
               <SelectTrigger id="settings-locale" className="w-full max-w-xs">
-                <SelectValue placeholder="Select locale" />
+                <SelectValue placeholder={t('settings.selectLocale')} />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="en-US">English (US)</SelectItem>
-                <SelectItem value="fr-FR">French (FR)</SelectItem>
+                <SelectItem value="en">{t('common.english')}</SelectItem>
+                <SelectItem value="fr">{t('common.french')}</SelectItem>
               </SelectContent>
             </Select>
           </CardContent>
         </Card>
 
         <div className="rounded-xl border border-border/70 bg-surface-2 px-4 py-3 text-sm text-muted-foreground">
-          Settings are stored locally in your browser.
+          {t('settings.storageNote')}
         </div>
 
         <div>
           <Button onClick={save}>
             <Save className="h-4 w-4" />
-            Save Settings
+            {t('settings.saveButton')}
           </Button>
         </div>
       </div>
     </div>
   );
 };
+

@@ -13,7 +13,9 @@ import {
   X,
   AlignJustify,
   AlignVerticalSpaceAround,
+  Globe,
 } from 'lucide-react';
+import { useTranslation } from 'react-i18next';
 import { toast } from 'sonner';
 import { useAuth } from '../../context/AuthContext';
 import { useTheme } from '../../context/ThemeContext';
@@ -45,6 +47,7 @@ export const TopBar: React.FC<TopBarProps> = ({
   onMenuToggle,
   onToggleCollapse,
 }) => {
+  const { t, i18n } = useTranslation();
   const { currentUser, logout } = useAuth();
   const { theme, toggleTheme } = useTheme();
   const { density, toggleDensity } = useDensity();
@@ -113,6 +116,11 @@ export const TopBar: React.FC<TopBarProps> = ({
     }
   };
 
+  const changeLanguage = (lng: string) => {
+    void i18n.changeLanguage(lng);
+    localStorage.setItem('i18nextLng', lng);
+  };
+
   return (
     <header className="sticky top-0 z-30 border-b border-border bg-surface-1">
       <div className="flex h-16 items-center gap-2 px-3 sm:gap-3 sm:px-6 lg:px-8">
@@ -125,7 +133,7 @@ export const TopBar: React.FC<TopBarProps> = ({
           aria-controls="app-mobile-navigation"
         >
           {mobileOpen ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
-          <span className="sr-only">Toggle navigation</span>
+          <span className="sr-only">{t('common.toggleNavigation')}</span>
         </Button>
 
         <Button
@@ -134,7 +142,7 @@ export const TopBar: React.FC<TopBarProps> = ({
           className="hidden md:inline-flex"
           onClick={onToggleCollapse}
           aria-pressed={sidebarCollapsed}
-          title={sidebarCollapsed ? 'Expand sidebar' : 'Collapse sidebar'}
+          title={sidebarCollapsed ? t('common.expandSidebar') : t('common.collapseSidebar')}
         >
           <PanelLeft className="h-4 w-4" />
           <span className="sr-only">Toggle sidebar width</span>
@@ -151,11 +159,33 @@ export const TopBar: React.FC<TopBarProps> = ({
           <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
           <Input
             id="topbar-search"
-            aria-label="Search projects, users, and tickets"
+            aria-label={t('common.search')}
             className="border-border/70 bg-surface-2 pl-9 focus-visible:ring-2"
-            placeholder="Search projects, users, tickets..."
+            placeholder={t('common.search')}
           />
         </div>
+
+        <DropdownMenu>
+          <DropdownMenuTrigger asChild>
+            <Button
+              variant="ghost"
+              size="icon"
+              className="text-muted-foreground"
+              title={t('common.switchLanguage')}
+            >
+              <Globe className="h-4 w-4" />
+              <span className="sr-only">{t('common.switchLanguage')}</span>
+            </Button>
+          </DropdownMenuTrigger>
+          <DropdownMenuContent align="end">
+            <DropdownMenuItem onClick={() => changeLanguage('en')}>
+              {t('common.english')}
+            </DropdownMenuItem>
+            <DropdownMenuItem onClick={() => changeLanguage('fr')}>
+              {t('common.french')}
+            </DropdownMenuItem>
+          </DropdownMenuContent>
+        </DropdownMenu>
 
         <Button
           variant="ghost"
@@ -163,7 +193,7 @@ export const TopBar: React.FC<TopBarProps> = ({
           className="text-muted-foreground"
           onClick={toggleDensity}
           aria-pressed={density === 'compact'}
-          title={density === 'compact' ? 'Switch to comfortable density' : 'Switch to compact density'}
+          title={density === 'compact' ? t('common.comfortableDensity') : t('common.compactDensity')}
         >
           {density === 'compact' ? <AlignJustify className="h-4 w-4" /> : <AlignVerticalSpaceAround className="h-4 w-4" />}
           <span className="sr-only">Toggle density</span>
@@ -175,7 +205,7 @@ export const TopBar: React.FC<TopBarProps> = ({
           className="text-muted-foreground"
           onClick={toggleTheme}
           aria-pressed={theme === 'dark'}
-          title={theme === 'dark' ? 'Switch to light mode' : 'Switch to dark mode'}
+          title={theme === 'dark' ? t('common.lightMode') : t('common.darkMode')}
         >
           {theme === 'dark' ? <Sun className="h-4 w-4" /> : <Moon className="h-4 w-4" />}
           <span className="sr-only">Toggle theme</span>
@@ -190,14 +220,14 @@ export const TopBar: React.FC<TopBarProps> = ({
                   {unreadCount > 9 ? '9+' : unreadCount}
                 </Badge>
               )}
-              <span className="sr-only">Open notifications</span>
+              <span className="sr-only">{t('common.notifications')}</span>
             </Button>
           </DropdownMenuTrigger>
           <DropdownMenuContent align="end" className="w-[320px]">
-            <DropdownMenuLabel>Notifications</DropdownMenuLabel>
+            <DropdownMenuLabel>{t('common.notifications')}</DropdownMenuLabel>
             <DropdownMenuSeparator />
             {notifications.length === 0 ? (
-              <p className="px-2 py-4 text-sm text-muted-foreground">No notifications</p>
+              <p className="px-2 py-4 text-sm text-muted-foreground">{t('common.noNotifications')}</p>
             ) : (
               notifications.slice(0, 8).map((notification) => (
                 <DropdownMenuItem
@@ -234,11 +264,11 @@ export const TopBar: React.FC<TopBarProps> = ({
             <DropdownMenuSeparator />
             <DropdownMenuItem onSelect={() => navigate('/profile')}>
               <User className="h-4 w-4" />
-              Profile
+              {t('common.profile')}
             </DropdownMenuItem>
             <DropdownMenuItem onSelect={() => navigate('/settings')}>
               <Settings className="h-4 w-4" />
-              Settings
+              {t('common.settings')}
             </DropdownMenuItem>
             <DropdownMenuSeparator />
             <DropdownMenuItem
@@ -251,7 +281,7 @@ export const TopBar: React.FC<TopBarProps> = ({
               }}
             >
               <LogOut className="h-4 w-4" />
-              Logout
+              {t('common.logout')}
             </DropdownMenuItem>
           </DropdownMenuContent>
         </DropdownMenu>
@@ -259,3 +289,4 @@ export const TopBar: React.FC<TopBarProps> = ({
     </header>
   );
 };
+

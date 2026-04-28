@@ -1,5 +1,7 @@
 import React, { useEffect, useMemo, useState } from 'react';
-import { PageHeader } from '../../components/common/PageHeader';import { NotificationsAPI } from '../../services/odata/notificationsApi';
+import { useTranslation } from 'react-i18next';
+import { PageHeader } from '../../components/common/PageHeader';
+import { NotificationsAPI } from '../../services/odata/notificationsApi';
 import { ProjectsAPI } from '../../services/odata/projectsApi';
 import { TicketsAPI } from '../../services/odata/ticketsApi';
 import { UsersAPI } from '../../services/odata/usersApi';
@@ -51,38 +53,39 @@ const getStatusOptions = (current: TicketStatus): TicketStatus[] => [
   ...TICKET_STATUS_TRANSITIONS[current],
 ];
 
-const getErrorMessage = (error: unknown): string => {
-  if (error && typeof error === 'object') {
-    const maybeError = error as {
-      message?: unknown;
-      details?: Array<{ message?: unknown }>;
-      status?: unknown;
-    };
-    if (typeof maybeError.message === 'string' && maybeError.message.trim()) {
-      return maybeError.message;
-    }
-    if (Array.isArray(maybeError.details)) {
-      const firstDetail = maybeError.details.find(
-        (detail) => typeof detail?.message === 'string' && detail.message.trim()
-      );
-      if (firstDetail && typeof firstDetail.message === 'string') {
-        return firstDetail.message;
-      }
-    }
-    if (typeof maybeError.status === 'number') {
-      return `Request failed (${maybeError.status})`;
-    }
-  }
-  if (error instanceof Error && error.message.trim()) return error.message;
-  return 'Failed to update ticket';
-};
-
 export const RisksAndCriticalTickets: React.FC = () => {
+  const { t } = useTranslation();
   const [tickets, setTickets] = useState<Ticket[]>([]);
   const [projects, setProjects] = useState<Project[]>([]);
   const [users, setUsers] = useState<User[]>([]);
   const [loading, setLoading] = useState(true);
   const [showOnlyCritical, setShowOnlyCritical] = useState(true);
+
+  const getErrorMessage = (error: unknown): string => {
+    if (error && typeof error === 'object') {
+      const maybeError = error as {
+        message?: unknown;
+        details?: Array<{ message?: unknown }>;
+        status?: unknown;
+      };
+      if (typeof maybeError.message === 'string' && maybeError.message.trim()) {
+        return maybeError.message;
+      }
+      if (Array.isArray(maybeError.details)) {
+        const firstDetail = maybeError.details.find(
+          (detail) => typeof detail?.message === 'string' && detail.message.trim()
+        );
+        if (firstDetail && typeof firstDetail.message === 'string') {
+          return firstDetail.message;
+        }
+      }
+      if (typeof maybeError.status === 'number') {
+        return `Request failed (${maybeError.status})`;
+      }
+    }
+    if (error instanceof Error && error.message.trim()) return error.message;
+    return t('dashboard.risks.errors.updateFailed');
+  };
 
   useEffect(() => {
     void loadData();
@@ -139,8 +142,7 @@ export const RisksAndCriticalTickets: React.FC = () => {
   const consultantAssignees = useMemo(
     () =>
       users.filter(
-        (user) =>
-          user.role === 'CONSULTANT_TECHNIQUE' || user.role === 'CONSULTANT_FONCTIONNEL'
+        (user) => user.role === 'CONSULTANT_TECHNIQUE' || user.role === 'CONSULTANT_FONCTIONNEL'
       ),
     [users]
   );
@@ -167,9 +169,10 @@ export const RisksAndCriticalTickets: React.FC = () => {
       return updated;
     } catch (error) {
       toast.error(getErrorMessage(error));
-      const status = typeof error === 'object' && error !== null
-        ? (error as { status?: unknown }).status
-        : undefined;
+      const status =
+        typeof error === 'object' && error !== null
+          ? (error as { status?: unknown }).status
+          : undefined;
       if (status === 409) {
         await loadData();
       }
@@ -185,8 +188,8 @@ export const RisksAndCriticalTickets: React.FC = () => {
     if (updated) {
       await notifyAssignee(
         updated.assignedTo,
-        'Mitigation Updated',
-        `${updated.title}: mitigation notes were updated by manager.`
+        t('dashboard.risks.notifications.mitigationTitle'),
+        t('dashboard.risks.notifications.mitigationMessage', { title: updated.title })
       );
     }
   };
@@ -196,7 +199,7 @@ export const RisksAndCriticalTickets: React.FC = () => {
 
     const latestTicket = await TicketsAPI.getById(ticket.id);
     if (!latestTicket) {
-      toast.error('Ticket no longer exists');
+      toast.error(t('dashboard.risks.toasts.ticketNotFound'));
       await loadData();
       return;
     }
@@ -206,7 +209,12 @@ export const RisksAndCriticalTickets: React.FC = () => {
     }
 
     if (!canTransitionStatus(latestTicket.status, status)) {
-      toast.error(`Invalid status transition: ${latestTicket.status} -> ${status}`);
+      toast.error(
+        t('dashboard.risks.toasts.invalidTransition', {
+          from: t(`entities.ticketStatus.${latestTicket.status}`),
+          to: t(`entities.ticketStatus.${status}`),
+        })
+      );
       return;
     }
 
@@ -214,8 +222,11 @@ export const RisksAndCriticalTickets: React.FC = () => {
     if (updated) {
       await notifyAssignee(
         updated.assignedTo,
-        'Ticket Status Updated',
-        `${updated.title}: status changed to ${status}.`
+        t('dashboard.risks.notifications.statusTitle'),
+        t('dashboard.risks.notifications.statusMessage', {
+          title: updated.title,
+          status: t(`entities.ticketStatus.${status}`),
+        })
       );
     }
   };
@@ -225,8 +236,11 @@ export const RisksAndCriticalTickets: React.FC = () => {
     if (updated) {
       await notifyAssignee(
         updated.assignedTo,
-        'Risk Level Updated',
-        `${updated.title}: risk level changed to ${riskLevel}.`
+        t('dashboard.risks.notifications.riskTitle'),
+        t('dashboard.risks.notifications.riskMessage', {
+          title: updated.title,
+          risk: t(`tickets.priority.${riskLevel}`),
+        })
       );
     }
   };
@@ -237,8 +251,8 @@ export const RisksAndCriticalTickets: React.FC = () => {
     if (updated && nextAssigneeId) {
       await notifyAssignee(
         nextAssigneeId,
-        'Ticket Reassigned',
-        `${updated.title}: you have been assigned as mitigation owner.`
+        t('dashboard.risks.notifications.reassignedTitle'),
+        t('dashboard.risks.notifications.reassignedMessage', { title: updated.title })
       );
     }
   };
@@ -249,8 +263,11 @@ export const RisksAndCriticalTickets: React.FC = () => {
     if (updated) {
       await notifyAssignee(
         updated.assignedTo,
-        'Deadline Updated',
-        `${updated.title}: deadline changed to ${new Date(dueDate).toLocaleDateString()}.`
+        t('dashboard.risks.notifications.deadlineTitle'),
+        t('dashboard.risks.notifications.deadlineMessage', {
+          title: updated.title,
+          date: new Date(dueDate).toLocaleDateString(),
+        })
       );
     }
   };
@@ -258,30 +275,32 @@ export const RisksAndCriticalTickets: React.FC = () => {
   return (
     <div className="min-h-screen bg-background">
       <PageHeader
-        title="Risks & Critical Tickets"
-        subtitle="Track blocked work, risk level and mitigation actions"
+        title={t('dashboard.risks.title')}
+        subtitle={t('dashboard.risks.subtitle')}
         breadcrumbs={[
-          { label: 'Home', path: '/manager/dashboard' },
-          { label: 'Risks & Critical Tickets' },
+          { label: t('documentation.home'), path: '/manager/dashboard' },
+          { label: t('dashboard.risks.title') },
         ]}
       />
 
       <div className="p-6 space-y-6">
         <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
           <div className="bg-card border border-border rounded-lg p-4">
-            <p className="text-xs text-muted-foreground">Blocked Tickets</p>
+            <p className="text-xs text-muted-foreground">{t('dashboard.risks.stats.blocked')}</p>
             <p className="text-2xl font-semibold text-destructive">{counts.blocked}</p>
           </div>
           <div className="bg-card border border-border rounded-lg p-4">
-            <p className="text-xs text-muted-foreground">High Risk</p>
+            <p className="text-xs text-muted-foreground">{t('dashboard.risks.stats.highRisk')}</p>
             <p className="text-2xl font-semibold text-primary">{counts.highRisk}</p>
           </div>
           <div className="bg-card border border-border rounded-lg p-4">
-            <p className="text-xs text-muted-foreground">Critical Risk</p>
+            <p className="text-xs text-muted-foreground">{t('dashboard.risks.stats.criticalRisk')}</p>
             <p className="text-2xl font-semibold text-destructive">{counts.criticalRisk}</p>
           </div>
           <div className="bg-card border border-border rounded-lg p-4">
-            <p className="text-xs text-muted-foreground">Critical Tickets</p>
+            <p className="text-xs text-muted-foreground">
+              {t('dashboard.risks.stats.criticalTickets')}
+            </p>
             <p className="text-2xl font-semibold text-foreground">{counts.criticalTickets}</p>
           </div>
         </div>
@@ -289,7 +308,7 @@ export const RisksAndCriticalTickets: React.FC = () => {
         <div className="flex items-center justify-between">
           <div className="inline-flex items-center gap-3">
             <Label htmlFor="show-critical-risks" className="text-sm text-foreground">
-              Show only critical or risky tickets
+              {t('dashboard.risks.filters.showCritical')}
             </Label>
             <Switch
               id="show-critical-risks"
@@ -297,33 +316,49 @@ export const RisksAndCriticalTickets: React.FC = () => {
               onCheckedChange={(checked) => setShowOnlyCritical(Boolean(checked))}
             />
           </div>
-          <div className="text-sm text-muted-foreground">{rows.length} tickets displayed</div>
+          <div className="text-sm text-muted-foreground">
+            {t('dashboard.risks.filters.count', { count: rows.length })}
+          </div>
         </div>
 
         <div className="bg-card border border-border rounded-lg overflow-x-auto">
           <table className="w-full min-w-[1120px]">
             <thead className="bg-muted">
               <tr>
-                <th className="px-4 py-3 text-left text-xs uppercase text-muted-foreground">Ticket</th>
-                <th className="px-4 py-3 text-left text-xs uppercase text-muted-foreground">Project</th>
-                <th className="px-4 py-3 text-left text-xs uppercase text-muted-foreground">Assignee</th>
-                <th className="px-4 py-3 text-left text-xs uppercase text-muted-foreground">Status</th>
-                <th className="px-4 py-3 text-left text-xs uppercase text-muted-foreground">Risk</th>
-                <th className="px-4 py-3 text-left text-xs uppercase text-muted-foreground">Deadline</th>
-                <th className="px-4 py-3 text-left text-xs uppercase text-muted-foreground">Mitigation</th>
+                <th className="px-4 py-3 text-left text-xs uppercase text-muted-foreground">
+                  {t('dashboard.risks.table.ticket')}
+                </th>
+                <th className="px-4 py-3 text-left text-xs uppercase text-muted-foreground">
+                  {t('dashboard.risks.table.project')}
+                </th>
+                <th className="px-4 py-3 text-left text-xs uppercase text-muted-foreground">
+                  {t('dashboard.risks.table.assignee')}
+                </th>
+                <th className="px-4 py-3 text-left text-xs uppercase text-muted-foreground">
+                  {t('dashboard.risks.table.status')}
+                </th>
+                <th className="px-4 py-3 text-left text-xs uppercase text-muted-foreground">
+                  {t('dashboard.risks.table.risk')}
+                </th>
+                <th className="px-4 py-3 text-left text-xs uppercase text-muted-foreground">
+                  {t('dashboard.risks.table.deadline')}
+                </th>
+                <th className="px-4 py-3 text-left text-xs uppercase text-muted-foreground">
+                  {t('dashboard.risks.table.mitigation')}
+                </th>
               </tr>
             </thead>
             <tbody className="divide-y divide-border">
               {loading ? (
                 <tr>
                   <td colSpan={7} className="px-4 py-8 text-center text-muted-foreground">
-                    Loading risk register...
+                    {t('dashboard.risks.table.loading')}
                   </td>
                 </tr>
               ) : rows.length === 0 ? (
                 <tr>
                   <td colSpan={7} className="px-4 py-8 text-center text-muted-foreground">
-                    No matching tickets.
+                    {t('dashboard.risks.table.noTickets')}
                   </td>
                 </tr>
               ) : (
@@ -335,12 +370,14 @@ export const RisksAndCriticalTickets: React.FC = () => {
                         {ticket.priority === 'CRITICAL' && (
                           <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded text-xs bg-destructive/12 text-destructive">
                             <AlertTriangle className="w-3 h-3" />
-                            Critical
+                            {t('dashboard.risks.labels.critical')}
                           </span>
                         )}
                       </div>
                       <div className="text-xs text-muted-foreground mt-1">
-                        Due: {ticket.dueDate ? new Date(ticket.dueDate).toLocaleDateString() : '-'}
+                        {t('dashboard.risks.labels.due', {
+                          date: ticket.dueDate ? new Date(ticket.dueDate).toLocaleDateString() : '-',
+                        })}
                       </div>
                     </td>
                     <td className="px-4 py-3 text-sm text-muted-foreground">
@@ -353,11 +390,16 @@ export const RisksAndCriticalTickets: React.FC = () => {
                           void setAssignee(ticket, value === 'UNASSIGNED' ? '' : value)
                         }
                       >
-                        <SelectTrigger aria-label={`Assignee for ${ticket.title}`} className="min-w-[190px]">
-                          <SelectValue placeholder="Unassigned" />
+                        <SelectTrigger
+                          aria-label={`${t('dashboard.risks.table.assignee')} for ${ticket.title}`}
+                          className="min-w-[190px]"
+                        >
+                          <SelectValue placeholder={t('dashboard.risks.labels.unassigned')} />
                         </SelectTrigger>
                         <SelectContent>
-                          <SelectItem value="UNASSIGNED">Unassigned</SelectItem>
+                          <SelectItem value="UNASSIGNED">
+                            {t('dashboard.risks.labels.unassigned')}
+                          </SelectItem>
                           {consultantAssignees.map((user) => (
                             <SelectItem key={user.id} value={user.id}>
                               {user.name}
@@ -371,13 +413,18 @@ export const RisksAndCriticalTickets: React.FC = () => {
                         value={ticket.status}
                         onValueChange={(value) => void setStatus(ticket, value as TicketStatus)}
                       >
-                        <SelectTrigger aria-label={`Status for ${ticket.title}`} className="min-w-[160px]">
-                          <SelectValue />
+                        <SelectTrigger
+                          aria-label={`${t('dashboard.risks.table.status')} for ${ticket.title}`}
+                          className="min-w-[160px]"
+                        >
+                          <SelectValue>
+                            {t(`entities.ticketStatus.${ticket.status}`)}
+                          </SelectValue>
                         </SelectTrigger>
                         <SelectContent>
                           {getStatusOptions(ticket.status).map((status) => (
                             <SelectItem key={status} value={status}>
-                              {status}
+                              {t(`entities.ticketStatus.${status}`)}
                             </SelectItem>
                           ))}
                         </SelectContent>
@@ -386,23 +433,30 @@ export const RisksAndCriticalTickets: React.FC = () => {
                     <td className="px-4 py-3">
                       <Select
                         value={riskFromPriority(ticket.priority)}
-                        onValueChange={(value) => void setRisk(ticket, value as 'LOW' | 'MEDIUM' | 'HIGH' | 'CRITICAL')}
+                        onValueChange={(value) =>
+                          void setRisk(ticket, value as 'LOW' | 'MEDIUM' | 'HIGH' | 'CRITICAL')
+                        }
                       >
-                        <SelectTrigger aria-label={`Risk level for ${ticket.title}`} className="min-w-[140px]">
-                          <SelectValue />
+                        <SelectTrigger
+                          aria-label={`${t('dashboard.risks.table.risk')} level for ${ticket.title}`}
+                          className="min-w-[140px]"
+                        >
+                          <SelectValue>
+                            {t(`tickets.priority.${riskFromPriority(ticket.priority)}`)}
+                          </SelectValue>
                         </SelectTrigger>
                         <SelectContent>
-                          <SelectItem value="LOW">LOW</SelectItem>
-                          <SelectItem value="MEDIUM">MEDIUM</SelectItem>
-                          <SelectItem value="HIGH">HIGH</SelectItem>
-                          <SelectItem value="CRITICAL">CRITICAL</SelectItem>
+                          <SelectItem value="LOW">{t('tickets.priority.LOW')}</SelectItem>
+                          <SelectItem value="MEDIUM">{t('tickets.priority.MEDIUM')}</SelectItem>
+                          <SelectItem value="HIGH">{t('tickets.priority.HIGH')}</SelectItem>
+                          <SelectItem value="CRITICAL">{t('tickets.priority.CRITICAL')}</SelectItem>
                         </SelectContent>
                       </Select>
                     </td>
                     <td className="px-4 py-3">
                       <Input
                         type="date"
-                        aria-label={`Deadline for ${ticket.title}`}
+                        aria-label={`${t('dashboard.risks.table.deadline')} for ${ticket.title}`}
                         defaultValue={ticket.dueDate ?? ''}
                         className="min-w-[170px]"
                         onBlur={(event) => void setDeadline(ticket, event.target.value)}
@@ -410,10 +464,12 @@ export const RisksAndCriticalTickets: React.FC = () => {
                     </td>
                     <td className="px-4 py-3">
                       <Textarea
-                        aria-label={`Mitigation notes for ${ticket.title}`}
+                        aria-label={`${t('dashboard.risks.placeholders.mitigation')} for ${
+                          ticket.title
+                        }`}
                         defaultValue={ticket.effortComment ?? ''}
                         onBlur={(event) => void setMitigation(ticket, event.target.value)}
-                        placeholder="Mitigation action / blocker details"
+                        placeholder={t('dashboard.risks.placeholders.mitigation')}
                         rows={2}
                         className="w-full min-w-[240px]"
                       />

@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { UserRound, Sparkles, Save } from 'lucide-react';
+import { useTranslation } from 'react-i18next';
 import { toast } from 'sonner';
 import { PageHeader } from '../../components/common/PageHeader';
 import { useAuth } from '../../context/AuthContext';import { UsersAPI } from '../../services/odata/usersApi';
@@ -13,6 +14,7 @@ import { Textarea } from '../../components/ui/textarea';
 import { Certification } from '../../types/entities';
 
 export const ProfilePage: React.FC = () => {
+  const { t } = useTranslation();
   const { currentUser, switchUser } = useAuth();
 
   const [name, setName] = useState('');
@@ -63,9 +65,9 @@ export const ProfilePage: React.FC = () => {
         availabilityPercent,
       });
       await switchUser(currentUser.id);
-      toast.success('Profile updated');
+      toast.success(t('profile.updated'));
     } catch (error) {
-      toast.error('Failed to update profile');
+      toast.error(t('profile.updateFailed'));
     } finally {
       setSaving(false);
     }
@@ -78,9 +80,9 @@ export const ProfilePage: React.FC = () => {
   return (
     <div className="min-h-screen bg-transparent">
       <PageHeader
-        title="My Profile"
-        subtitle="Manage personal details, skill stack, and availability"
-        breadcrumbs={[{ label: 'My Profile' }]}
+        title={t('profile.title')}
+        subtitle={t('profile.subtitle')}
+        breadcrumbs={[{ label: t('profile.title') }]}
       />
 
       <div className="mx-auto grid max-w-4xl gap-6 p-6 lg:p-8">
@@ -107,15 +109,15 @@ export const ProfilePage: React.FC = () => {
           <CardHeader>
             <CardTitle className="inline-flex items-center gap-2 text-xl">
               <Sparkles className="h-4 w-4 text-primary" />
-              Edit Profile
+              {t('profile.editProfile')}
             </CardTitle>
-            <CardDescription>Changes are persisted through the configured backend API.</CardDescription>
+            <CardDescription>{t('profile.editProfileDesc')}</CardDescription>
           </CardHeader>
           <CardContent>
             <form className="space-y-4" onSubmit={saveProfile}>
               <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
                 <div className="space-y-1.5">
-                  <Label htmlFor="profile-name">Full Name</Label>
+                  <Label htmlFor="profile-name">{t('profile.fullName')}</Label>
                   <Input
                     id="profile-name"
                     value={name}
@@ -124,37 +126,37 @@ export const ProfilePage: React.FC = () => {
                   />
                 </div>
                 <div className="space-y-1.5">
-                  <Label htmlFor="profile-email">Email</Label>
+                  <Label htmlFor="profile-email">{t('profile.email')}</Label>
                   <Input id="profile-email" value={currentUser.email} disabled />
                 </div>
               </div>
 
               <div className="space-y-1.5">
-                <Label htmlFor="profile-skills">Skills (comma-separated)</Label>
+                <Label htmlFor="profile-skills">{t('profile.skills')}</Label>
                 <Textarea
                   id="profile-skills"
                   rows={3}
                   value={skills}
                   onChange={(event) => setSkills(event.target.value)}
-                  placeholder="SAP CAP, Fiori, ABAP"
+                  placeholder={t('profile.skillsPlaceholder')}
                 />
               </div>
 
               <div className="space-y-1.5">
-                <Label htmlFor="profile-certifications">Certifications (comma-separated)</Label>
+                <Label htmlFor="profile-certifications">{t('profile.certifications')}</Label>
                 <Textarea
                   id="profile-certifications"
                   rows={3}
                   value={certifications}
                   onChange={(event) => setCertifications(event.target.value)}
-                  placeholder="SAP Developer, AWS Architect"
+                  placeholder={t('profile.certificationsPlaceholder')}
                 />
               </div>
 
               <div className="space-y-2 rounded-xl border border-border/70 bg-surface-2 p-4">
                 <div className="flex items-center justify-between text-sm">
                   <Label htmlFor="profile-availability" className="text-muted-foreground">
-                    Availability
+                    {t('profile.availability')}
                   </Label>
                   <span className="font-semibold text-foreground">{availabilityPercent}%</span>
                 </div>
@@ -171,7 +173,7 @@ export const ProfilePage: React.FC = () => {
 
               <Button type="submit" disabled={saving}>
                 <Save className="h-4 w-4" />
-                {saving ? 'Saving...' : 'Save Profile'}
+                {saving ? t('profile.saving') : t('profile.saveProfile')}
               </Button>
             </form>
           </CardContent>

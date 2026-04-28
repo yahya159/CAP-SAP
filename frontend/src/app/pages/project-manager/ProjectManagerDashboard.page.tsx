@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { useNavigate } from 'react-router';
 import { FolderKanban, Ticket, AlertTriangle, CheckCircle2, Send } from 'lucide-react';
 import { PageHeader } from '../../components/common/PageHeader';
@@ -9,10 +10,11 @@ import { Badge } from '../../components/ui/badge';import { ImputationPeriodsAPI 
 import { ProjectsAPI } from '../../services/odata/projectsApi';
 import { TicketsAPI } from '../../services/odata/ticketsApi';
 import { UsersAPI } from '../../services/odata/usersApi';
-import { ImputationPeriod, Project, Ticket as TicketType, User, TICKET_STATUS_LABELS, TICKET_NATURE_LABELS, USER_ROLE_LABELS } from '../../types/entities';
+import { ImputationPeriod, Project, Ticket as TicketType, User, TICKET_STATUS_LABELS, TICKET_NATURE_LABELS } from '../../types/entities';
 
 const ProjectManagerDashboard: React.FC = () => {
   const navigate = useNavigate();
+  const { t } = useTranslation();
   const [projects, setProjects] = useState<Project[]>([]);
   const [tickets, setTickets] = useState<TicketType[]>([]);
   const [users, setUsers] = useState<User[]>([]);
@@ -65,46 +67,46 @@ const ProjectManagerDashboard: React.FC = () => {
   return (
     <div className="space-y-6 p-6">
       <PageHeader
-        title="Project Manager Dashboard"
-        subtitle="Core mission: validate team imputations and send validated periods to Stratime"
+        title={t('pm.dashboard.title')}
+        subtitle={t('pm.dashboard.subtitle')}
       />
 
       {/* KPIs */}
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-        <KPICard title="Active Projects" value={projects.filter((p) => p.status === 'ACTIVE').length} icon={FolderKanban} variant="info" />
-        <KPICard title="Open Tickets" value={openTickets.length} icon={Ticket} variant="warning" />
-        <KPICard title="In Test" value={inTestTickets.length} icon={CheckCircle2} variant="success" />
-        <KPICard title="Blocked" value={blockedTickets.length} icon={AlertTriangle} variant="danger" />
+        <KPICard title={t('pm.dashboard.kpi.activeProjects')} value={projects.filter((p) => p.status === 'ACTIVE').length} icon={FolderKanban} variant="info" />
+        <KPICard title={t('pm.dashboard.kpi.openTickets')} value={openTickets.length} icon={Ticket} variant="warning" />
+        <KPICard title={t('pm.dashboard.kpi.inTest')} value={inTestTickets.length} icon={CheckCircle2} variant="success" />
+        <KPICard title={t('pm.dashboard.kpi.blocked')} value={blockedTickets.length} icon={AlertTriangle} variant="danger" />
       </div>
 
       <Card className="border-border/80 bg-card">
         <CardHeader className="flex flex-row items-center justify-between">
-          <CardTitle className="text-lg">Stratime Validation Pipeline</CardTitle>
+          <CardTitle className="text-lg">{t('pm.dashboard.validationPipeline.title')}</CardTitle>
           <Button size="sm" onClick={() => navigate('/project-manager/imputations')}>
             <Send className="mr-1 h-4 w-4" />
-            Open Validation Hub
+            {t('pm.dashboard.validationPipeline.openHub')}
           </Button>
         </CardHeader>
         <CardContent className="grid gap-3 sm:grid-cols-2">
           <div className="rounded-lg border p-3">
-            <p className="text-xs uppercase tracking-wide text-muted-foreground">Submitted Periods</p>
+            <p className="text-xs uppercase tracking-wide text-muted-foreground">{t('pm.dashboard.validationPipeline.submittedPeriods')}</p>
             <p className="mt-1 text-2xl font-semibold text-foreground">{pendingValidation}</p>
-            <p className="text-xs text-muted-foreground">Waiting for project manager validation</p>
+            <p className="text-xs text-muted-foreground">{t('pm.dashboard.validationPipeline.waitingForValidation')}</p>
           </div>
           <div className="rounded-lg border p-3">
-            <p className="text-xs uppercase tracking-wide text-muted-foreground">Ready for Stratime</p>
+            <p className="text-xs uppercase tracking-wide text-muted-foreground">{t('pm.dashboard.validationPipeline.readyForStratime')}</p>
             <p className="mt-1 text-2xl font-semibold text-foreground">{readyToSend}</p>
-            <p className="text-xs text-muted-foreground">Validated periods pending dispatch</p>
+            <p className="text-xs text-muted-foreground">{t('pm.dashboard.validationPipeline.readyDescription')}</p>
           </div>
         </CardContent>
       </Card>
 
       {/* Recent tickets */}
       <Card className="border-border/80 bg-card">
-        <CardHeader className="flex flex-row items-center justify-between">
-          <CardTitle className="text-lg">Recent Tickets</CardTitle>
+          <CardHeader className="flex flex-row items-center justify-between">
+          <CardTitle className="text-lg">{t('pm.dashboard.recentTickets.title')}</CardTitle>
           <Button variant="outline" size="sm" onClick={() => navigate('/project-manager/tickets')}>
-            View all
+            {t('pm.dashboard.recentTickets.viewAll')}
           </Button>
         </CardHeader>
         <CardContent>
@@ -117,7 +119,7 @@ const ProjectManagerDashboard: React.FC = () => {
                     <Badge variant="outline">{TICKET_NATURE_LABELS[ticket.nature]}</Badge>
                     <Badge variant="secondary">{TICKET_STATUS_LABELS[ticket.status]}</Badge>
                     {ticket.assignedToRole && (
-                      <Badge variant="outline" className="text-xs">{USER_ROLE_LABELS[ticket.assignedToRole]}</Badge>
+                      <Badge variant="outline" className="text-xs">{t(`roles.${ticket.assignedToRole}`)}</Badge>
                     )}
                   </div>
                 </div>
@@ -128,7 +130,7 @@ const ProjectManagerDashboard: React.FC = () => {
               </div>
             ))}
             {tickets.length === 0 && (
-              <p className="text-center text-sm text-muted-foreground py-8">No tickets yet</p>
+              <p className="text-center text-sm text-muted-foreground py-8">{t('pm.dashboard.noTickets')}</p>
             )}
           </div>
         </CardContent>
@@ -136,10 +138,10 @@ const ProjectManagerDashboard: React.FC = () => {
 
       {/* Projects overview */}
       <Card className="border-border/80 bg-card">
-        <CardHeader className="flex flex-row items-center justify-between">
-          <CardTitle className="text-lg">Projects</CardTitle>
+          <CardHeader className="flex flex-row items-center justify-between">
+          <CardTitle className="text-lg">{t('pm.dashboard.projects.title')}</CardTitle>
           <Button variant="outline" size="sm" onClick={() => navigate('/project-manager/projects')}>
-            View all
+            {t('pm.dashboard.projects.viewAll')}
           </Button>
         </CardHeader>
         <CardContent>

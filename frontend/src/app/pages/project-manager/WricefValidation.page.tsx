@@ -8,6 +8,7 @@ import {
   XCircle,
 } from 'lucide-react';
 import { toast } from 'sonner';
+import { useTranslation } from 'react-i18next';
 import { PageHeader } from '../../components/common/PageHeader';
 import { Card, CardContent, CardHeader, CardTitle } from '../../components/ui/card';
 import { Button } from '../../components/ui/button';
@@ -34,10 +35,6 @@ import {
   type Wricef,
   type WricefObject,
   type WricefValidationStatus,
-  WRICEF_TYPE_LABELS,
-  WRICEF_VALIDATION_STATUS_LABELS,
-  SAP_MODULE_LABELS,
-  TICKET_COMPLEXITY_LABELS,
 } from '../../types/entities';
 import type { Ticket as TicketEntity } from '../../types/entities';
 
@@ -55,6 +52,7 @@ const STATUS_BADGE: Record<WricefValidationStatus, string> = {
 // ════════════════════════════════════════════════════════════════════════════
 
 export const WricefValidation: React.FC = () => {
+  const { t } = useTranslation();
   const [wricefs, setWricefs] = useState<Wricef[]>([]);
   const [allObjects, setAllObjects] = useState<WricefObject[]>([]);
   const [allTickets, setAllTickets] = useState<TicketEntity[]>([]);
@@ -94,11 +92,11 @@ export const WricefValidation: React.FC = () => {
         setSelectedId(w[0].id);
       }
     } catch {
-      toast.error('Failed to load WRICEFs');
+      toast.error(t('wricefValidation.toasts.loadFailed'));
     } finally {
       setLoading(false);
     }
-  }, []);
+  }, [t, selectedId]);
 
   useEffect(() => { void loadData(); }, [loadData]);
 
@@ -137,8 +135,8 @@ export const WricefValidation: React.FC = () => {
     setSubmitting(true);
     try {
       await WricefsAPI.validateWricef(wricef.id);
-      toast.success('WRICEF validated', {
-        description: `"${wricef.sourceFileName}" approved successfully.`,
+      toast.success(t('wricefValidation.toasts.validated'), {
+        description: t('wricefValidation.toasts.validatedDesc', { name: wricef.sourceFileName }),
       });
       // Remove from list and select next
       setWricefs((prev) => {
@@ -149,7 +147,7 @@ export const WricefValidation: React.FC = () => {
         return next;
       });
     } catch {
-      toast.error('Failed to validate WRICEF');
+      toast.error(t('wricefValidation.toasts.validateFailed'));
     } finally {
       setSubmitting(false);
     }
@@ -158,13 +156,13 @@ export const WricefValidation: React.FC = () => {
   const handleReject = async () => {
     if (!rejectTarget) return;
     if (!rejectionReason.trim()) {
-      toast.error('Please provide a rejection reason');
+      toast.error(t('wricefValidation.toasts.reasonRequired'));
       return;
     }
     setSubmitting(true);
     try {
       await WricefsAPI.rejectWricef(rejectTarget.id, rejectionReason.trim());
-      toast.success('WRICEF rejected');
+      toast.success(t('wricefValidation.toasts.rejected'));
       // Remove from list
       setWricefs((prev) => {
         const next = prev.filter((w) => w.id !== rejectTarget.id);
@@ -176,7 +174,7 @@ export const WricefValidation: React.FC = () => {
       setRejectTarget(null);
       setRejectionReason('');
     } catch {
-      toast.error('Failed to reject WRICEF');
+      toast.error(t('wricefValidation.toasts.rejectFailed'));
     } finally {
       setSubmitting(false);
     }
@@ -185,25 +183,25 @@ export const WricefValidation: React.FC = () => {
   const handleApproveObject = async (obj: WricefObject) => {
     try {
       await WricefObjectsAPI.approveWricefObject(obj.id);
-      toast.success(`Object "${obj.title}" approved`);
+      toast.success(t('wricefValidation.toasts.objectApproved', { title: obj.title }));
       setAllObjects((prev) =>
         prev.map((o) => (o.id === obj.id ? { ...o, status: 'VALIDATED' as const } : o)),
       );
     } catch {
-      toast.error('Failed to approve object');
+      toast.error(t('wricefValidation.toasts.objectApproveFailed'));
     }
   };
 
   const handleRejectObject = async () => {
     if (!rejectObjTarget) return;
     if (!objRejectionReason.trim()) {
-      toast.error('Please provide a rejection reason');
+      toast.error(t('wricefValidation.toasts.reasonRequired'));
       return;
     }
     setSubmitting(true);
     try {
       await WricefObjectsAPI.rejectWricefObject(rejectObjTarget.id, objRejectionReason.trim());
-      toast.success(`Object "${rejectObjTarget.title}" rejected`);
+      toast.success(t('wricefValidation.toasts.objectRejected', { title: rejectObjTarget.title }));
       setAllObjects((prev) =>
         prev.map((o) =>
           o.id === rejectObjTarget.id
@@ -214,7 +212,7 @@ export const WricefValidation: React.FC = () => {
       setRejectObjTarget(null);
       setObjRejectionReason('');
     } catch {
-      toast.error('Failed to reject object');
+      toast.error(t('wricefValidation.toasts.objectRejectFailed'));
     } finally {
       setSubmitting(false);
     }
@@ -232,11 +230,11 @@ export const WricefValidation: React.FC = () => {
   return (
     <div className="min-h-screen bg-transparent">
       <PageHeader
-        title="WRICEF Validation"
-        subtitle={`${wricefs.length} WRICEF(s) pending your approval`}
+        title={t('wricefValidation.title')}
+        subtitle={t('wricefValidation.subtitle', { count: wricefs.length })}
         breadcrumbs={[
-          { label: 'Home', path: '/project-manager/dashboard' },
-          { label: 'WRICEF Validation' },
+          { label: t('wricefValidation.breadcrumbHome'), path: '/project-manager/dashboard' },
+          { label: t('wricefValidation.title') },
         ]}
       />
 
@@ -246,7 +244,7 @@ export const WricefValidation: React.FC = () => {
             <CardContent className="flex flex-col items-center justify-center py-12 text-center">
               <ShieldCheck className="mb-3 h-10 w-10 text-primary/40" />
               <p className="text-sm text-muted-foreground">
-                All WRICEFs have been reviewed. Nothing pending.
+                {t('wricefValidation.allReviewed')}
               </p>
             </CardContent>
           </Card>
@@ -272,16 +270,16 @@ export const WricefValidation: React.FC = () => {
                   >
                     <div className="flex items-center justify-between">
                       <span className="text-sm font-medium truncate">
-                        {w.sourceFileName || 'Untitled'}
+                        {w.sourceFileName || t('wricefValidation.untitled')}
                       </span>
                       <ChevronRight className="h-3.5 w-3.5 text-muted-foreground" />
                     </div>
                     <div className="mt-1 flex flex-wrap items-center gap-1.5 text-[10px] text-muted-foreground">
                       <Badge className={`text-[9px] ${STATUS_BADGE[w.status]}`}>
-                        {WRICEF_VALIDATION_STATUS_LABELS[w.status]}
+                        {t('entities.wricefValidationStatus.' + w.status)}
                       </Badge>
                       <span>{projectMap.get(w.projectId)?.name ?? w.projectId}</span>
-                      <span>• {objects.length} obj</span>
+                      <span>• {t('wricefValidation.objCount', { count: objects.length })}</span>
                     </div>
                   </button>
                 );
@@ -293,7 +291,7 @@ export const WricefValidation: React.FC = () => {
           <main className="flex-1 overflow-y-auto p-4 sm:p-6">
             {!selected ? (
               <div className="flex h-full items-center justify-center text-sm text-muted-foreground">
-                Select a WRICEF from the list
+                {t('wricefValidation.selectFromList')}
               </div>
             ) : (
               <div className="space-y-6">
@@ -303,19 +301,19 @@ export const WricefValidation: React.FC = () => {
                     <div className="flex items-start justify-between">
                       <div>
                         <CardTitle className="text-lg">
-                          {selected.sourceFileName || 'Untitled WRICEF'}
+                          {selected.sourceFileName || t('wricefValidation.untitledWricef')}
                         </CardTitle>
                         <div className="mt-1 flex flex-wrap items-center gap-2 text-xs text-muted-foreground">
                           <Badge className={`text-[10px] ${STATUS_BADGE[selected.status]}`}>
-                            {WRICEF_VALIDATION_STATUS_LABELS[selected.status]}
+                            {t('entities.wricefValidationStatus.' + selected.status)}
                           </Badge>
                           <span>
-                            Project:{' '}
+                            {t('wricefValidation.projectLabel')}{' '}
                             {projectMap.get(selected.projectId)?.name ?? selected.projectId}
                           </span>
                           {selected.autoCreated && (
                             <Badge variant="secondary" className="text-[10px]">
-                              Auto-created
+                              {t('wricefValidation.autoCreated')}
                             </Badge>
                           )}
                         </div>
@@ -325,7 +323,7 @@ export const WricefValidation: React.FC = () => {
                   <CardContent>
                     <div className="grid grid-cols-2 gap-3 text-xs sm:grid-cols-4">
                       <div>
-                        <span className="text-muted-foreground">Imported</span>
+                        <span className="text-muted-foreground">{t('wricefValidation.imported')}</span>
                         <p className="font-medium">
                           {selected.importedAt
                             ? new Date(selected.importedAt).toLocaleDateString()
@@ -333,7 +331,7 @@ export const WricefValidation: React.FC = () => {
                         </p>
                       </div>
                       <div>
-                        <span className="text-muted-foreground">Submitted by</span>
+                        <span className="text-muted-foreground">{t('wricefValidation.submittedBy')}</span>
                         <p className="font-medium">
                           {selected.submittedBy
                             ? userMap.get(selected.submittedBy)?.name ?? selected.submittedBy
@@ -341,7 +339,7 @@ export const WricefValidation: React.FC = () => {
                         </p>
                       </div>
                       <div>
-                        <span className="text-muted-foreground">Submitted at</span>
+                        <span className="text-muted-foreground">{t('wricefValidation.submittedAt')}</span>
                         <p className="font-medium">
                           {selected.submittedAt
                             ? new Date(selected.submittedAt).toLocaleDateString()
@@ -349,7 +347,7 @@ export const WricefValidation: React.FC = () => {
                         </p>
                       </div>
                       <div>
-                        <span className="text-muted-foreground">Objects</span>
+                        <span className="text-muted-foreground">{t('wricefValidation.objects')}</span>
                         <p className="font-medium">{selectedObjects.length}</p>
                       </div>
                     </div>
@@ -363,7 +361,7 @@ export const WricefValidation: React.FC = () => {
                         onClick={() => void handleValidate(selected)}
                       >
                         <CheckCircle2 className="mr-1 h-3.5 w-3.5" />
-                        {submitting ? 'Processing...' : 'Approve WRICEF'}
+                        {submitting ? t('wricefValidation.processing') : t('wricefValidation.approveWricef')}
                       </Button>
                       <Button
                         size="sm"
@@ -375,7 +373,7 @@ export const WricefValidation: React.FC = () => {
                         }}
                       >
                         <XCircle className="mr-1 h-3.5 w-3.5" />
-                        Reject WRICEF
+                        {t('wricefValidation.rejectWricef')}
                       </Button>
                     </div>
                   </CardContent>
@@ -385,13 +383,13 @@ export const WricefValidation: React.FC = () => {
                 <div>
                   <h3 className="mb-3 flex items-center gap-2 text-sm font-semibold">
                     <Package className="h-4 w-4" />
-                    Objects ({selectedObjects.length})
+                    {t('wricefValidation.objectsWithCount', { count: selectedObjects.length })}
                   </h3>
 
                   {selectedObjects.length === 0 ? (
                     <Card>
                       <CardContent className="py-8 text-center text-sm text-muted-foreground">
-                        No objects in this WRICEF.
+                        {t('wricefValidation.noObjects')}
                       </CardContent>
                     </Card>
                   ) : (
@@ -407,11 +405,11 @@ export const WricefValidation: React.FC = () => {
                                 <div className="min-w-0 flex-1">
                                   <div className="flex items-center gap-2">
                                     <Badge variant="outline" className="text-[10px]">
-                                      {WRICEF_TYPE_LABELS[obj.type]}
+                                      {t('entities.wricefType.' + obj.type)}
                                     </Badge>
                                     <span className="text-sm font-medium">{obj.title}</span>
                                     <Badge className={`text-[10px] ${STATUS_BADGE[obj.status]}`}>
-                                      {WRICEF_VALIDATION_STATUS_LABELS[obj.status]}
+                                      {t('entities.wricefValidationStatus.' + obj.status)}
                                     </Badge>
                                   </div>
 
@@ -423,20 +421,20 @@ export const WricefValidation: React.FC = () => {
 
                                   <div className="mt-2 grid grid-cols-2 gap-x-6 gap-y-1 text-xs sm:grid-cols-3">
                                     <div>
-                                      <span className="text-muted-foreground">Module: </span>
+                                      <span className="text-muted-foreground">{t('wricefValidation.moduleLabel')} </span>
                                       <span className="font-medium">
-                                        {SAP_MODULE_LABELS[obj.module] ?? obj.module}
+                                        {t('entities.sapModule.' + obj.module)}
                                       </span>
                                     </div>
                                     <div>
-                                      <span className="text-muted-foreground">Complexity: </span>
+                                      <span className="text-muted-foreground">{t('wricefValidation.complexityLabel')} </span>
                                       <span className="font-medium">
-                                        {TICKET_COMPLEXITY_LABELS[obj.complexity]}
+                                        {t('entities.ticketComplexity.' + obj.complexity)}
                                       </span>
                                     </div>
                                     {objTickets.length > 0 && (
                                       <div>
-                                        <span className="text-muted-foreground">Tickets: </span>
+                                        <span className="text-muted-foreground">{t('wricefValidation.ticketsLabel')} </span>
                                         <span className="font-medium">{objTickets.length}</span>
                                       </div>
                                     )}
@@ -453,22 +451,22 @@ export const WricefValidation: React.FC = () => {
                                   {objTickets.length > 0 && (
                                     <div className="mt-3 space-y-1 rounded-md border p-2">
                                       <p className="text-[10px] font-semibold uppercase text-muted-foreground">
-                                        Linked Tickets
+                                        {t('wricefValidation.linkedTickets')}
                                       </p>
-                                      {objTickets.map((t) => (
+                                      {objTickets.map((t_entity) => (
                                         <div
-                                          key={t.id}
+                                          key={t_entity.id}
                                           className="flex items-center gap-2 rounded bg-muted/40 px-2 py-1 text-xs"
                                         >
                                           <Badge variant="outline" className="text-[9px]">
-                                            {t.ticketCode}
+                                            {t_entity.ticketCode}
                                           </Badge>
-                                          <span className="truncate">{t.title}</span>
+                                          <span className="truncate">{t_entity.title}</span>
                                           <Badge
                                             variant="secondary"
                                             className="ml-auto text-[9px]"
                                           >
-                                            {t.status}
+                                            {t('entities.ticketStatus.' + t_entity.status)}
                                           </Badge>
                                         </div>
                                       ))}
@@ -486,7 +484,7 @@ export const WricefValidation: React.FC = () => {
                                       onClick={() => void handleApproveObject(obj)}
                                     >
                                       <CheckCircle2 className="mr-1 h-3 w-3" />
-                                      Approve
+                                      {t('wricefValidation.approve')}
                                     </Button>
                                     <Button
                                       size="sm"
@@ -498,7 +496,7 @@ export const WricefValidation: React.FC = () => {
                                       }}
                                     >
                                       <XCircle className="mr-1 h-3 w-3" />
-                                      Reject
+                                      {t('wricefValidation.reject')}
                                     </Button>
                                   </div>
                                 )}
@@ -523,20 +521,20 @@ export const WricefValidation: React.FC = () => {
       >
         <DialogContent className="sm:max-w-md">
           <DialogHeader>
-            <DialogTitle>Reject WRICEF</DialogTitle>
+            <DialogTitle>{t('wricefValidation.rejectReasonTitle')}</DialogTitle>
             <DialogDescription>
               {rejectTarget && (
-                <>Provide a reason for rejecting &quot;{rejectTarget.sourceFileName}&quot;.</>
+                <>{t('wricefValidation.rejectReasonDesc', { name: rejectTarget.sourceFileName })}</>
               )}
             </DialogDescription>
           </DialogHeader>
           <div className="py-2">
-            <Label htmlFor="wricef-rejection-reason">Reason *</Label>
+            <Label htmlFor="wricef-rejection-reason">{t('wricefValidation.reasonLabel')}</Label>
             <Textarea
               id="wricef-rejection-reason"
               value={rejectionReason}
               onChange={(e) => setRejectionReason(e.target.value)}
-              placeholder="Explain why this WRICEF is being rejected..."
+              placeholder={t('wricefValidation.reasonPlaceholder')}
               rows={4}
               className="mt-1.5"
             />
@@ -547,14 +545,14 @@ export const WricefValidation: React.FC = () => {
               onClick={() => setRejectTarget(null)}
               disabled={submitting}
             >
-              Cancel
+              {t('wricefValidation.cancel')}
             </Button>
             <Button
               variant="destructive"
               onClick={() => void handleReject()}
               disabled={submitting}
             >
-              {submitting ? 'Rejecting...' : 'Reject WRICEF'}
+              {submitting ? t('wricefValidation.rejecting') : t('wricefValidation.rejectWricef')}
             </Button>
           </DialogFooter>
         </DialogContent>
@@ -567,20 +565,20 @@ export const WricefValidation: React.FC = () => {
       >
         <DialogContent className="sm:max-w-md">
           <DialogHeader>
-            <DialogTitle>Reject Object</DialogTitle>
+            <DialogTitle>{t('wricefValidation.rejectObjectTitle')}</DialogTitle>
             <DialogDescription>
               {rejectObjTarget && (
-                <>Provide a reason for rejecting &quot;{rejectObjTarget.title}&quot;.</>
+                <>{t('wricefValidation.rejectObjectDesc', { name: rejectObjTarget.title })}</>
               )}
             </DialogDescription>
           </DialogHeader>
           <div className="py-2">
-            <Label htmlFor="obj-rejection-reason">Reason *</Label>
+            <Label htmlFor="obj-rejection-reason">{t('wricefValidation.reasonLabel')}</Label>
             <Textarea
               id="obj-rejection-reason"
               value={objRejectionReason}
               onChange={(e) => setObjRejectionReason(e.target.value)}
-              placeholder="Explain why this object is being rejected..."
+              placeholder={t('wricefValidation.objReasonPlaceholder')}
               rows={4}
               className="mt-1.5"
             />
@@ -591,14 +589,14 @@ export const WricefValidation: React.FC = () => {
               onClick={() => setRejectObjTarget(null)}
               disabled={submitting}
             >
-              Cancel
+              {t('wricefValidation.cancel')}
             </Button>
             <Button
               variant="destructive"
               onClick={() => void handleRejectObject()}
               disabled={submitting}
             >
-              {submitting ? 'Rejecting...' : 'Reject Object'}
+              {submitting ? t('wricefValidation.rejecting') : t('wricefValidation.rejectObjectTitle')}
             </Button>
           </DialogFooter>
         </DialogContent>

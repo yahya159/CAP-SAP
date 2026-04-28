@@ -2,13 +2,13 @@
 import { useNavigate } from 'react-router';
 import { Edit3, Plus, RefreshCcw, Trash2, FolderSearch, FileUp, X } from 'lucide-react';
 import { toast } from 'sonner';
+import { useTranslation } from 'react-i18next';
 import { PageHeader } from '../../components/common/PageHeader';
 import { useAuth } from '../../context/AuthContext';import { ProjectsAPI } from '../../services/odata/projectsApi';
 import {
   Priority,
   Project,
   ProjectDeliveryType,
-  PROJECT_DELIVERY_TYPE_LABELS,
   ProjectStatus,
 } from '../../types/entities';
 import { Badge } from '../../components/ui/badge';
@@ -92,6 +92,7 @@ const priorityStyles: Record<Priority, string> = {
 export const ProjectsEnhanced: React.FC = () => {
   const navigate = useNavigate();
   const { currentUser } = useAuth();
+  const { t } = useTranslation();
   const roleBasePath = currentUser?.role === 'PROJECT_MANAGER' ? '/project-manager' : '/manager';
 
   const [projects, setProjects] = useState<Project[]>([]);
@@ -110,21 +111,21 @@ export const ProjectsEnhanced: React.FC = () => {
   const [isParsingWricef, setIsParsingWricef] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
-  useEffect(() => {
-    void loadProjects();
-  }, []);
-
   const loadProjects = async () => {
     setLoading(true);
     try {
       const data = await ProjectsAPI.getAll();
       setProjects(data);
     } catch (error) {
-      toast.error('Failed to load projects');
+      toast.error(t('projects.toasts.loadFailed'));
     } finally {
       setLoading(false);
     }
   };
+
+  useEffect(() => {
+    void loadProjects();
+  }, []);
 
   const filteredProjects = useMemo(() => {
     return projects.filter((project) => {
@@ -181,7 +182,7 @@ export const ProjectsEnhanced: React.FC = () => {
     if (!file) return;
 
     if (!file.name.match(/\.(xlsx|xls)$/i)) {
-      toast.error('Please upload an Excel file (.xlsx or .xls)');
+      toast.error(t('projects.toasts.invalidFile'));
       return;
     }
 
@@ -190,9 +191,9 @@ export const ProjectsEnhanced: React.FC = () => {
       const parsedWricef = await parseWricefExcel(file);
       setWricefFile(file);
       setForm((prev) => ({ ...prev, wricef: parsedWricef }));
-      toast.success(`WRICEF imported: ${parsedWricef.objects.length} objects found`);
+      toast.success(t('projects.toasts.wricefImported', { count: parsedWricef.objects.length }));
     } catch (error) {
-      toast.error(error instanceof Error ? error.message : 'Failed to parse WRICEF file');
+      toast.error(error instanceof Error ? error.message : t('projects.toasts.parseFailed'));
       setWricefFile(null);
     } finally {
       setIsParsingWricef(false);
@@ -211,17 +212,17 @@ export const ProjectsEnhanced: React.FC = () => {
     event.preventDefault();
 
     if (!form.name.trim()) {
-      toast.error('Project name is required');
+      toast.error(t('projects.toasts.nameRequired'));
       return;
     }
 
     if (!form.startDate || !form.endDate) {
-      toast.error('Start and end dates are required');
+      toast.error(t('projects.toasts.datesRequired'));
       return;
     }
 
     if (form.endDate < form.startDate) {
-      toast.error('End date cannot be before start date');
+      toast.error(t('projects.toasts.invalidDates'));
       return;
     }
 
@@ -244,17 +245,17 @@ export const ProjectsEnhanced: React.FC = () => {
       if (dialogMode === 'create') {
         const created = await ProjectsAPI.create(payload);
         setProjects((prev) => [created, ...prev]);
-        toast.success('Project created successfully');
+        toast.success(t('projects.toasts.created'));
       } else if (dialogMode === 'edit' && selectedProject) {
         const updated = await ProjectsAPI.update(selectedProject.id, payload);
         setProjects((prev) =>
           prev.map((project) => (project.id === selectedProject.id ? updated : project))
         );
-        toast.success('Project updated successfully');
+        toast.success(t('projects.toasts.updated'));
       }
       closeDialog();
     } catch (error) {
-      toast.error('Failed to save project');
+      toast.error(t('projects.toasts.saveFailed'));
     } finally {
       setSaving(false);
     }
@@ -264,9 +265,9 @@ export const ProjectsEnhanced: React.FC = () => {
     try {
       await ProjectsAPI.delete(projectId);
       setProjects((prev) => prev.filter((project) => project.id !== projectId));
-      toast.success('Project deleted');
+      toast.success(t('projects.toasts.deleted'));
     } catch (error) {
-      toast.error('Failed to delete project');
+      toast.error(t('projects.toasts.deleteFailed'));
     } finally {
       setProjectPendingDelete(null);
     }
@@ -275,21 +276,21 @@ export const ProjectsEnhanced: React.FC = () => {
   return (
     <div className="min-h-screen bg-transparent">
       <PageHeader
-        title="Projects"
-        subtitle="Portfolio pipeline with smart filtering, quick edits, and KPI context"
+        title={t('projects.title')}
+        subtitle={t('projects.subtitle')}
         breadcrumbs={[
-          { label: 'Home', path: `${roleBasePath}/dashboard` },
-          { label: 'Projects' },
+          { label: t('projects.breadcrumbHome'), path: `${roleBasePath}/dashboard` },
+          { label: t('projects.title') },
         ]}
         actions={
           <div className="flex items-center gap-2">
             <Button variant="outline" size="sm" onClick={() => void loadProjects()}>
               <RefreshCcw className="h-4 w-4" />
-              Refresh
+              {t('projects.refresh')}
             </Button>
             <Button size="sm" onClick={openCreateDialog}>
               <Plus className="h-4 w-4" />
-              New Project
+              {t('projects.newProject')}
             </Button>
           </div>
         }
@@ -300,11 +301,11 @@ export const ProjectsEnhanced: React.FC = () => {
           <CardContent className="grid grid-cols-1 gap-3 pt-6 md:grid-cols-[2fr_1fr_1fr_auto]">
             <div className="space-y-1">
               <Label htmlFor="projects-search" className="sr-only">
-                Search projects
+                {t('projects.searchPlaceholder')}
               </Label>
               <Input
                 id="projects-search"
-                placeholder="Search by name or description"
+                placeholder={t('projects.searchPlaceholder')}
                 value={searchQuery}
                 onChange={(event) => setSearchQuery(event.target.value)}
               />
@@ -312,20 +313,20 @@ export const ProjectsEnhanced: React.FC = () => {
 
             <div className="space-y-1">
               <Label htmlFor="projects-status-filter" className="sr-only">
-                Filter by status
+                {t('projects.allStatuses')}
               </Label>
               <Select
                 value={statusFilter}
                 onValueChange={(value) => setStatusFilter(value as ProjectStatus | 'ALL')}
               >
                 <SelectTrigger id="projects-status-filter">
-                  <SelectValue placeholder="All statuses" />
+                  <SelectValue placeholder={t('projects.allStatuses')} />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="ALL">All statuses</SelectItem>
+                  <SelectItem value="ALL">{t('projects.allStatuses')}</SelectItem>
                   {STATUS_OPTIONS.map((status) => (
                     <SelectItem key={status} value={status}>
-                      {status}
+                      {t('entities.projectStatus.' + status, { defaultValue: status })}
                     </SelectItem>
                   ))}
                 </SelectContent>
@@ -334,20 +335,20 @@ export const ProjectsEnhanced: React.FC = () => {
 
             <div className="space-y-1">
               <Label htmlFor="projects-priority-filter" className="sr-only">
-                Filter by priority
+                {t('projects.allPriorities')}
               </Label>
               <Select
                 value={priorityFilter}
                 onValueChange={(value) => setPriorityFilter(value as Priority | 'ALL')}
               >
                 <SelectTrigger id="projects-priority-filter">
-                  <SelectValue placeholder="All priorities" />
+                  <SelectValue placeholder={t('projects.allPriorities')} />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="ALL">All priorities</SelectItem>
+                  <SelectItem value="ALL">{t('projects.allPriorities')}</SelectItem>
                   {PRIORITY_OPTIONS.map((priority) => (
                     <SelectItem key={priority} value={priority}>
-                      {priority}
+                      {t('entities.priority.' + priority, { defaultValue: priority })}
                     </SelectItem>
                   ))}
                 </SelectContent>
@@ -355,7 +356,7 @@ export const ProjectsEnhanced: React.FC = () => {
             </div>
 
             <Button variant="secondary" onClick={resetFilters}>
-              Reset
+              {t('projects.reset')}
             </Button>
           </CardContent>
         </Card>
@@ -367,25 +368,25 @@ export const ProjectsEnhanced: React.FC = () => {
                 <thead className="bg-muted/65">
                   <tr>
                     <th className="px-4 py-3 text-left text-xs uppercase tracking-[0.08em] text-muted-foreground">
-                      Project
+                      {t('projects.table.project')}
                     </th>
                     <th className="px-4 py-3 text-left text-xs uppercase tracking-[0.08em] text-muted-foreground">
-                      Type
+                      {t('projects.table.type')}
                     </th>
                     <th className="px-4 py-3 text-left text-xs uppercase tracking-[0.08em] text-muted-foreground">
-                      Status
+                      {t('projects.table.status')}
                     </th>
                     <th className="px-4 py-3 text-left text-xs uppercase tracking-[0.08em] text-muted-foreground">
-                      Priority
+                      {t('projects.table.priority')}
                     </th>
                     <th className="px-4 py-3 text-left text-xs uppercase tracking-[0.08em] text-muted-foreground">
-                      Timeline
+                      {t('projects.table.timeline')}
                     </th>
                     <th className="px-4 py-3 text-left text-xs uppercase tracking-[0.08em] text-muted-foreground">
-                      Progress
+                      {t('projects.table.progress')}
                     </th>
                     <th className="px-4 py-3 text-left text-xs uppercase tracking-[0.08em] text-muted-foreground">
-                      Actions
+                      {t('projects.table.actions')}
                     </th>
                   </tr>
                 </thead>
@@ -393,7 +394,7 @@ export const ProjectsEnhanced: React.FC = () => {
                   {loading ? (
                     <tr>
                         <td colSpan={7} className="px-4 py-10 text-center text-sm text-muted-foreground">
-                        Loading projects...
+                        {t('projects.loading')}
                       </td>
                     </tr>
                   ) : filteredProjects.length === 0 ? (
@@ -401,10 +402,10 @@ export const ProjectsEnhanced: React.FC = () => {
                         <td colSpan={7} className="px-4 py-12 text-center">
                         <div className="mx-auto flex max-w-sm flex-col items-center gap-2 text-sm text-muted-foreground">
                           <FolderSearch className="h-8 w-8 text-muted-foreground" />
-                          <p>No projects match the current filters.</p>
+                          <p>{t('projects.noProjects')}</p>
                           <Button variant="secondary" size="sm" onClick={openCreateDialog}>
                             <Plus className="h-4 w-4" />
-                            Create project
+                            {t('projects.createProject')}
                           </Button>
                         </div>
                       </td>
@@ -426,14 +427,18 @@ export const ProjectsEnhanced: React.FC = () => {
                         </td>
                         <td className="px-4 py-3">
                           <Badge variant="outline">
-                            {PROJECT_DELIVERY_TYPE_LABELS[project.projectType ?? 'BUILD']}
+                            {t('entities.projectDeliveryType.' + (project.projectType ?? 'BUILD'))}
                           </Badge>
                         </td>
                         <td className="px-4 py-3">
-                          <Badge className={statusStyles[project.status]}>{project.status}</Badge>
+                          <Badge className={statusStyles[project.status]}>
+                            {t('entities.projectStatus.' + project.status, { defaultValue: project.status })}
+                          </Badge>
                         </td>
                         <td className="px-4 py-3">
-                          <Badge className={priorityStyles[project.priority]}>{project.priority}</Badge>
+                          <Badge className={priorityStyles[project.priority]}>
+                            {t('entities.priority.' + project.priority, { defaultValue: project.priority })}
+                          </Badge>
                         </td>
                         <td className="px-4 py-3 text-sm text-muted-foreground">
                           <div>{new Date(project.startDate).toLocaleDateString()}</div>
@@ -482,27 +487,27 @@ export const ProjectsEnhanced: React.FC = () => {
       <Dialog open={dialogMode !== null} onOpenChange={(open) => !open && closeDialog()}>
         <DialogContent className="sm:max-w-2xl">
           <DialogHeader>
-            <DialogTitle>{dialogMode === 'create' ? 'Create Project' : 'Edit Project'}</DialogTitle>
+            <DialogTitle>{dialogMode === 'create' ? t('projects.dialog.createTitle') : t('projects.dialog.editTitle')}</DialogTitle>
             <DialogDescription>
-              Capture project planning metadata and portfolio tracking fields.
+              {t('projects.dialog.description')}
             </DialogDescription>
           </DialogHeader>
 
           <form className="space-y-4" onSubmit={saveProject}>
             <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
               <div className="space-y-1.5 md:col-span-2">
-                <Label htmlFor="project-name">Project Name</Label>
+                <Label htmlFor="project-name">{t('projects.dialog.nameLabel')}</Label>
                 <Input
                   id="project-name"
                   value={form.name}
                   onChange={(event) => setForm((prev) => ({ ...prev, name: event.target.value }))}
-                  placeholder="S/4HANA Migration Program"
+                  placeholder={t('projects.dialog.namePlaceholder')}
                   required
                 />
               </div>
 
               <div className="space-y-1.5 md:col-span-2">
-                <Label htmlFor="project-description">Description</Label>
+                <Label htmlFor="project-description">{t('projects.dialog.descLabel')}</Label>
                 <Textarea
                   id="project-description"
                   rows={3}
@@ -510,12 +515,12 @@ export const ProjectsEnhanced: React.FC = () => {
                   onChange={(event) =>
                     setForm((prev) => ({ ...prev, description: event.target.value }))
                   }
-                  placeholder="Describe project scope, outcomes, and execution context"
+                  placeholder={t('projects.dialog.descPlaceholder')}
                 />
               </div>
 
               <div className="space-y-1.5">
-                <Label htmlFor="project-type">Project Type</Label>
+                <Label htmlFor="project-type">{t('projects.dialog.typeLabel')}</Label>
                 <Select
                   value={form.projectType}
                   onValueChange={(value) =>
@@ -528,7 +533,7 @@ export const ProjectsEnhanced: React.FC = () => {
                   <SelectContent>
                     {PROJECT_TYPE_OPTIONS.map((projectType) => (
                       <SelectItem key={projectType} value={projectType}>
-                        {PROJECT_DELIVERY_TYPE_LABELS[projectType]}
+                        {t('entities.projectDeliveryType.' + projectType)}
                       </SelectItem>
                     ))}
                   </SelectContent>
@@ -536,7 +541,7 @@ export const ProjectsEnhanced: React.FC = () => {
               </div>
 
               <div className="space-y-1.5">
-                <Label htmlFor="project-status">Status</Label>
+                <Label htmlFor="project-status">{t('projects.dialog.statusLabel')}</Label>
                 <Select
                   value={form.status}
                   onValueChange={(value) =>
@@ -549,7 +554,7 @@ export const ProjectsEnhanced: React.FC = () => {
                   <SelectContent>
                     {STATUS_OPTIONS.map((status) => (
                       <SelectItem key={status} value={status}>
-                        {status}
+                        {t('entities.projectStatus.' + status, { defaultValue: status })}
                       </SelectItem>
                     ))}
                   </SelectContent>
@@ -557,7 +562,7 @@ export const ProjectsEnhanced: React.FC = () => {
               </div>
 
               <div className="space-y-1.5">
-                <Label htmlFor="project-priority">Priority</Label>
+                <Label htmlFor="project-priority">{t('projects.dialog.priorityLabel')}</Label>
                 <Select
                   value={form.priority}
                   onValueChange={(value) =>
@@ -570,7 +575,7 @@ export const ProjectsEnhanced: React.FC = () => {
                   <SelectContent>
                     {PRIORITY_OPTIONS.map((priority) => (
                       <SelectItem key={priority} value={priority}>
-                        {priority}
+                        {t('entities.priority.' + priority, { defaultValue: priority })}
                       </SelectItem>
                     ))}
                   </SelectContent>
@@ -578,7 +583,7 @@ export const ProjectsEnhanced: React.FC = () => {
               </div>
 
               <div className="space-y-1.5">
-                <Label htmlFor="project-start-date">Start Date</Label>
+                <Label htmlFor="project-start-date">{t('projects.dialog.startDateLabel')}</Label>
                 <Input
                   id="project-start-date"
                   type="date"
@@ -589,7 +594,7 @@ export const ProjectsEnhanced: React.FC = () => {
               </div>
 
               <div className="space-y-1.5">
-                <Label htmlFor="project-end-date">End Date</Label>
+                <Label htmlFor="project-end-date">{t('projects.dialog.endDateLabel')}</Label>
                 <Input
                   id="project-end-date"
                   type="date"
@@ -600,7 +605,7 @@ export const ProjectsEnhanced: React.FC = () => {
               </div>
 
               <div className="space-y-1.5">
-                <Label htmlFor="project-progress">Progress (%)</Label>
+                <Label htmlFor="project-progress">{t('projects.dialog.progressLabel')}</Label>
                 <Input
                   id="project-progress"
                   type="number"
@@ -617,9 +622,9 @@ export const ProjectsEnhanced: React.FC = () => {
             <div className="space-y-3 rounded-lg border border-border bg-muted/30 p-4">
               <div className="flex items-center justify-between">
                 <div>
-                  <Label className="text-sm font-semibold">WRICEF Import (Optional)</Label>
+                  <Label className="text-sm font-semibold">{t('projects.dialog.wricefImport')}</Label>
                   <p className="text-xs text-muted-foreground mt-0.5">
-                    Upload an Excel file containing WRICEF objects and tickets
+                    {t('projects.dialog.wricefImportDesc')}
                   </p>
                 </div>
                 <Button
@@ -630,7 +635,7 @@ export const ProjectsEnhanced: React.FC = () => {
                   disabled={isParsingWricef}
                 >
                   <FileUp className="h-4 w-4 mr-2" />
-                  {isParsingWricef ? 'Parsing...' : 'Upload Excel'}
+                  {isParsingWricef ? t('projects.dialog.parsing') : t('projects.dialog.uploadExcel')}
                 </Button>
                 <input
                   ref={fileInputRef}
@@ -647,17 +652,17 @@ export const ProjectsEnhanced: React.FC = () => {
                     <div className="flex-1">
                       <div className="flex items-center gap-2">
                         <Badge variant="secondary" className="text-xs">
-                          {form.wricef.objects.length} Objects
+                          {t('projects.dialog.objects', { count: form.wricef.objects.length })}
                         </Badge>
                         <Badge variant="outline" className="text-xs">
-                          {form.wricef.tickets.length} Tickets
+                          {t('projects.dialog.tickets', { count: form.wricef.tickets.length })}
                         </Badge>
                       </div>
                       <p className="text-xs text-muted-foreground mt-1">
                         {wricefFile?.name || form.wricef.sourceFileName}
                       </p>
                       <p className="text-xs text-muted-foreground">
-                        Imported: {new Date(form.wricef.importedAt).toLocaleString()}
+                        {t('wricefValidation.imported')}: {new Date(form.wricef.importedAt).toLocaleString()}
                       </p>
                     </div>
                     <Button
@@ -687,23 +692,23 @@ export const ProjectsEnhanced: React.FC = () => {
 
               {!form.wricef && !isParsingWricef && (
                 <p className="text-xs text-muted-foreground italic">
-                  No WRICEF file uploaded. You can add one now or later from the project details page.
+                  {t('projects.dialog.noWricef')}
                 </p>
               )}
             </div>
 
             <DialogFooter>
               <Button type="button" variant="outline" onClick={closeDialog}>
-                Cancel
+                {t('projects.dialog.cancel')}
               </Button>
               <Button type="submit" disabled={saving}>
                 {saving
                   ? dialogMode === 'create'
-                    ? 'Creating...'
-                    : 'Saving...'
+                    ? t('projects.dialog.creating')
+                    : t('projects.dialog.saving')
                   : dialogMode === 'create'
-                    ? 'Create Project'
-                    : 'Save Changes'}
+                    ? t('projects.dialog.createTitle')
+                    : t('projects.dialog.saveChanges')}
               </Button>
             </DialogFooter>
           </form>
@@ -716,20 +721,20 @@ export const ProjectsEnhanced: React.FC = () => {
       >
         <AlertDialogContent>
           <AlertDialogHeader>
-            <AlertDialogTitle>Delete project</AlertDialogTitle>
+            <AlertDialogTitle>{t('projects.deleteDialog.title')}</AlertDialogTitle>
             <AlertDialogDescription>
               {projectPendingDelete
-                ? `This will remove "${projectPendingDelete.name}" from the portfolio.`
-                : 'This action cannot be undone.'}
+                ? t('projects.deleteDialog.description', { name: projectPendingDelete.name })
+                : t('projects.deleteDialog.fallbackDescription')}
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
-            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogCancel>{t('projects.dialog.cancel')}</AlertDialogCancel>
             <AlertDialogAction
               className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
               onClick={() => projectPendingDelete && void deleteProject(projectPendingDelete.id)}
             >
-              Delete
+              {t('projects.deleteDialog.delete')}
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>

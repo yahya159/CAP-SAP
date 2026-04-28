@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { Activity, Database, ServerCog, Users } from 'lucide-react';
 import { PageHeader } from '../../components/common/PageHeader';
 import { KPICard } from '../../components/common/KPICard';import { NotificationsAPI } from '../../services/odata/notificationsApi';
@@ -37,6 +38,7 @@ const kpiReferences = [
 ];
 
 export const AdminDashboard: React.FC = () => {
+  const { t } = useTranslation();
   const odataEndpoint = '/odata/v4/* (4 Microservices)';
   const [userCount, setUserCount] = useState(0);
   const [projectCount, setProjectCount] = useState(0);
@@ -85,9 +87,9 @@ export const AdminDashboard: React.FC = () => {
   return (
     <div className="min-h-screen bg-transparent">
       <PageHeader
-        title="Admin Command Center"
-        subtitle="Platform health, user governance, and data integrity overview"
-        breadcrumbs={[{ label: 'Admin Dashboard' }]}
+        title={t('admin.dashboard.title')}
+        subtitle={t('admin.dashboard.subtitle')}
+        breadcrumbs={[{ label: t('admin.dashboard.breadcrumb') }]}
       />
 
       <div className="space-y-6 p-6 lg:p-8">
@@ -99,15 +101,15 @@ export const AdminDashboard: React.FC = () => {
           </Card>
         )}
         <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4">
-          <KPICard title="Total Users" value={userCount} icon="group" color="blue" />
-          <KPICard title="Active Users" value={activeUsers} icon="group" color="green" />
+          <KPICard title={t('admin.dashboard.kpi.totalUsers')} value={userCount} icon="group" color="blue" />
+          <KPICard title={t('admin.dashboard.kpi.activeUsers')} value={activeUsers} icon="group" color="green" />
           <KPICard
-            title="Projects"
+            title={t('admin.dashboard.kpi.projects')}
             value={projectCount}
             icon="project-definition-triangle-2"
             color="yellow"
           />
-          <KPICard title="Tickets" value={ticketCount} icon="ticket" color="purple" />
+          <KPICard title={t('admin.dashboard.kpi.tickets')} value={ticketCount} icon="ticket" color="purple" />
         </div>
 
         <div className="grid grid-cols-1 gap-6 xl:grid-cols-[1.4fr_1fr]">
@@ -115,7 +117,7 @@ export const AdminDashboard: React.FC = () => {
             <CardHeader>
               <CardTitle className="flex items-center gap-2 text-lg">
                 <Database className="h-4 w-4 text-primary" />
-                KPI Definitions
+                {t('admin.dashboard.kpi.definitions')}
               </CardTitle>
             </CardHeader>
             <CardContent>
@@ -161,7 +163,7 @@ export const AdminDashboard: React.FC = () => {
             </CardHeader>
             <CardContent className="space-y-4">
               <div className="rounded-xl border border-border/70 bg-surface-2 p-4">
-                <p className="text-xs uppercase tracking-[0.1em] text-muted-foreground">Backend mode</p>
+                <p className="text-xs uppercase tracking-[0.1em] text-muted-foreground">{t('admin.dashboard.backendMode')}</p>
                 <div className="mt-2 flex items-center gap-2">
                   <Badge>Live API</Badge>
                   <span className="text-sm text-muted-foreground">Connected to SAP CAP service</span>
@@ -169,12 +171,12 @@ export const AdminDashboard: React.FC = () => {
               </div>
 
               <div className="rounded-xl border border-border/70 bg-surface-2 p-4">
-                <p className="text-xs uppercase tracking-[0.1em] text-muted-foreground">OData endpoint</p>
+                <p className="text-xs uppercase tracking-[0.1em] text-muted-foreground">{t('admin.dashboard.odataEndpoint')}</p>
                 <p className="mt-2 break-all text-sm font-medium text-foreground">{odataEndpoint}</p>
               </div>
 
               <div className="rounded-xl border border-border/70 bg-surface-2 p-4">
-                <p className="text-xs uppercase tracking-[0.1em] text-muted-foreground">Activity snapshot</p>
+                <p className="text-xs uppercase tracking-[0.1em] text-muted-foreground">{t('admin.dashboard.activitySnapshot')}</p>
                 <div className="mt-3 space-y-2 text-sm text-muted-foreground">
                   <div className="flex items-center justify-between">
                     <span className="inline-flex items-center gap-2"><Users className="h-4 w-4" />User records</span>
@@ -196,7 +198,7 @@ export const AdminDashboard: React.FC = () => {
 
         <Card className="bg-card/92">
           <CardHeader>
-            <CardTitle className="text-lg">Audit & Activity Log</CardTitle>
+            <CardTitle className="text-lg">{t('admin.dashboard.auditLog')}</CardTitle>
           </CardHeader>
           <CardContent>
             <div className="overflow-x-auto rounded-lg border border-border/70">

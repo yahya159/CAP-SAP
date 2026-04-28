@@ -1,13 +1,15 @@
 import React, { useEffect, useState, useMemo } from 'react';
+import { useTranslation } from 'react-i18next';
 import { BarChart3 } from 'lucide-react';
 import { PageHeader } from '../../components/common/PageHeader';
 import { Card, CardContent, CardHeader, CardTitle } from '../../components/ui/card';
 import { Badge } from '../../components/ui/badge';
 import { Progress } from '../../components/ui/progress';import { TicketsAPI } from '../../services/odata/ticketsApi';
 import { UsersAPI } from '../../services/odata/usersApi';
-import { Ticket, User, USER_ROLE_LABELS, TICKET_NATURE_LABELS } from '../../types/entities';
+import { Ticket, User, TICKET_NATURE_LABELS } from '../../types/entities';
 
 const WorkloadPage: React.FC = () => {
+  const { t } = useTranslation();
   const [tickets, setTickets] = useState<Ticket[]>([]);
   const [users, setUsers] = useState<User[]>([]);
   const [loading, setLoading] = useState(true);
@@ -70,8 +72,8 @@ const WorkloadPage: React.FC = () => {
   return (
     <div className="space-y-6 p-6">
       <PageHeader
-        title="Workload Overview"
-        subtitle="Consultant ticket assignments, effort hours, and availability"
+        title={t('coordinator.workload.title')}
+        subtitle={t('coordinator.workload.subtitle')}
       />
 
       <div className="space-y-4">
@@ -81,7 +83,7 @@ const WorkloadPage: React.FC = () => {
               <div>
                 <CardTitle className="text-base">{user.name}</CardTitle>
                 <div className="flex gap-2 mt-1">
-                  <Badge variant="outline" className="text-xs">{USER_ROLE_LABELS[user.role]}</Badge>
+                  <Badge variant="outline" className="text-xs">{t(`roles.${user.role}`)}</Badge>
                   <span className={`text-xs ${user.availabilityPercent >= 80 ? 'text-green-600' : user.availabilityPercent >= 50 ? 'text-yellow-600' : 'text-red-600'}`}>
                     {user.availabilityPercent}% available
                   </span>
@@ -96,7 +98,7 @@ const WorkloadPage: React.FC = () => {
               {/* Load bar */}
               <div className="space-y-1">
                 <div className="flex justify-between text-xs text-muted-foreground">
-                  <span>Ticket Load</span>
+                  <span>{t('coordinator.workload.ticketLoad')}</span>
                   <span>{loadPercent.toFixed(0)}%</span>
                 </div>
                 <Progress value={loadPercent} className="h-2" />
