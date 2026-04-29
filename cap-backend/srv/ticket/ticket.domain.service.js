@@ -12,6 +12,7 @@ const { TICKET_STATUS, TICKET_PRIORITY, TICKET_NATURE, TICKET_COMPLEXITY } = req
 const cds = require('@sap/cds');
 
 const CONSULTANT_ROLES = new Set(['CONSULTANT_TECHNIQUE', 'CONSULTANT_FONCTIONNEL']);
+const REVIEWER_ROLES = new Set(['ADMIN', 'MANAGER', 'PROJECT_MANAGER']);
 
 const TICKET_STATUS_TRANSITIONS = {
   PENDING_APPROVAL: new Set(['APPROVED', 'REJECTED']),
@@ -66,10 +67,16 @@ class TicketDomainService {
    */
   async beforeCreate(req) {
     const data = req.data;
+    const claims = req._authClaims;
+    const userId = String(claims?.sub ?? '').trim();
 
     // Guard required fields
     if (!data.projectId) req.error(400, 'projectId is required');
-    if (!data.createdBy) req.error(400, 'createdBy is required');
+    if (!userId) req.reject(401, 'Missing authenticated user');
+    if (data.createdBy !== undefined && String(data.createdBy) !== userId) {
+      req.reject(403, 'createdBy must match the authenticated user');
+    }
+    data.createdBy = userId;
     if (!data.title)     req.error(400, 'title is required');
     if (!data.nature)    req.error(400, 'nature is required');
 
@@ -91,7 +98,7 @@ class TicketDomainService {
 
     // Defaults
     // FuncConsultant creates tickets as PENDING_APPROVAL (Feature 2 workflow)
-    const creatorRole = req._authClaims?.role;
+    const creatorRole = claims?.role;
     if (creatorRole === 'CONSULTANT_FONCTIONNEL') {
       data.status = 'PENDING_APPROVAL';
       // Functional consultants cannot assign – manager assigns after approval
@@ -122,6 +129,8 @@ class TicketDomainService {
    */
   async beforeUpdate(req) {
     const data = req.data;
+    const claims = req._authClaims;
+    const userId = String(claims?.sub ?? '').trim();
     data.updatedAt = nowIso();
     const id = req.params?.[0]?.ID ?? req.params?.[0] ?? data.ID;
 
@@ -131,6 +140,14 @@ class TicketDomainService {
 
     if (typeof data.assignedTo === 'string' && !data.assignedTo.trim()) data.assignedTo = null;
     if (typeof data.functionalTesterId === 'string' && !data.functionalTesterId.trim()) data.functionalTesterId = null;
+
+    if (data.createdBy !== undefined) {
+      if (!userId) req.reject(401, 'Missing authenticated user');
+      if (String(data.createdBy) !== userId) {
+        req.reject(403, 'createdBy cannot be reassigned to another user');
+      }
+      data.createdBy = userId;
+    }
 
     if (data.status !== undefined && id) {
       const current = await this.repo.findById(id);
@@ -202,7 +219,10 @@ class TicketDomainService {
         return;
       }
 
-      await assertEntityExists(ENTITIES.Users, techConsultantId, 'techConsultantId', req);
+      const techConsultant = await this._getActiveTechnicalConsultant(techConsultantId);
+      if (!techConsultant) {
+        req.reject(400, 'techConsultantId must reference an active technical consultant');
+      }
 
       await tx.run(UPDATE(ENTITIES.Tickets).where({ ID: id }).with({
         status: TICKET_STATUS.APPROVED,
@@ -347,6 +367,16 @@ class TicketDomainService {
       }
     }
     throw new Error('Unable to allocate a unique ticketCode');
+  }
+
+  async _getActiveTechnicalConsultant(userId) {
+    if (!userId) return null;
+    return cds.db.run(
+      SELECT.one
+        .from(ENTITIES.Users)
+        .columns('ID')
+        .where({ ID: userId, active: true, role: 'CONSULTANT_TECHNIQUE' })
+    );
   }
 }
 

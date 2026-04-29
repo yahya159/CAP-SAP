@@ -34,6 +34,8 @@
     "edit": "Modifier",
     "create": "Créer",
     "back": "Retour",
+    "tryAgain": "Réessayer",
+    "goHome": "Retour à l'accueil",
     "tickets": "Tickets",
     "previous": "Précédent",
     "next": "Suivant",
@@ -396,8 +398,10 @@
       },
       "workload": {
         "title": "Charge de Travail des Consultants",
+        "subtitle": "Affectations des tickets, heures d'effort et disponibilité des consultants",
         "details": "Détails",
         "tickets": "{{count}} tickets",
+        "ticketLoad": "Charge de Tickets",
         "effort": "{{hours}}h d'effort",
         "avail": "{{percent}}% dispo."
       },
@@ -454,100 +458,48 @@
     }
   },
   "admin": {
-    "dashboard": {
-      "title": "Centre d'administration",
-      "subtitle": "Santé de la plateforme, gouvernance des utilisateurs et intégrité des données",
-      "breadcrumb": "Tableau de bord Admin",
-      "kpi": {
-        "totalUsers": "Utilisateurs totaux",
-        "activeUsers": "Utilisateurs actifs",
-        "projects": "Projets",
-        "tickets": "Tickets",
-        "definitions": "Définitions KPI",
-        "table": {
-          "kpi": "KPI",
-          "formula": "Formule",
-          "source": "Source",
-          "refresh": "Rafraîchir"
-        }
-      },
-      "backendMode": "Mode backend",
-      "odataEndpoint": "Point de terminaison OData",
-      "activitySnapshot": "Capture d'activité",
-      "auditLog": "Journal d'audit et d'activité"
-    },
-    "users": {
-      "title": "Gestion des Utilisateurs",
-      "subtitle": "Gérer les comptes utilisateurs, les rôles et les permissions",
-      "newUser": "Nouvel Utilisateur",
-      "searchPlaceholder": "Rechercher par nom ou e-mail...",
-      "role": "Rôle",
-      "allRoles": "Tous les Rôles",
-      "table": {
-        "user": "Utilisateur",
-        "role": "Rôle",
-        "skills": "Compétences",
-        "availability": "Disponibilité",
-        "status": "Statut",
-        "actions": "Actions",
-        "rate": "Taux",
-        "active": "Actif",
-        "inactive": "Inactif",
-        "loading": "Chargement des utilisateurs...",
-        "empty": "Aucun utilisateur ne correspond à vos filtres."
-      },
-      "dialog": {
-        "createTitle": "Créer un Utilisateur",
-        "editTitle": "Modifier l'Utilisateur",
-        "desc": "Gérer le profil du compte, l'affectation des rôles et les attributs de dotation.",
-        "name": "Nom",
-        "email": "E-mail",
-        "role": "Rôle",
-        "selectRole": "Sélectionner un rôle",
-        "availability": "Disponibilité %",
-        "skills": "Compétences (séparées par des virgules)",
-        "certifications": "Certifications (séparées par des virgules)",
-        "active": "Compte actif",
-        "saving": "Enregistrement..."
-      },
-      "deleteDialog": {
-        "title": "Supprimer l'utilisateur",
-        "desc": "Cela supprimera définitivement \"{{name}}\" du jeu de données actuel.",
-        "fallback": "Cette action est irréversible."
-      },
-      "toasts": {
-        "activated": "Utilisateur activé",
-        "deactivated": "Utilisateur désactivé",
-        "updateStatusFailed": "Échec de la mise à jour du statut de l'utilisateur",
-        "requiredFields": "Le nom et l'e-mail sont requis",
-        "invalidEmail": "Veuillez entrer une adresse e-mail valide",
-        "invalidAvailability": "La disponibilité doit être comprise entre 0 et 100",
-        "updated": "Utilisateur mis à jour",
-        "created": "Utilisateur créé",
-        "saveFailed": "Échec de l'enregistrement de l'utilisateur",
-        "deleteSelf": "Vous ne pouvez pas supprimer l'utilisateur actuellement connecté",
-        "deleted": "Utilisateur supprimé",
-        "deleteFailed": "Échec de la suppression de l'utilisateur"
-      }
-    },
-    "reference": {
+    "referenceData": {
       "title": "Gestion des Données de Référence",
-      "subtitle": "Gérer les statuts des tickets, les priorités, les types de projet et les compétences",
-      "createTitle": "Créer un Élément de Référence",
-      "editTitle": "Modifier l'Élément de Référence",
+      "subtitle": "Gérer les valeurs de recherche et codes système",
+      "pageSubtitle": "Gérer les statuts de ticket, priorités, types de projet et compétences",
+      "breadcrumb": "Données de Référence",
+      "search": "Rechercher par code ou libellé...",
+      "add": "Ajouter une Donnée de Référence",
+      "code": "Code *",
+      "label": "Libellé *",
       "type": "Type",
-      "selectType": "Sélectionner le type",
-      "code": "Code",
-      "codePlaceholder": "EX: EN_COURS",
-      "label": "Libellé",
-      "labelPlaceholder": "ex : En Cours",
-      "order": "Ordre",
       "active": "Actif",
-      "updating": "Mise à jour",
-      "creating": "Création",
-      "saving": "Enregistrement...",
-      "search": "Rechercher code ou libellé...",
-      "allTypes": "Tous les Types",
+      "order": "Ordre",
+      "cancel": "Annuler",
+      "save": "Enregistrer",
+      "delete": "Supprimer la donnée de référence",
+      "deleteItem": "Supprimer {{label}}",
+      "edit": "Modifier {{label}}",
+      "deleteConfirm": "Supprimer la donnée de référence",
+      "deleteDesc": "Cette action ne peut pas être annulée.",
+      "deleteDescWithCode": "Supprimer \"{{label}}\" ({{code}}) des données de référence ?",
+      "yes": "Supprimer",
+      "form": {
+        "createTitle": "Créer une Donnée de Référence",
+        "editTitle": "Modifier une Donnée de Référence",
+        "typePlaceholder": "Sélectionner un type",
+        "codePlaceholder": "EX : IN_PROGRESS",
+        "labelPlaceholder": "Ex : En cours",
+        "saving": "Enregistrement...",
+        "update": "Mettre à jour",
+        "create": "Créer"
+      },
+      "types": {
+        "ticketStatus": "Statut du Ticket",
+        "priority": "Priorité",
+        "projectType": "Type de Projet",
+        "skill": "Compétence"
+      },
+      "filters": {
+        "searchLabel": "Rechercher dans les données de référence",
+        "typeLabel": "Filtrer par type",
+        "allTypes": "Tous les Types"
+      },
       "table": {
         "type": "Type",
         "code": "Code",
@@ -557,24 +509,24 @@
         "actions": "Actions",
         "loading": "Chargement des données de référence...",
         "empty": "Aucune entrée de référence trouvée",
+        "toggleActive": "Basculer le statut actif pour {{label}}"
+      },
+      "status": {
         "active": "Actif",
         "inactive": "Inactif"
       },
-      "deleteDialog": {
-        "title": "Supprimer l'élément de référence",
-        "desc": "Supprimer \"{{label}}\" ({{code}}) des données de référence ?",
-        "fallback": "Cette action est irréversible."
-      },
       "toasts": {
-        "requiredFields": "Le code et le libellé sont requis",
-        "invalidOrder": "L'ordre doit être d'au moins 1",
-        "duplicate": "Un élément de référence avec ce type et ce code existe déjà",
-        "updated": "Élément de référence mis à jour",
-        "created": "Élément de référence créé",
-        "saveFailed": "Échec de l'enregistrement de l'élément de référence",
-        "statusFailed": "Échec de la mise à jour du statut",
-        "deleted": "Élément de référence supprimé",
-        "deleteFailed": "Échec de la suppression de l'élément de référence"
+        "addSuccess": "Donnée de référence ajoutée",
+        "addFailed": "Échec de l'ajout de la donnée",
+        "updateSuccess": "Donnée de référence mise à jour",
+        "updateFailed": "Échec de la mise à jour",
+        "deleteSuccess": "Donnée de référence supprimée",
+        "deleteFailed": "Échec de la suppression",
+        "createSuccess": "Donnée de référence créée",
+        "saveFailed": "Échec de l'enregistrement de la donnée de référence",
+        "statusUpdateFailed": "Échec de la mise à jour du statut",
+        "orderMin": "L'ordre doit être au moins égal à 1",
+        "duplicateCode": "Une donnée de référence avec ce type et ce code existe déjà"
       }
     }
   },
@@ -629,93 +581,37 @@
     "DEV_COORDINATOR": "Coordinateur Dev"
   },
   "documentation": {
-    "title": "Objets de Documentation",
-    "subtitle": "Documentation projet centralisée, SFD, guides et notes d'architecture",
-    "home": "Accueil",
-    "objects": "Objets",
-    "newObject": "Nouvel Objet",
-    "searchPlaceholder": "Rechercher des objets par titre, contenu, projet...",
-    "allProjects": "Tous les projets",
-    "allTypes": "Tous les types",
-    "kbObjects": "Objets de la Base de Connaissances",
-    "table": {
-      "title": "Titre",
-      "type": "Type",
-      "source": "Source",
-      "project": "Projet",
-      "linkedTickets": "Tickets Liés",
-      "files": "Fichiers",
-      "author": "Auteur",
-      "updated": "Mis à jour",
-      "action": "Action"
-    },
-    "loading": "Chargement des objets...",
-    "noObjects": "Aucun objet trouvé pour les filtres actuels.",
-    "manual": "Manuel",
-    "open": "Ouvrir",
-    "createTitle": "Créer un Objet de Documentation",
-    "titleLabel": "Titre *",
-    "titlePlaceholder": "Titre de l'objet de documentation",
-    "typeLabel": "Type",
-    "projectLabel": "Projet *",
-    "selectProject": "Sélectionner le projet",
-    "overviewLabel": "Aperçu",
-    "overviewPlaceholder": "Résumé de haut niveau de cet objet",
-    "contentLabel": "Contenu *",
-    "contentPlaceholder": "Rédigez le contenu (Markdown supporté) pour cet objet",
-    "attachedFilesLabel": "Fichiers Joints",
-    "relatedTicketsLabel": "Tickets Liés",
-    "selectProjectFirst": "Sélectionnez d'abord un projet pour lier des tickets.",
-    "noTicketsFound": "Aucun ticket trouvé pour ce projet.",
-    "cancel": "Annuler",
-    "creating": "Création...",
-    "createObject": "Créer l'Objet",
-    "errors": {
-      "loadFailed": "Échec du chargement des objets de documentation.",
-      "filesSkipped": "{{count}} fichier(s) ignoré(s). La taille max est de {{size}} par fichier.",
-      "attachFailed": "Échec de l'attachement d'un ou plusieurs fichiers",
-      "titleRequired": "Le titre est requis",
-      "projectRequired": "Le projet est requis",
-      "contentRequired": "Le contenu est requis",
-      "createFailed": "Échec de la création de l'objet"
-    },
-    "success": {
-      "created": "Objet créé"
-    },
-    "types": {
-      "SFD": "SFD",
-      "GUIDE": "Guide",
-      "ARCHITECTURE_DOC": "Doc Architecture",
-      "GENERAL": "Général"
-    },
-    "details": {
-      "title": "Détails de la Documentation",
-      "subtitle": "Détails de l'article de la base de connaissances",
-      "back": "Retour",
+    "section": {
+      "title": "Documentation Associée",
+      "attachExisting": "Joindre une Documentation Existante",
+      "createNew": "Créer une Nouvelle Documentation",
       "loading": "Chargement de la documentation...",
-      "notFound": "Documentation non trouvée",
-      "notFoundDesc": "L'article demandé n'existe pas dans la base de connaissances.",
-      "ticket": "ticket",
-      "tickets": "tickets",
-      "file": "fichier",
-      "files": "fichiers",
-      "metadata": "Métadonnées",
-      "author": "Auteur :",
-      "created": "Créé le :",
-      "updated": "Mis à jour le :",
-      "project": "Projet :",
-      "attachedFiles": "Fichiers Joints",
-      "noFiles": "Aucun fichier joint.",
-      "download": "Télécharger",
-      "unavailable": "Indisponible",
-      "linkedTickets": "Tickets Liés",
-      "noLinkedTickets": "Aucun ticket n'est actuellement lié à ce document.",
-      "table": {
-        "code": "Code",
-        "title": "Titre",
-        "status": "Statut",
-        "priority": "Priorité",
-        "project": "Projet"
+      "noLinked": "Aucune documentation n'est liée à ce ticket pour l'instant.",
+      "attachDialog": "Joindre une Documentation Existante",
+      "selectLabel": "Objet de Documentation",
+      "selectPlaceholder": "Sélectionner la documentation à joindre",
+      "cancel": "Annuler",
+      "attach": "Joindre",
+      "attaching": "Jointure en cours...",
+      "open": "Ouvrir",
+      "noAttachable": "Aucune documentation joignable pour ce projet",
+      "loadFailed": "Échec du chargement de la documentation"
+    },
+    "create": {
+      "title": "Créer un Objet de Documentation",
+      "titleLabel": "Titre *",
+      "typeLabel": "Type",
+      "overviewLabel": "Aperçu",
+      "overviewPlaceholder": "Vue d'ensemble générale de cet objet de documentation",
+      "contentLabel": "Contenu *",
+      "contentPlaceholder": "Écrire du contenu markdown ou texte enrichi...",
+      "attachFilesLabel": "Joindre des Fichiers",
+      "cancel": "Annuler",
+      "create": "Créer",
+      "creating": "Création en cours...",
+      "toasts": {
+        "createSuccess": "Documentation créée",
+        "createFailed": "Échec de la création de la documentation"
       }
     }
   },
@@ -890,161 +786,20 @@
     }
   },
   "projects": {
-    "title": "Projets",
-    "subtitle": "Pipeline du portefeuille avec filtrage intelligent, modifications rapides et contexte KPI",
-    "breadcrumbHome": "Accueil",
-    "refresh": "Actualiser",
-    "newProject": "Nouveau Projet",
-    "searchPlaceholder": "Rechercher par nom ou description",
-    "allStatuses": "Tous les statuts",
-    "allPriorities": "Toutes les priorités",
-    "reset": "Réinitialiser",
-    "table": {
-      "project": "Projet",
-      "type": "Type",
-      "status": "Statut",
-      "priority": "Priorité",
-      "timeline": "Chronologie",
-      "progress": "Progression",
-      "actions": "Actions"
-    },
-    "loading": "Chargement des projets...",
-    "noProjects": "Aucun projet ne correspond aux filtres actuels.",
-    "createProject": "Créer un projet",
-    "dialog": {
-      "createTitle": "Créer un Projet",
-      "editTitle": "Modifier le Projet",
-      "description": "Saisissez les métadonnées de planification du projet et les champs de suivi du portefeuille.",
-      "nameLabel": "Nom du Projet",
-      "namePlaceholder": "Programme de Migration S/4HANA",
-      "descLabel": "Description",
-      "descPlaceholder": "Décrivez le périmètre, les résultats et le contexte d'exécution du projet",
-      "typeLabel": "Type de Projet",
-      "statusLabel": "Statut",
-      "priorityLabel": "Priorité",
-      "startDateLabel": "Date de Début",
-      "endDateLabel": "Date de Fin",
-      "progressLabel": "Progression (%)",
-      "wricefImport": "Import WRICEF (Optionnel)",
-      "wricefImportDesc": "Téléchargez un fichier Excel contenant des objets WRICEF et des tickets",
-      "parsing": "Analyse...",
-      "uploadExcel": "Télécharger Excel",
-      "objects": "{{count}} Objets",
-      "tickets": "{{count}} Tickets",
-      "noWricef": "Aucun fichier WRICEF téléchargé. Vous pouvez en ajouter un maintenant ou plus tard depuis la page de détails du projet.",
+    "abaques": {
+      "title": "Définir la Matrice",
+      "description": "Définir les heures estimées mappées à la Nature de Tâche et la Complexité. Ceci agit comme une référence de base manuelle.",
+      "noEntries": "Aucune entrée dans la matrice pour l'instant. Cliquez sur \"Ajouter une Entrée\" pour commencer.",
+      "taskNature": "Nature de Tâche",
+      "complexity": "Complexité",
+      "estimatedHours": "Heures Estimées",
+      "addEntry": "Ajouter une Entrée",
       "cancel": "Annuler",
-      "creating": "Création...",
-      "saving": "Enregistrement...",
-      "saveChanges": "Enregistrer les modifications"
+      "submit": "Soumettre"
     },
-    "deleteDialog": {
-      "title": "Supprimer le projet",
-      "description": "Cela supprimera \"{{name}}\" du portefeuille.",
-      "fallbackDescription": "Cette action est irréversible.",
-      "delete": "Supprimer"
-    },
-    "toasts": {
-      "loadFailed": "Échec du chargement des projets",
-      "invalidFile": "Veuillez télécharger un fichier Excel (.xlsx ou .xls)",
-      "wricefImported": "WRICEF importé : {{count}} objets trouvés",
-      "parseFailed": "Échec de l'analyse du fichier WRICEF",
-      "nameRequired": "Le nom du projet est requis",
-      "datesRequired": "Les dates de début et de fin sont requises",
-      "invalidDates": "La date de fin ne peut pas être antérieure à la date de début",
-      "created": "Projet créé avec succès",
-      "updated": "Projet mis à jour avec succès",
-      "saveFailed": "Échec de l'enregistrement du projet",
-      "deleted": "Projet supprimé",
-      "deleteFailed": "Échec de la suppression du projet"
-    },
-    "details": {
-      "title": "Détails du Projet",
-      "loading": "Chargement des détails du projet...",
-      "notFound": "Projet indisponible",
-      "notFoundDesc": "Le projet demandé n'a pas pu être chargé.",
-      "breadcrumbHome": "Accueil",
-      "subtitle": "Cockpit de projet avec aperçu, tickets, équipe et documentation",
-      "tabs": {
-        "overview": "Aperçu",
-        "abaques": "Abaques",
-        "tickets": "Tickets",
-        "team": "Équipe",
-        "objects": "Objets WRICEF",
-        "docs": "Documentation"
-      },
-      "kpis": {
-        "onTrack": "Tickets à jour",
-        "late": "Tickets en retard",
-        "blocked": "Tickets bloqués",
-        "completed": "Tickets terminés",
-        "critical": "Tickets critiques",
-        "productivity": "Productivité",
-        "actualHours": "Heures réelles",
-        "estimatedHours": "Heures estimées",
-        "variance": "Écart"
-      },
-      "abaques": {
-        "title": "Matrice d'Abaque (Référence Manuelle)",
-        "subtitle": "Matrice de référence associant la nature et la complexité des tâches à l'effort estimé.",
-        "nature": "Nature de la tâche",
-        "complexity": "Complexité",
-        "hours": "Heures estimées",
-        "edit": "Modifier la matrice"
-      },
-      "documentation": {
-        "stats": {
-          "total": "Total Documents"
-        },
-        "keywords": "Mots-clés Tech",
-        "objects": "Objets de Documentation",
-        "create": "Créer un document",
-        "notes": "Notes du Projet (Markdown)",
-        "notesPlaceholder": "Rédigez la documentation du projet ici (markdown supporté)...",
-        "saveNotes": "Enregistrer",
-        "savingNotes": "Enregistrement..."
-      },
-      "wricef": {
-        "stats": {
-          "totalObjects": "Total Objets",
-          "totalTickets": "Total Tickets",
-          "totalDocuments": "Total Documents"
-        },
-        "filters": {
-          "search": "Rechercher des objets...",
-          "type": "Type",
-          "allTypes": "Tous les types",
-          "complexity": "Complexité",
-          "allComplexity": "Toutes les complexités",
-          "module": "Module",
-          "allModules": "Tous les modules",
-          "clear": "Effacer les filtres",
-          "createTicket": "Créer un Ticket",
-          "import": "Importer WRICEF"
-        },
-        "pagination": {
-          "showing": "Affichage de",
-          "to": "à",
-          "of": "sur",
-          "results": "résultats",
-          "pageSize": "Taille de page"
-        }
-      },
-      "tables": {
-        "documentation": {
-          "linkedTickets": "Tickets liés"
-        },
-        "wricef": {
-          "objectId": "ID de l'objet",
-          "ticketsFor": "Tickets pour {{id}}",
-          "documentsFor": "Documents pour {{id}}",
-          "addTicket": "Ajouter un Ticket",
-          "addDocument": "Ajouter un Document"
-        },
-        "wricefTickets": {
-          "ticketId": "ID du Ticket",
-          "liveTicket": "Ticket Live"
-        }
-      }
+    "ticketDialog": {
+      "title": "Créer un nouveau ticket en mappant manuellement l'estimation, la priorité et la complexité.",
+      "cancel": "Annuler"
     }
   },
   "wricefValidation": {
@@ -1413,136 +1168,10 @@
     }
   },
   "consultantTech": {
-    "certifications": {
-      "title": "Mes Certifications",
-      "subtitle": "Gérez vos certifications professionnelles et formations",
-      "noCertificationsYet": "Aucune certification pour l'instant. Cliquez sur \"Ajouter une Certification\" pour commencer.",
-      "addCertificateTitle": "Ajouter une Certification",
-      "certificateNameLabel": "Nom de la Certification *",
-      "certificateNamePlaceholder": "ex. SAP Certified Application Associate",
-      "issuingBodyLabel": "Organisme Certificateur *",
-      "issuingBodyPlaceholder": "ex. SAP",
-      "dateObtainedLabel": "Date d'Obtention *",
-      "expiryDateLabel": "Date d'Expiration",
-      "statusLabel": "Statut",
-      "valid": "Valide",
-      "expiringSoon": "Expire bientôt",
-      "expired": "Expiré",
-      "cancel": "Annuler",
-      "add": "Ajouter",
-      "delete": "Supprimer",
-      "toasts": {
-        "addSuccess": "Certification ajoutée",
-        "addFailed": "Échec de l'ajout de certification",
-        "deleteSuccess": "Certification supprimée",
-        "deleteFailed": "Échec de la suppression de certification"
-      }
-    },
     "leaves": {
       "title": "Mes Congés",
       "subtitle": "Afficher et gérer vos demandes de congé",
-      "requestLeaveTitle": "Demander un Congé",
-      "startDateLabel": "Date de début *",
-      "endDateLabel": "Date de fin *",
-      "reasonLabel": "Raison *",
-      "reasonPlaceholder": "Décrivez la raison de votre congé...",
-      "daysLabel": "Jours",
-      "submitted": "Soumis",
-      "submit": "Soumettre",
-      "cancel": "Annuler",
-      "toasts": {
-        "requestSuccess": "Demande de congé soumise",
-        "requestFailed": "Échec de la soumission de la demande",
-        "approveSuccess": "Congé approuvé",
-        "rejectSuccess": "Congé rejeté"
-      }
-    }
-  },
-  "projects": {
-    "abaques": {
-      "title": "Définir la Matrice",
-      "description": "Définir les heures estimées mappées à la Nature de Tâche et la Complexité. Ceci agit comme une référence de base manuelle.",
-      "noEntries": "Aucune entrée dans la matrice pour l'instant. Cliquez sur \"Ajouter une Entrée\" pour commencer.",
-      "taskNature": "Nature de Tâche",
-      "complexity": "Complexité",
-      "estimatedHours": "Heures Estimées",
-      "addEntry": "Ajouter une Entrée",
-      "cancel": "Annuler",
-      "submit": "Soumettre"
-    },
-    "ticketDialog": {
-      "title": "Créer un nouveau ticket en mappant manuellement l'estimation, la priorité et la complexité.",
-      "cancel": "Annuler"
-    }
-  },
-  "documentation": {
-    "section": {
-      "title": "Documentation Associée",
-      "attachExisting": "Joindre une Documentation Existante",
-      "createNew": "Créer une Nouvelle Documentation",
-      "loading": "Chargement de la documentation...",
-      "noLinked": "Aucune documentation n'est liée à ce ticket pour l'instant.",
-      "attachDialog": "Joindre une Documentation Existante",
-      "selectLabel": "Objet de Documentation",
-      "selectPlaceholder": "Sélectionner la documentation à joindre",
-      "cancel": "Annuler",
-      "attach": "Joindre",
-      "attaching": "Jointure en cours...",
-      "open": "Ouvrir",
-      "noAttachable": "Aucune documentation joignable pour ce projet",
-      "loadFailed": "Échec du chargement de la documentation"
-    },
-    "create": {
-      "title": "Créer un Objet de Documentation",
-      "titleLabel": "Titre *",
-      "typeLabel": "Type",
-      "overviewLabel": "Aperçu",
-      "overviewPlaceholder": "Vue d'ensemble générale de cet objet de documentation",
-      "contentLabel": "Contenu *",
-      "contentPlaceholder": "Écrire du contenu markdown ou texte enrichi...",
-      "attachFilesLabel": "Joindre des Fichiers",
-      "cancel": "Annuler",
-      "create": "Créer",
-      "creating": "Création en cours...",
-      "toasts": {
-        "createSuccess": "Documentation créée",
-        "createFailed": "Échec de la création de la documentation"
-      }
-    }
-  },
-  "admin": {
-    "referenceData": {
-      "title": "Gestion des Données de Référence",
-      "subtitle": "Gérer les valeurs de recherche et codes système",
-      "search": "Rechercher par code ou libellé...",
-      "add": "Ajouter une Donnée de Référence",
-      "code": "Code *",
-      "label": "Libellé *",
-      "type": "Type",
-      "active": "Actif",
-      "order": "Ordre",
-      "cancel": "Annuler",
-      "save": "Enregistrer",
-      "delete": "Supprimer la donnée de référence",
-      "edit": "Modifier {{label}}",
-      "deleteConfirm": "Supprimer la donnée de référence",
-      "deleteDesc": "Cela supprimera \"{{label}}\" du système. Cette action ne peut pas être annulée.",
-      "yes": "Supprimer",
-      "toasts": {
-        "addSuccess": "Donnée de référence ajoutée",
-        "addFailed": "Échec de l'ajout de la donnée",
-        "updateSuccess": "Donnée de référence mise à jour",
-        "updateFailed": "Échec de la mise à jour",
-        "deleteSuccess": "Donnée de référence supprimée",
-        "deleteFailed": "Échec de la suppression"
-      }
-    }
-  },
-  "consultantTech": {
-    "leaves": {
-      "title": "Mes Congés",
-      "subtitle": "Afficher et gérer vos demandes de congé",
-      "requestLeave": "Demander un Congé",
+      "requestLeave": "Nouvelle demande",
       "startDate": "Date de début *",
       "endDate": "Date de fin *",
       "reason": "Raison",
@@ -1551,17 +1180,20 @@
       "submit": "Soumettre",
       "cancel": "Annuler",
       "stats": {
-        "total": "Total des Demandes",
+        "total": "Demandes totales",
         "pending": "En attente",
-        "approved": "Approuvé",
+        "approved": "Approuvées",
         "rejected": "Rejeté",
-        "daysTaken": "Jours Pris"
+        "daysTaken": "Jours Pris",
+        "daysApproved": "Jours approuvés"
       },
       "table": {
-        "startDate": "Date de début",
-        "endDate": "Date de fin",
-        "reason": "Raison",
-        "status": "Statut"
+        "startDate": "Début",
+        "endDate": "Fin",
+        "days": "Jours",
+        "reason": "Motif",
+        "status": "Statut",
+        "submitted": "Soumise"
       },
       "errors": {
         "dateRequired": "La date de début et de fin sont requises",
@@ -1571,6 +1203,50 @@
       "toasts": {
         "requestSuccess": "Demande de congé soumise",
         "requestFailed": "Échec de la soumission de la demande"
+      },
+      "status": {
+        "PENDING": "En attente",
+        "APPROVED": "Approuvée",
+        "REJECTED": "Rejetée"
+      },
+      "empty": "Aucune demande de congé pour le moment.",
+      "dialog": {
+        "title": "Nouvelle demande de congé",
+        "startDate": "Date de début *",
+        "endDate": "Date de fin *",
+        "reason": "Motif",
+        "reasonPlaceholder": "Motif facultatif..."
+      }
+    },
+    "certifications": {
+      "addCta": "Ajouter une certification",
+      "stats": {
+        "total": "Total",
+        "valid": "Valides",
+        "expired": "Expirées"
+      },
+      "table": {
+        "name": "Nom",
+        "issuingBody": "Organisme",
+        "obtained": "Obtenue",
+        "expires": "Expire",
+        "status": "Statut"
+      },
+      "status": {
+        "VALID": "Valide",
+        "EXPIRING_SOON": "Expire bientôt",
+        "EXPIRED": "Expirée"
+      },
+      "empty": "Aucune certification pour le moment. Cliquez sur \"Ajouter une certification\" pour commencer.",
+      "dialog": {
+        "title": "Ajouter une certification",
+        "certificateName": "Nom de la certification *",
+        "certificateNamePlaceholder": "ex. SAP Certified Application Associate",
+        "issuingBody": "Organisme émetteur *",
+        "issuingBodyPlaceholder": "ex. SAP",
+        "dateObtained": "Date d'obtention *",
+        "expiryDate": "Date d'expiration",
+        "status": "Statut"
       }
     }
   },
@@ -1601,6 +1277,81 @@
       "searchPlaceholder": "Rechercher des tickets...",
       "status": "Statut"
     }
+  },
+  "asyncError": {
+    "title": "Erreur de l'application",
+    "description": "Une erreur critique est survenue. Cela peut être lié à un problème réseau ou à un incident technique."
+  },
+  "imputationsPages": {
+    "consultantTech": {
+      "title": "Mes saisies de temps",
+      "subtitle": "Enregistrez vos heures de travail avec le calendrier bi-hebdomadaire"
+    },
+    "manager": {
+      "title": "Saisies d'équipe",
+      "subtitle": "Consultez et suivez les saisies de temps de l'équipe"
+    },
+    "devCoordinator": {
+      "title": "Saisies de temps et allocation",
+      "subtitle": "Suivez les saisies de temps de l'équipe et la répartition de charge"
+    },
+    "projectManager": {
+      "title": "Hub de validation Stratime",
+      "subtitle": "Validez les saisies d'équipe soumises et envoyez les périodes validées vers Stratime"
+    }
+  },
+  "resourceAllocation": {
+    "title": "Allocation des ressources",
+    "subtitle": "Affectez les consultants aux projets et suivez les taux d'allocation",
+    "generic": {
+      "project": "projet"
+    },
+    "notification": {
+      "title": "Nouvelle allocation attribuée",
+      "message": "Vous avez été alloué à {{percent}}% sur {{project}}."
+    },
+    "form": {
+      "title": "Nouvelle allocation",
+      "consultant": "Consultant",
+      "selectUser": "Sélectionner un utilisateur",
+      "project": "Projet",
+      "selectProject": "Sélectionner un projet",
+      "allocationPercent": "Allocation %",
+      "start": "Début",
+      "end": "Fin",
+      "saving": "Enregistrement...",
+      "add": "Ajouter l'allocation"
+    },
+    "matrix": {
+      "title": "Matrice d'allocation",
+      "filterByProject": "Filtrer par projet",
+      "allProjects": "Tous les projets",
+      "consultant": "Consultant",
+      "project": "Projet",
+      "allocation": "Allocation",
+      "totalPerUser": "Total/Utilisateur",
+      "period": "Période",
+      "periodValue": "{{start}} à {{end}}",
+      "loading": "Chargement des allocations...",
+      "empty": "Aucune allocation trouvée."
+    },
+    "delete": {
+      "title": "Supprimer l'allocation",
+      "description": "Cette ligne d'allocation sera supprimée du jeu de données actuel.",
+      "fallbackDescription": "Cette action est irréversible.",
+      "remove": "Supprimer"
+    },
+    "toasts": {
+      "requiredFields": "L'utilisateur et le projet sont requis",
+      "invalidDateRange": "La date de fin ne peut pas être antérieure à la date de début",
+      "invalidPercent": "Le pourcentage d'allocation doit être compris entre 0 et 100",
+      "overlappingAllocation": "Ce consultant a déjà une allocation qui chevauche cette période pour ce projet",
+      "exceedsCapacity": "L'allocation dépasse 100% pour cet utilisateur ({{total}}%)",
+      "created": "Allocation créée",
+      "createFailed": "Échec de la création de l'allocation",
+      "updateFailed": "Échec de la mise à jour de l'allocation",
+      "deleted": "Allocation supprimée",
+      "deleteFailed": "Échec de la suppression de l'allocation"
+    }
   }
-}
 }

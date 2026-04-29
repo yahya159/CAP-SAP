@@ -97,9 +97,9 @@ export const MyCertifications: React.FC = () => {
       setProfile(updated);
       setForm(EMPTY_FORM);
       setShowAdd(false);
-      toast.success('Certification added');
+      toast.success(t('consultantTech.certifications.toasts.addSuccess'));
     } catch {
-      toast.error('Failed to add certification');
+      toast.error(t('consultantTech.certifications.toasts.addFailed'));
     }
   };
 
@@ -110,9 +110,9 @@ export const MyCertifications: React.FC = () => {
         certifications: profile.certifications.filter((c) => c.id !== certId),
       });
       setProfile(updated);
-      toast.success('Certification removed');
+      toast.success(t('consultantTech.certifications.toasts.deleteSuccess'));
     } catch {
-      toast.error('Failed to remove certification');
+      toast.error(t('consultantTech.certifications.toasts.deleteFailed'));
     }
   };
 
@@ -123,11 +123,11 @@ export const MyCertifications: React.FC = () => {
   return (
     <div className="min-h-screen bg-background">
       <PageHeader
-        title="My Certifications"
-        subtitle="Manage your professional certifications"
+        title={t('consultantTech.certifications.title')}
+        subtitle={t('consultantTech.certifications.subtitle')}
         breadcrumbs={[
-          { label: 'Home', path: '/consultant-tech/dashboard' },
-          { label: 'Certifications' },
+          { label: t('common.home'), path: '/consultant-tech/dashboard' },
+          { label: t('sidebar.items.Certifications') },
         ]}
       />
 
@@ -136,37 +136,37 @@ export const MyCertifications: React.FC = () => {
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
           <div className="bg-card border border-border rounded-lg p-4 text-center">
             <div className="text-2xl font-semibold text-primary">{certs.length}</div>
-            <div className="text-xs text-muted-foreground">Total</div>
+            <div className="text-xs text-muted-foreground">{t('consultantTech.certifications.stats.total')}</div>
           </div>
           <div className="bg-card border border-border rounded-lg p-4 text-center">
             <div className="text-2xl font-semibold text-green-600">{certs.filter((c) => c.status === 'VALID').length}</div>
-            <div className="text-xs text-muted-foreground">Valid</div>
+            <div className="text-xs text-muted-foreground">{t('consultantTech.certifications.stats.valid')}</div>
           </div>
           <div className="bg-card border border-border rounded-lg p-4 text-center">
             <div className="text-2xl font-semibold text-red-600">{certs.filter((c) => c.status === 'EXPIRED').length}</div>
-            <div className="text-xs text-muted-foreground">Expired</div>
+            <div className="text-xs text-muted-foreground">{t('consultantTech.certifications.stats.expired')}</div>
           </div>
         </div>
 
         <div className="flex justify-end">
           <Button onClick={() => setShowAdd(true)}>
-            <Plus className="mr-1 h-4 w-4" /> Add Certification
+            <Plus className="mr-1 h-4 w-4" /> {t('consultantTech.certifications.addCta')}
           </Button>
         </div>
 
         {loading ? (
-          <p className="text-muted-foreground">Loading...</p>
+          <p className="text-muted-foreground">{t('common.loading')}</p>
         ) : (
           <div className="rounded-lg border bg-card overflow-x-auto">
             <Table>
               <TableHeader className="bg-muted/50">
                 <TableRow>
-                  <TableHead className="px-4">Name</TableHead>
-                  <TableHead className="px-4">Issuing Body</TableHead>
-                  <TableHead className="px-4">Obtained</TableHead>
-                  <TableHead className="px-4">Expires</TableHead>
-                  <TableHead className="px-4">Status</TableHead>
-                  <TableHead className="px-4">Actions</TableHead>
+                  <TableHead className="px-4">{t('consultantTech.certifications.table.name')}</TableHead>
+                  <TableHead className="px-4">{t('consultantTech.certifications.table.issuingBody')}</TableHead>
+                  <TableHead className="px-4">{t('consultantTech.certifications.table.obtained')}</TableHead>
+                  <TableHead className="px-4">{t('consultantTech.certifications.table.expires')}</TableHead>
+                  <TableHead className="px-4">{t('consultantTech.certifications.table.status')}</TableHead>
+                  <TableHead className="px-4">{t('common.actions')}</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
@@ -182,7 +182,7 @@ export const MyCertifications: React.FC = () => {
                     <TableCell className="px-4 py-3 text-sm">{new Date(cert.dateObtained).toLocaleDateString()}</TableCell>
                     <TableCell className="px-4 py-3 text-sm">{cert.expiryDate ? new Date(cert.expiryDate).toLocaleDateString() : '-'}</TableCell>
                     <TableCell className="px-4 py-3">
-                      <Badge className={statusColor[cert.status]}>{cert.status.replace('_', ' ')}</Badge>
+                      <Badge className={statusColor[cert.status]}>{t(`consultantTech.certifications.status.${cert.status}`)}</Badge>
                     </TableCell>
                     <TableCell className="px-4 py-3">
                       <Button variant="ghost" size="sm" onClick={() => void removeCertification(cert.id)}>
@@ -194,7 +194,7 @@ export const MyCertifications: React.FC = () => {
                 {certs.length === 0 && (
                   <TableRow>
                     <TableCell colSpan={6} className="h-24 text-center text-muted-foreground">
-                      No certifications yet. Click "Add Certification" to get started.
+                      {t('consultantTech.certifications.empty')}
                     </TableCell>
                   </TableRow>
                 )}
@@ -208,41 +208,41 @@ export const MyCertifications: React.FC = () => {
       <Dialog open={showAdd} onOpenChange={setShowAdd}>
         <DialogContent className="max-w-md">
           <DialogHeader>
-            <DialogTitle>Add Certification</DialogTitle>
+            <DialogTitle>{t('consultantTech.certifications.dialog.title')}</DialogTitle>
           </DialogHeader>
           <form onSubmit={(e) => void addCertification(e)} className="space-y-4">
             <div>
-              <Label>Certificate Name *</Label>
-              <Input value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} placeholder="e.g. SAP Certified Application Associate" />
+              <Label>{t('consultantTech.certifications.dialog.certificateName')}</Label>
+              <Input value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} placeholder={t('consultantTech.certifications.dialog.certificateNamePlaceholder')} />
             </div>
             <div>
-              <Label>Issuing Body *</Label>
-              <Input value={form.issuingBody} onChange={(e) => setForm({ ...form, issuingBody: e.target.value })} placeholder="e.g. SAP" />
+              <Label>{t('consultantTech.certifications.dialog.issuingBody')}</Label>
+              <Input value={form.issuingBody} onChange={(e) => setForm({ ...form, issuingBody: e.target.value })} placeholder={t('consultantTech.certifications.dialog.issuingBodyPlaceholder')} />
             </div>
             <div className="grid grid-cols-2 gap-3">
               <div>
-                <Label>Date Obtained *</Label>
+                <Label>{t('consultantTech.certifications.dialog.dateObtained')}</Label>
                 <Input type="date" value={form.dateObtained} onChange={(e) => setForm({ ...form, dateObtained: e.target.value })} />
               </div>
               <div>
-                <Label>Expiry Date</Label>
+                <Label>{t('consultantTech.certifications.dialog.expiryDate')}</Label>
                 <Input type="date" value={form.expiryDate} onChange={(e) => setForm({ ...form, expiryDate: e.target.value })} />
               </div>
             </div>
             <div>
-              <Label>Status</Label>
+              <Label>{t('consultantTech.certifications.dialog.status')}</Label>
               <Select value={form.status} onValueChange={(v) => setForm({ ...form, status: v as CertificationStatus })}>
                 <SelectTrigger><SelectValue /></SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="VALID">Valid</SelectItem>
-                  <SelectItem value="EXPIRING_SOON">Expiring Soon</SelectItem>
-                  <SelectItem value="EXPIRED">Expired</SelectItem>
+                  <SelectItem value="VALID">{t('consultantTech.certifications.status.VALID')}</SelectItem>
+                  <SelectItem value="EXPIRING_SOON">{t('consultantTech.certifications.status.EXPIRING_SOON')}</SelectItem>
+                  <SelectItem value="EXPIRED">{t('consultantTech.certifications.status.EXPIRED')}</SelectItem>
                 </SelectContent>
               </Select>
             </div>
             <div className="flex justify-end gap-2">
-              <Button type="button" variant="outline" onClick={() => setShowAdd(false)}>Cancel</Button>
-              <Button type="submit">Add</Button>
+              <Button type="button" variant="outline" onClick={() => setShowAdd(false)}>{t('common.cancel')}</Button>
+              <Button type="submit">{t('consultantTech.certifications.add')}</Button>
             </div>
           </form>
         </DialogContent>

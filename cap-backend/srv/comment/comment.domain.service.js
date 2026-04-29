@@ -3,7 +3,8 @@
 const cds = require('@sap/cds');
 
 const CommentRepo = require('./comment.repo');
-const { assertEntityExists, ENTITIES, MANAGER_ROLES, ALL_ROLES } = require('../shared/services/validation');
+const { restrictTicketChildRead } = require('../shared/services/authz');
+const { assertEntityExists, ENTITIES, MANAGER_ROLES } = require('../shared/services/validation');
 
 const COMMENT_TYPES = ['GENERAL', 'BLOCKER', 'QUESTION', 'UPDATE', 'FEEDBACK'];
 const CONSULTANT_ROLES = new Set(['CONSULTANT_TECHNIQUE', 'CONSULTANT_FONCTIONNEL']);
@@ -20,10 +21,14 @@ class CommentDomainService {
    */
   beforeRead(req) {
     const role = req._authClaims?.role;
-    if (INTERNAL_READERS.has(role)) return;
-
     const select = req.query?.SELECT;
     if (!select) return;
+
+    if (CONSULTANT_ROLES.has(role)) {
+      restrictTicketChildRead(req, 'ticketId');
+    }
+
+    if (INTERNAL_READERS.has(role)) return;
 
     const internalFilter = [{ ref: ['isInternal'] }, '=', { val: false }];
     if (Array.isArray(select.where) && select.where.length > 0) {

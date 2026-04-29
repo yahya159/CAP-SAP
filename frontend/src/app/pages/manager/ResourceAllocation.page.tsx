@@ -1,5 +1,6 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import { Plus, Trash2 } from 'lucide-react';
+import { useTranslation } from 'react-i18next';
 import { toast } from 'sonner';
 import { PageHeader } from '../../components/common/PageHeader';
 import {
@@ -63,6 +64,7 @@ const rangesOverlap = (startA: string, endA: string, startB: string, endB: strin
   !(endA < startB || endB < startA);
 
 export const ResourceAllocation: React.FC = () => {
+  const { t } = useTranslation();
   const { currentUser } = useAuth();
   const [users, setUsers] = useState<User[]>([]);
   const [projects, setProjects] = useState<Project[]>([]);
@@ -114,15 +116,15 @@ export const ResourceAllocation: React.FC = () => {
   const createAllocation = async (event: React.FormEvent) => {
     event.preventDefault();
     if (!form.userId || !form.projectId) {
-      toast.error('User and project are required');
+      toast.error(t('resourceAllocation.toasts.requiredFields'));
       return;
     }
     if (form.endDate < form.startDate) {
-      toast.error('End date cannot be before start date');
+      toast.error(t('resourceAllocation.toasts.invalidDateRange'));
       return;
     }
     if (form.allocationPercent < 0 || form.allocationPercent > 100) {
-      toast.error('Allocation percent must be between 0 and 100');
+      toast.error(t('resourceAllocation.toasts.invalidPercent'));
       return;
     }
 
@@ -133,14 +135,14 @@ export const ResourceAllocation: React.FC = () => {
         rangesOverlap(form.startDate, form.endDate, allocation.startDate, allocation.endDate)
     );
     if (duplicatePeriod) {
-      toast.error('This consultant already has an overlapping allocation for this project');
+      toast.error(t('resourceAllocation.toasts.overlappingAllocation'));
       return;
     }
 
     const currentTotal = userTotalAllocation.get(form.userId) ?? 0;
     const nextTotal = currentTotal + form.allocationPercent;
     if (nextTotal > 100) {
-      toast.error(`Allocation exceeds 100% for this user (${nextTotal}%)`);
+      toast.error(t('resourceAllocation.toasts.exceedsCapacity', { total: nextTotal }));
       return;
     }
 
@@ -149,19 +151,22 @@ export const ResourceAllocation: React.FC = () => {
       const created = await AllocationsAPI.create({ ...form });
       setAllocations((prev) => [created, ...prev]);
 
-      const projectName = projects.find((project) => project.id === form.projectId)?.name ?? 'project';
+      const projectName = projects.find((project) => project.id === form.projectId)?.name ?? t('resourceAllocation.generic.project');
       await NotificationsAPI.create({
         userId: form.userId,
         type: 'ALLOCATION_UPDATED',
-        title: 'New Allocation Assigned',
-        message: `You have been allocated ${form.allocationPercent}% on ${projectName}.`,
+        title: t('resourceAllocation.notification.title'),
+        message: t('resourceAllocation.notification.message', {
+          percent: form.allocationPercent,
+          project: projectName,
+        }),
         read: false,
       });
 
       setForm(EMPTY_FORM);
-      toast.success('Allocation created');
+      toast.success(t('resourceAllocation.toasts.created'));
     } catch {
-      toast.error('Failed to create allocation');
+      toast.error(t('resourceAllocation.toasts.createFailed'));
     } finally {
       setIsSubmitting(false);
     }
@@ -169,7 +174,7 @@ export const ResourceAllocation: React.FC = () => {
 
   const updatePercent = async (allocation: Allocation, nextPercent: number) => {
     if (nextPercent < 0 || nextPercent > 100) {
-      toast.error('Allocation percent must be between 0 and 100');
+      toast.error(t('resourceAllocation.toasts.invalidPercent'));
       return;
     }
 
@@ -177,7 +182,7 @@ export const ResourceAllocation: React.FC = () => {
     const totalWithoutCurrent = currentTotal - allocation.allocationPercent;
     const nextTotal = totalWithoutCurrent + nextPercent;
     if (nextTotal > 100) {
-      toast.error(`Allocation exceeds 100% for this user (${nextTotal}%)`);
+      toast.error(t('resourceAllocation.toasts.exceedsCapacity', { total: nextTotal }));
       return;
     }
 
@@ -187,7 +192,7 @@ export const ResourceAllocation: React.FC = () => {
       });
       setAllocations((prev) => prev.map((entry) => (entry.id === allocation.id ? updated : entry)));
     } catch {
-      toast.error('Failed to update allocation');
+      toast.error(t('resourceAllocation.toasts.updateFailed'));
     }
   };
 
@@ -195,9 +200,9 @@ export const ResourceAllocation: React.FC = () => {
     try {
       await AllocationsAPI.delete(id);
       setAllocations((prev) => prev.filter((entry) => entry.id !== id));
-      toast.success('Allocation removed');
+      toast.success(t('resourceAllocation.toasts.deleted'));
     } catch {
-      toast.error('Failed to remove allocation');
+      toast.error(t('resourceAllocation.toasts.deleteFailed'));
     } finally {
       setAllocationPendingDelete(null);
     }
@@ -211,27 +216,27 @@ export const ResourceAllocation: React.FC = () => {
   return (
     <div className="min-h-screen bg-background">
       <PageHeader
-        title="Resource Allocation"
-        subtitle="Assign consultants to projects and monitor allocation rates"
+        title={t('resourceAllocation.title')}
+        subtitle={t('resourceAllocation.subtitle')}
         breadcrumbs={[
-          { label: 'Home', path: homePath },
-          { label: 'Resource Allocation' },
+          { label: t('common.home'), path: homePath },
+          { label: t('resourceAllocation.title') },
         ]}
       />
 
       <div className="grid grid-cols-1 gap-6 p-6 xl:grid-cols-3 lg:p-8">
         <Card className="h-fit bg-card/92">
           <CardContent className="pt-6">
-            <h3 className="mb-4 text-lg font-semibold text-foreground">New Allocation</h3>
+            <h3 className="mb-4 text-lg font-semibold text-foreground">{t('resourceAllocation.form.title')}</h3>
             <form onSubmit={createAllocation} className="space-y-3">
               <div className="space-y-1.5">
-                <Label htmlFor="allocation-user">Consultant</Label>
+                <Label htmlFor="allocation-user">{t('resourceAllocation.form.consultant')}</Label>
                 <Select
                   value={form.userId}
                   onValueChange={(val) => setForm((prev) => ({ ...prev, userId: val }))}
                 >
                   <SelectTrigger id="allocation-user">
-                    <SelectValue placeholder="Select user" />
+                    <SelectValue placeholder={t('resourceAllocation.form.selectUser')} />
                   </SelectTrigger>
                   <SelectContent>
                     {users.map((user) => (
@@ -244,13 +249,13 @@ export const ResourceAllocation: React.FC = () => {
               </div>
 
               <div className="space-y-1.5">
-                <Label htmlFor="allocation-project">Project</Label>
+                <Label htmlFor="allocation-project">{t('resourceAllocation.form.project')}</Label>
                 <Select
                   value={form.projectId}
                   onValueChange={(val) => setForm((prev) => ({ ...prev, projectId: val }))}
                 >
                   <SelectTrigger id="allocation-project">
-                    <SelectValue placeholder="Select project" />
+                    <SelectValue placeholder={t('resourceAllocation.form.selectProject')} />
                   </SelectTrigger>
                   <SelectContent>
                     {projects.map((project) => (
@@ -263,7 +268,7 @@ export const ResourceAllocation: React.FC = () => {
               </div>
 
               <div className="space-y-1.5">
-                <Label htmlFor="allocation-percent">Allocation %</Label>
+                <Label htmlFor="allocation-percent">{t('resourceAllocation.form.allocationPercent')}</Label>
                 <Input
                   id="allocation-percent"
                   type="number"
@@ -278,7 +283,7 @@ export const ResourceAllocation: React.FC = () => {
 
               <div className="grid grid-cols-2 gap-2">
                 <div className="space-y-1.5">
-                  <Label htmlFor="allocation-start">Start</Label>
+                  <Label htmlFor="allocation-start">{t('resourceAllocation.form.start')}</Label>
                   <Input
                     id="allocation-start"
                     type="date"
@@ -287,7 +292,7 @@ export const ResourceAllocation: React.FC = () => {
                   />
                 </div>
                 <div className="space-y-1.5">
-                  <Label htmlFor="allocation-end">End</Label>
+                  <Label htmlFor="allocation-end">{t('resourceAllocation.form.end')}</Label>
                   <Input
                     id="allocation-end"
                     type="date"
@@ -299,7 +304,7 @@ export const ResourceAllocation: React.FC = () => {
 
               <Button type="submit" disabled={isSubmitting} className="w-full">
                 <Plus className="h-4 w-4" />
-                {isSubmitting ? 'Saving...' : 'Add Allocation'}
+                {isSubmitting ? t('resourceAllocation.form.saving') : t('resourceAllocation.form.add')}
               </Button>
             </form>
           </CardContent>
@@ -308,20 +313,20 @@ export const ResourceAllocation: React.FC = () => {
         <Card className="overflow-hidden bg-card/92 xl:col-span-2">
           <CardContent className="p-0">
             <div className="flex items-center justify-between gap-3 border-b border-border p-4">
-              <h3 className="text-lg font-semibold text-foreground">Allocation Matrix</h3>
+              <h3 className="text-lg font-semibold text-foreground">{t('resourceAllocation.matrix.title')}</h3>
               <div className="space-y-1">
                 <Label htmlFor="allocation-project-filter" className="sr-only">
-                  Filter by project
+                  {t('resourceAllocation.matrix.filterByProject')}
                 </Label>
                 <Select
                   value={projectFilter}
                   onValueChange={(val) => setProjectFilter(val)}
                 >
                   <SelectTrigger id="allocation-project-filter" className="w-[180px]">
-                    <SelectValue placeholder="All Projects" />
+                    <SelectValue placeholder={t('resourceAllocation.matrix.allProjects')} />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="ALL">All Projects</SelectItem>
+                    <SelectItem value="ALL">{t('resourceAllocation.matrix.allProjects')}</SelectItem>
                     {projects.map((project) => (
                       <SelectItem key={project.id} value={project.id}>
                         {project.name}
@@ -335,25 +340,25 @@ export const ResourceAllocation: React.FC = () => {
             <Table>
               <TableHeader className="bg-muted/65">
                 <TableRow>
-                  <TableHead className="px-4">Consultant</TableHead>
-                  <TableHead className="px-4">Project</TableHead>
-                  <TableHead className="px-4">Allocation</TableHead>
-                  <TableHead className="px-4">Total/User</TableHead>
-                  <TableHead className="px-4">Period</TableHead>
-                  <TableHead className="px-4 text-right">Actions</TableHead>
+                  <TableHead className="px-4">{t('resourceAllocation.matrix.consultant')}</TableHead>
+                  <TableHead className="px-4">{t('resourceAllocation.matrix.project')}</TableHead>
+                  <TableHead className="px-4">{t('resourceAllocation.matrix.allocation')}</TableHead>
+                  <TableHead className="px-4">{t('resourceAllocation.matrix.totalPerUser')}</TableHead>
+                  <TableHead className="px-4">{t('resourceAllocation.matrix.period')}</TableHead>
+                  <TableHead className="px-4 text-right">{t('common.actions')}</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
                 {loading ? (
                   <TableRow>
                     <TableCell colSpan={6} className="h-24 text-center text-muted-foreground">
-                      Loading allocations...
+                      {t('resourceAllocation.matrix.loading')}
                     </TableCell>
                   </TableRow>
                 ) : filteredAllocations.length === 0 ? (
                   <TableRow>
                     <TableCell colSpan={6} className="h-24 text-center text-muted-foreground">
-                      No allocations found.
+                      {t('resourceAllocation.matrix.empty')}
                     </TableCell>
                   </TableRow>
                 ) : (
@@ -411,7 +416,10 @@ export const ResourceAllocation: React.FC = () => {
                           {total}%
                         </TableCell>
                         <TableCell className="px-4 py-3 text-muted-foreground">
-                          {allocation.startDate} to {allocation.endDate}
+                          {t('resourceAllocation.matrix.periodValue', {
+                            start: allocation.startDate,
+                            end: allocation.endDate,
+                          })}
                         </TableCell>
                         <TableCell className="px-4 py-3 text-right">
                           <Button
@@ -421,7 +429,7 @@ export const ResourceAllocation: React.FC = () => {
                             onClick={() => setAllocationPendingDelete(allocation)}
                           >
                             <Trash2 className="h-3.5 w-3.5" />
-                            <span className="sr-only">Remove</span>
+                            <span className="sr-only">{t('resourceAllocation.delete.remove')}</span>
                           </Button>
                         </TableCell>
                       </TableRow>
@@ -440,20 +448,20 @@ export const ResourceAllocation: React.FC = () => {
       >
         <AlertDialogContent>
           <AlertDialogHeader>
-            <AlertDialogTitle>Remove allocation</AlertDialogTitle>
+            <AlertDialogTitle>{t('resourceAllocation.delete.title')}</AlertDialogTitle>
             <AlertDialogDescription>
               {allocationPendingDelete
-                ? 'This allocation entry will be removed from the current dataset.'
-                : 'This action cannot be undone.'}
+                ? t('resourceAllocation.delete.description')
+                : t('resourceAllocation.delete.fallbackDescription')}
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
-            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogCancel>{t('common.cancel')}</AlertDialogCancel>
             <AlertDialogAction
               className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
               onClick={() => allocationPendingDelete && void removeAllocation(allocationPendingDelete.id)}
             >
-              Remove
+              {t('resourceAllocation.delete.remove')}
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>

@@ -14,6 +14,7 @@ import { Login } from './pages/Login.page';
 import { useAuth } from './context/AuthContext';
 import { getDefaultRouteForRole } from './context/roleRouting';
 import { UserRole } from './types/entities';
+import i18n from '../i18n';
 import {
   getSharedRouteDefinitions,
   ROLE_ORDER,
@@ -25,7 +26,7 @@ import {
 
 const PageLoader = () => (
   <div className="flex min-h-[50vh] items-center justify-center text-muted-foreground">
-    Loading...
+    {i18n.t('common.loading')}
   </div>
 );
 
@@ -35,7 +36,7 @@ const SuspensePage = ({ children }: { children: ReactElement }) => (
 
 const AuthLoadingScreen = () => (
   <div className="min-h-screen flex items-center justify-center bg-background text-muted-foreground">
-    Loading session...
+    {i18n.t('common.loadingSession')}
   </div>
 );
 
@@ -198,7 +199,7 @@ export const router = createBrowserRouter([
           <div className="p-6">
             <h1 className="text-2xl font-semibold">Page not found</h1>
             <p className="mt-2 text-muted-foreground">
-              The page you requested does not exist.
+              {i18n.t('common.pageNotFoundDesc')}
             </p>
           </div>
         ),
@@ -211,7 +212,7 @@ export const router = createBrowserRouter([
       <div className="min-h-screen flex items-center justify-center bg-background">
         <div className="text-center">
           <h1 className="mb-2 text-4xl font-bold text-foreground">404</h1>
-          <p className="text-muted-foreground">Page not found</p>
+          <p className="text-muted-foreground">{i18n.t('common.pageNotFound')}</p>
         </div>
       </div>
     ),

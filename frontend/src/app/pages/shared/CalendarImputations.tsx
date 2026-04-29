@@ -1,4 +1,5 @@
 import React from 'react';
+import { useTranslation } from 'react-i18next';
 import { PageHeader } from '../../components/common/PageHeader';
 import { useCalendarImputations } from '../../features/imputations/hooks/useCalendarImputations';
 import { ImputationStatsCards } from '../../features/imputations/components/ImputationStatsCards';
@@ -27,6 +28,7 @@ export const CalendarImputations: React.FC<CalendarImputationsProps> = ({
   canValidate = false,
   canSendToStraTIME = false,
 }) => {
+  const { t } = useTranslation();
   const vm = useCalendarImputations(canImpute, canValidate);
 
   if (vm.loading) {
@@ -35,9 +37,9 @@ export const CalendarImputations: React.FC<CalendarImputationsProps> = ({
         <PageHeader
           title={title}
           subtitle={subtitle}
-          breadcrumbs={[{ label: 'Home', path: homePath }, { label: title }]}
+          breadcrumbs={[{ label: t('common.home'), path: homePath }, { label: title }]}
         />
-        <div className="p-6 text-muted-foreground">Loading...</div>
+        <div className="p-6 text-muted-foreground">{t('common.loading')}</div>
       </div>
     );
   }
@@ -47,7 +49,7 @@ export const CalendarImputations: React.FC<CalendarImputationsProps> = ({
       <PageHeader
         title={title}
         subtitle={subtitle}
-        breadcrumbs={[{ label: 'Home', path: homePath }, { label: title }]}
+        breadcrumbs={[{ label: t('common.home'), path: homePath }, { label: title }]}
       />
 
       <div className="p-6 space-y-6">

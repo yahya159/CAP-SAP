@@ -28,6 +28,14 @@ class ImputationDomainService {
 
   async beforeCreate(req) {
     const data = req.data;
+    const claims = req._authClaims;
+    const userId = String(claims?.sub ?? '').trim();
+
+    if (!userId) req.reject(401, 'Missing authenticated user');
+    if (data.consultantId !== undefined && String(data.consultantId) !== userId) {
+      req.reject(403, 'consultantId must match the authenticated user');
+    }
+    data.consultantId = userId;
 
     await assertEntityExists(ENTITIES.Users, data.consultantId, 'consultantId', req);
     await assertEntityExists(ENTITIES.Tickets, data.ticketId, 'ticketId', req);
@@ -40,6 +48,7 @@ class ImputationDomainService {
 
   async beforeUpdate(req) {
     const data = req.data;
+    const userId = String(req._authClaims?.sub ?? '').trim();
     const id = extractEntityId(req);
     const current = id ? await this.repo.findById(id) : null;
 
@@ -48,6 +57,14 @@ class ImputationDomainService {
       if (data[field] !== undefined && current && data[field] !== current[field]) {
         req.reject(403, 'Use validate/rejectEntry actions to change validation metadata');
       }
+    }
+
+    if (data.consultantId !== undefined) {
+      if (!userId) req.reject(401, 'Missing authenticated user');
+      if (String(data.consultantId) !== userId) {
+        req.reject(403, 'consultantId cannot be reassigned to another user');
+      }
+      data.consultantId = userId;
     }
 
     await assertEntityExists(ENTITIES.Users, data.consultantId, 'consultantId', req);

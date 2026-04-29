@@ -1,6 +1,7 @@
 import { Component, type ErrorInfo, type ReactNode } from 'react';
 import { AlertTriangle, RotateCcw } from 'lucide-react';
 import { Button } from '../ui/button';
+import i18n from '../../../i18n';
 
 interface AsyncErrorBoundaryProps {
   children: ReactNode;
@@ -62,9 +63,9 @@ export class AsyncErrorBoundary extends Component<AsyncErrorBoundaryProps, Async
         </div>
 
         <div className="space-y-1">
-          <h2 className="text-xl font-semibold text-foreground">Application Error</h2>
+          <h2 className="text-xl font-semibold text-foreground">{i18n.t('asyncError.title')}</h2>
           <p className="max-w-md text-sm text-muted-foreground">
-            A critical error occurred. This might be due to a network failure or a technical issue.
+            {i18n.t('asyncError.description')}
           </p>
         </div>
 
@@ -77,10 +78,10 @@ export class AsyncErrorBoundary extends Component<AsyncErrorBoundaryProps, Async
         <div className="flex gap-3 mt-2">
           <Button variant="outline" onClick={this.handleRetry} className="gap-2">
             <RotateCcw className="h-4 w-4" />
-            Try Again
+            {i18n.t('common.tryAgain')}
           </Button>
           <Button variant="secondary" onClick={() => window.location.href = '/'} className="gap-2">
-            Go Home
+            {i18n.t('common.goHome')}
           </Button>
         </div>
       </div>
