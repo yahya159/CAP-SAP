@@ -18,7 +18,8 @@ import { Button } from '../../components/ui/button';
 import { Card, CardContent } from '../../components/ui/card';
 import { Input } from '../../components/ui/input';
 import { Label } from '../../components/ui/label';
-import { Switch } from '../../components/ui/switch';import { ReferenceDataAPI } from '../../services/odata/referenceDataApi';
+import { Switch } from '../../components/ui/switch';
+import { ReferenceDataAPI } from '../../services/odata/referenceDataApi';
 import { ReferenceData } from '../../types/entities';
 
 import {
@@ -95,6 +96,21 @@ export const ReferenceDataManagement: React.FC = () => {
     setEditingId(null);
   };
 
+  const getTypeLabel = (type: ReferenceData['type']) => {
+    switch (type) {
+      case 'TICKET_STATUS':
+        return t('admin.referenceData.types.ticketStatus');
+      case 'PRIORITY':
+        return t('admin.referenceData.types.priority');
+      case 'PROJECT_TYPE':
+        return t('admin.referenceData.types.projectType');
+      case 'SKILL':
+        return t('admin.referenceData.types.skill');
+      default:
+        return type;
+    }
+  };
+
   const handleSubmit = async (event: React.FormEvent) => {
     event.preventDefault();
     if (!form.code.trim() || !form.label.trim()) {
@@ -102,7 +118,7 @@ export const ReferenceDataManagement: React.FC = () => {
       return;
     }
     if ((form.order ?? 1) < 1) {
-      toast.error('Order must be at least 1');
+      toast.error(t('admin.referenceData.toasts.orderMin'));
       return;
     }
 
@@ -114,7 +130,7 @@ export const ReferenceDataManagement: React.FC = () => {
         item.id !== editingId
     );
     if (duplicate) {
-      toast.error('A reference item with this type and code already exists');
+      toast.error(t('admin.referenceData.toasts.duplicateCode'));
       return;
     }
 
@@ -127,7 +143,7 @@ export const ReferenceDataManagement: React.FC = () => {
           label: form.label.trim(),
         });
         setItems((prev) => prev.map((item) => (item.id === editingId ? updated : item)));
-        toast.success('Reference item updated');
+        toast.success(t('admin.referenceData.toasts.updateSuccess'));
       } else {
         const created = await ReferenceDataAPI.create({
           ...form,
@@ -135,11 +151,11 @@ export const ReferenceDataManagement: React.FC = () => {
           label: form.label.trim(),
         });
         setItems((prev) => [created, ...prev]);
-        toast.success('Reference item created');
+        toast.success(t('admin.referenceData.toasts.createSuccess'));
       }
       resetForm();
     } catch (error) {
-      toast.error('Failed to save reference item');
+      toast.error(t('admin.referenceData.toasts.saveFailed'));
     } finally {
       setIsSubmitting(false);
     }
@@ -161,7 +177,7 @@ export const ReferenceDataManagement: React.FC = () => {
       const updated = await ReferenceDataAPI.update(item.id, { active: !item.active });
       setItems((prev) => prev.map((entry) => (entry.id === item.id ? updated : entry)));
     } catch (error) {
-      toast.error('Failed to update status');
+      toast.error(t('admin.referenceData.toasts.statusUpdateFailed'));
     }
   };
 
@@ -169,12 +185,12 @@ export const ReferenceDataManagement: React.FC = () => {
     try {
       await ReferenceDataAPI.delete(id);
       setItems((prev) => prev.filter((item) => item.id !== id));
-      toast.success('Reference item deleted');
+      toast.success(t('admin.referenceData.toasts.deleteSuccess'));
       if (editingId === id) {
         resetForm();
       }
     } catch (error) {
-      toast.error('Failed to delete reference item');
+      toast.error(t('admin.referenceData.toasts.deleteFailed'));
     } finally {
       setItemPendingDelete(null);
     }
@@ -183,11 +199,11 @@ export const ReferenceDataManagement: React.FC = () => {
   return (
     <div className="min-h-screen bg-background">
       <PageHeader
-        title="Reference Data Management"
-        subtitle="Manage ticket statuses, priorities, project types and skills"
+        title={t('admin.referenceData.title')}
+        subtitle={t('admin.referenceData.pageSubtitle')}
         breadcrumbs={[
-          { label: 'Home', path: '/admin/dashboard' },
-          { label: 'Reference Data' },
+          { label: t('common.home'), path: '/admin/dashboard' },
+          { label: t('admin.referenceData.breadcrumb') },
         ]}
       />
 
@@ -195,12 +211,14 @@ export const ReferenceDataManagement: React.FC = () => {
         <Card className="h-fit bg-card/92 xl:col-span-1">
           <CardContent className="pt-6">
             <h2 className="mb-4 text-lg font-semibold text-foreground">
-              {editingId ? 'Edit Reference Item' : 'Create Reference Item'}
+              {editingId
+                ? t('admin.referenceData.form.editTitle')
+                : t('admin.referenceData.form.createTitle')}
             </h2>
 
             <form onSubmit={handleSubmit} className="space-y-3">
               <div className="space-y-1.5">
-                <Label htmlFor="reference-type">Type</Label>
+                <Label htmlFor="reference-type">{t('admin.referenceData.type')}</Label>
                 <Select
                   value={form.type}
                   onValueChange={(val) =>
@@ -211,39 +229,45 @@ export const ReferenceDataManagement: React.FC = () => {
                   }
                 >
                   <SelectTrigger id="reference-type">
-                    <SelectValue placeholder="Select type" />
+                    <SelectValue placeholder={t('admin.referenceData.form.typePlaceholder')} />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="TICKET_STATUS">Ticket Status</SelectItem>
-                    <SelectItem value="PRIORITY">Priority</SelectItem>
-                    <SelectItem value="PROJECT_TYPE">Project Type</SelectItem>
-                    <SelectItem value="SKILL">Skill</SelectItem>
+                    <SelectItem value="TICKET_STATUS">
+                      {t('admin.referenceData.types.ticketStatus')}
+                    </SelectItem>
+                    <SelectItem value="PRIORITY">
+                      {t('admin.referenceData.types.priority')}
+                    </SelectItem>
+                    <SelectItem value="PROJECT_TYPE">
+                      {t('admin.referenceData.types.projectType')}
+                    </SelectItem>
+                    <SelectItem value="SKILL">{t('admin.referenceData.types.skill')}</SelectItem>
                   </SelectContent>
                 </Select>
               </div>
 
               <div className="space-y-1.5">
-                <Label htmlFor="reference-code">Code</Label>
+                <Label htmlFor="reference-code">{t('admin.referenceData.code')}</Label>
                 <Input
                   id="reference-code"
                   value={form.code}
                   onChange={(event) => setForm((prev) => ({ ...prev, code: event.target.value }))}
-                  placeholder="EX: IN_PROGRESS"
+                  placeholder={t('admin.referenceData.form.codePlaceholder')}
                 />
               </div>
 
               <div className="space-y-1.5">
-                <Label htmlFor="reference-label">Label</Label>
+                <Label htmlFor="reference-label">{t('admin.referenceData.label')}</Label>
                 <Input
                   id="reference-label"
                   value={form.label}
                   onChange={(event) => setForm((prev) => ({ ...prev, label: event.target.value }))}
-                  placeholder="Ex: In Progress"
+                  placeholder={t('admin.referenceData.form.labelPlaceholder')}
                 />
               </div>
 
               <div className="space-y-1.5">
-                <Label htmlFor="reference-order">Order</Label>
+                <Label htmlFor="reference-order">{t('admin.referenceData.order')}</Label>
                 <Input
                   id="reference-order"
                   type="number"
@@ -256,7 +280,7 @@ export const ReferenceDataManagement: React.FC = () => {
               </div>
 
               <div className="flex items-center justify-between rounded-md border border-border/70 bg-surface-2 p-3">
-                <Label htmlFor="reference-active">Active</Label>
+                <Label htmlFor="reference-active">{t('admin.referenceData.active')}</Label>
                 <Switch
                   id="reference-active"
                   checked={form.active}
@@ -269,12 +293,16 @@ export const ReferenceDataManagement: React.FC = () => {
               <div className="flex items-center gap-2 pt-2">
                 <Button type="submit" disabled={isSubmitting} className="flex-1">
                   {editingId ? <Save className="h-4 w-4" /> : <Plus className="h-4 w-4" />}
-                  {isSubmitting ? 'Saving...' : editingId ? 'Update' : 'Create'}
+                  {isSubmitting
+                    ? t('admin.referenceData.form.saving')
+                    : editingId
+                      ? t('admin.referenceData.form.update')
+                      : t('admin.referenceData.form.create')}
                 </Button>
                 {editingId && (
                   <Button type="button" variant="outline" onClick={resetForm}>
                     <X className="h-4 w-4" />
-                    Cancel
+                    {t('admin.referenceData.cancel')}
                   </Button>
                 )}
               </div>
@@ -287,32 +315,40 @@ export const ReferenceDataManagement: React.FC = () => {
             <div className="flex flex-col gap-3 border-b border-border p-4 md:flex-row">
               <div className="space-y-1 md:flex-1">
                 <Label htmlFor="reference-search" className="sr-only">
-                  Search reference data
+                  {t('admin.referenceData.filters.searchLabel')}
                 </Label>
                 <Input
                   id="reference-search"
                   value={search}
                   onChange={(event) => setSearch(event.target.value)}
-                  placeholder="Search code or label..."
+                  placeholder={t('admin.referenceData.search')}
                 />
               </div>
               <div className="space-y-1">
                 <Label htmlFor="reference-type-filter" className="sr-only">
-                  Filter by type
+                  {t('admin.referenceData.filters.typeLabel')}
                 </Label>
                 <Select
                   value={typeFilter}
                   onValueChange={(val) => setTypeFilter(val as ReferenceType)}
                 >
                   <SelectTrigger id="reference-type-filter" className="w-full md:w-[220px]">
-                    <SelectValue placeholder="All Types" />
+                    <SelectValue placeholder={t('admin.referenceData.filters.allTypes')} />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="ALL">All Types</SelectItem>
-                    <SelectItem value="TICKET_STATUS">Ticket Status</SelectItem>
-                    <SelectItem value="PRIORITY">Priority</SelectItem>
-                    <SelectItem value="PROJECT_TYPE">Project Type</SelectItem>
-                    <SelectItem value="SKILL">Skill</SelectItem>
+                    <SelectItem value="ALL">
+                      {t('admin.referenceData.filters.allTypes')}
+                    </SelectItem>
+                    <SelectItem value="TICKET_STATUS">
+                      {t('admin.referenceData.types.ticketStatus')}
+                    </SelectItem>
+                    <SelectItem value="PRIORITY">
+                      {t('admin.referenceData.types.priority')}
+                    </SelectItem>
+                    <SelectItem value="PROJECT_TYPE">
+                      {t('admin.referenceData.types.projectType')}
+                    </SelectItem>
+                    <SelectItem value="SKILL">{t('admin.referenceData.types.skill')}</SelectItem>
                   </SelectContent>
                 </Select>
               </div>
@@ -321,31 +357,33 @@ export const ReferenceDataManagement: React.FC = () => {
             <Table>
               <TableHeader className="bg-muted/65">
                 <TableRow>
-                  <TableHead className="px-4">Type</TableHead>
-                  <TableHead className="px-4">Code</TableHead>
-                  <TableHead className="px-4">Label</TableHead>
-                  <TableHead className="px-4">Order</TableHead>
-                  <TableHead className="px-4">Status</TableHead>
-                  <TableHead className="px-4 text-right">Actions</TableHead>
+                  <TableHead className="px-4">{t('admin.referenceData.table.type')}</TableHead>
+                  <TableHead className="px-4">{t('admin.referenceData.table.code')}</TableHead>
+                  <TableHead className="px-4">{t('admin.referenceData.table.label')}</TableHead>
+                  <TableHead className="px-4">{t('admin.referenceData.table.order')}</TableHead>
+                  <TableHead className="px-4">{t('admin.referenceData.table.status')}</TableHead>
+                  <TableHead className="px-4 text-right">
+                    {t('admin.referenceData.table.actions')}
+                  </TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
                 {loading ? (
                   <TableRow>
                     <TableCell colSpan={6} className="h-24 text-center text-muted-foreground">
-                      Loading reference data...
+                      {t('admin.referenceData.table.loading')}
                     </TableCell>
                   </TableRow>
                 ) : filteredItems.length === 0 ? (
                   <TableRow>
                     <TableCell colSpan={6} className="h-32 text-center text-muted-foreground">
-                      No reference entries found
+                      {t('admin.referenceData.table.empty')}
                     </TableCell>
                   </TableRow>
                 ) : (
                   filteredItems.map((item) => (
                     <TableRow key={item.id} className="hover:bg-accent/40">
-                      <TableCell className="px-4 py-3 text-sm">{item.type}</TableCell>
+                      <TableCell className="px-4 py-3 text-sm">{getTypeLabel(item.type)}</TableCell>
                       <TableCell className="px-4 py-3 text-sm font-mono">{item.code}</TableCell>
                       <TableCell className="px-4 py-3 text-sm">{item.label}</TableCell>
                       <TableCell className="px-4 py-3 text-sm">{item.order ?? '-'}</TableCell>
@@ -354,10 +392,16 @@ export const ReferenceDataManagement: React.FC = () => {
                           <Switch
                             id={`reference-active-${item.id}`}
                             checked={item.active}
-                            aria-label={`Toggle active status for ${item.label}`}
+                            aria-label={t('admin.referenceData.table.toggleActive', {
+                              label: item.label,
+                            })}
                             onCheckedChange={() => void toggleActive(item)}
                           />
-                          <Badge variant="secondary">{item.active ? 'Active' : 'Inactive'}</Badge>
+                          <Badge variant="secondary">
+                            {item.active
+                              ? t('admin.referenceData.status.active')
+                              : t('admin.referenceData.status.inactive')}
+                          </Badge>
                         </div>
                       </TableCell>
                       <TableCell className="px-4 py-3 text-right">
@@ -366,16 +410,20 @@ export const ReferenceDataManagement: React.FC = () => {
                             variant="ghost"
                             size="icon"
                             onClick={() => startEdit(item)}
-                            aria-label={`Edit ${item.label}`}
+                            aria-label={t('admin.referenceData.edit', { label: item.label })}
                           >
                             <Pencil className="h-4 w-4" />
-                            <span className="sr-only">Edit {item.label}</span>
+                            <span className="sr-only">
+                              {t('admin.referenceData.edit', { label: item.label })}
+                            </span>
                           </Button>
                           <Button
                             variant="ghost"
                             size="icon"
                             onClick={() => setItemPendingDelete(item)}
-                            aria-label={`Delete ${item.label}`}
+                            aria-label={t('admin.referenceData.deleteItem', {
+                              label: item.label,
+                            })}
                           >
                             <Trash2 className="h-4 w-4 text-destructive" />
                           </Button>
@@ -393,20 +441,23 @@ export const ReferenceDataManagement: React.FC = () => {
       <AlertDialog open={itemPendingDelete !== null} onOpenChange={(open) => !open && setItemPendingDelete(null)}>
         <AlertDialogContent>
           <AlertDialogHeader>
-            <AlertDialogTitle>Delete reference item</AlertDialogTitle>
+            <AlertDialogTitle>{t('admin.referenceData.deleteConfirm')}</AlertDialogTitle>
             <AlertDialogDescription>
               {itemPendingDelete
-                ? `Delete "${itemPendingDelete.label}" (${itemPendingDelete.code}) from reference data?`
-                : 'This action cannot be undone.'}
+                ? t('admin.referenceData.deleteDescWithCode', {
+                    label: itemPendingDelete.label,
+                    code: itemPendingDelete.code,
+                  })
+                : t('admin.referenceData.deleteDesc')}
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
-            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogCancel>{t('admin.referenceData.cancel')}</AlertDialogCancel>
             <AlertDialogAction
               className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
               onClick={() => itemPendingDelete && void removeItem(itemPendingDelete.id)}
             >
-              Delete
+              {t('admin.referenceData.yes')}
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>

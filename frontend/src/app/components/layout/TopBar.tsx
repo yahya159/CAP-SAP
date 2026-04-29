@@ -1,12 +1,13 @@
 import React, { useEffect, useMemo, useState } from 'react';
-import { useNavigate } from 'react-router';
+import { matchPath, useLocation, useNavigate } from 'react-router';
 import {
+  BookMarked,
   Bell,
+  CheckCircle2,
   LogOut,
   Menu,
   Moon,
   PanelLeft,
-  Search,
   Settings,
   Sun,
   User,
@@ -19,7 +20,9 @@ import { useTranslation } from 'react-i18next';
 import { toast } from 'sonner';
 import { useAuth } from '../../context/AuthContext';
 import { useTheme } from '../../context/ThemeContext';
-import { useDensity } from '../../context/DensityContext';import { NotificationsAPI } from '../../services/odata/notificationsApi';
+import { useDensity } from '../../context/DensityContext';
+import { NotificationsAPI } from '../../services/odata/notificationsApi';
+import { getBaseRouteForRole, getRoleRouteDefinitions } from '../../routing/routeRegistry';
 import { Notification } from '../../types/entities';
 import { Avatar, AvatarFallback } from '../ui/avatar';
 import { Badge } from '../ui/badge';
@@ -32,7 +35,6 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from '../ui/dropdown-menu';
-import { Input } from '../ui/input';
 
 interface TopBarProps {
   mobileOpen: boolean;
@@ -52,6 +54,7 @@ export const TopBar: React.FC<TopBarProps> = ({
   const { theme, toggleTheme } = useTheme();
   const { density, toggleDensity } = useDensity();
   const navigate = useNavigate();
+  const location = useLocation();
 
   const [notifications, setNotifications] = useState<Notification[]>([]);
   const displayName = currentUser?.name ?? 'Guest';
@@ -103,6 +106,38 @@ export const TopBar: React.FC<TopBarProps> = ({
     [notifications]
   );
 
+  const currentRoleLabel = currentUser ? t(`roles.${currentUser.role}`) : null;
+  const currentWorkspaceLabel = useMemo(() => {
+    if (!currentUser) return null;
+
+    const routeDefinitions = getRoleRouteDefinitions(currentUser.role);
+    const basePath = getBaseRouteForRole(currentUser.role);
+    const fullRouteDefinitions = routeDefinitions.map((route) => ({
+      ...route,
+      fullPath: `${basePath}/${route.path}`,
+    }));
+
+    const exactMatch = fullRouteDefinitions.find((route) =>
+      matchPath({ path: route.fullPath, end: true }, location.pathname)
+    );
+
+    if (exactMatch?.nav) {
+      return t(`sidebar.items.${exactMatch.nav.label}`, exactMatch.nav.label);
+    }
+
+    const sectionMatch = fullRouteDefinitions
+      .filter((route) => route.nav)
+      .find((route) => matchPath({ path: route.fullPath, end: false }, location.pathname));
+
+    if (sectionMatch?.nav) {
+      return t(`sidebar.items.${sectionMatch.nav.label}`, sectionMatch.nav.label);
+    }
+
+    return currentRoleLabel;
+  }, [currentRoleLabel, currentUser, location.pathname, t]);
+
+  const currentLocale = (i18n.resolvedLanguage ?? i18n.language).toUpperCase();
+
   const markNotificationAsRead = async (notificationId: string) => {
     try {
       await NotificationsAPI.markAsRead(notificationId);
@@ -112,7 +147,7 @@ export const TopBar: React.FC<TopBarProps> = ({
         )
       );
     } catch (error) {
-      toast.error('Failed to update notification');
+      toast.error(t('common.errors.loadFailed'));
     }
   };
 
@@ -122,7 +157,7 @@ export const TopBar: React.FC<TopBarProps> = ({
   };
 
   return (
-    <header className="sticky top-0 z-30 border-b border-border bg-surface-1">
+    <header className="sticky top-0 z-30 border-b border-border/80 bg-surface-1/92 backdrop-blur-xl">
       <div className="flex h-16 items-center gap-2 px-3 sm:gap-3 sm:px-6 lg:px-8">
         <Button
           variant="ghost"
@@ -145,35 +180,42 @@ export const TopBar: React.FC<TopBarProps> = ({
           title={sidebarCollapsed ? t('common.expandSidebar') : t('common.collapseSidebar')}
         >
           <PanelLeft className="h-4 w-4" />
-          <span className="sr-only">Toggle sidebar width</span>
+          <span className="sr-only">
+            {sidebarCollapsed ? t('common.expandSidebar') : t('common.collapseSidebar')}
+          </span>
         </Button>
 
         <div className="min-w-0">
           <p className="text-xs font-semibold uppercase tracking-[0.1em] text-muted-foreground">
             SAP Performance Management
           </p>
-          <p className="truncate text-sm font-semibold text-foreground sm:text-base">{displayName}</p>
+          <div className="flex flex-wrap items-center gap-2">
+            <p className="truncate text-sm font-semibold text-foreground sm:text-base">{displayName}</p>
+            {currentRoleLabel && (
+              <Badge variant="secondary" className="hidden rounded-full px-2.5 py-1 text-[10px] sm:inline-flex">
+                {currentRoleLabel}
+              </Badge>
+            )}
+          </div>
         </div>
 
-        <div className="relative ml-auto hidden w-full max-w-sm lg:block">
-          <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
-          <Input
-            id="topbar-search"
-            aria-label={t('common.search')}
-            className="border-border/70 bg-surface-2 pl-9 focus-visible:ring-2"
-            placeholder={t('common.search')}
-          />
+        <div className="ml-auto hidden min-w-0 items-center gap-2 rounded-full border border-border/70 bg-background/75 px-3 py-2 text-sm text-muted-foreground backdrop-blur lg:flex">
+          <BookMarked className="h-4 w-4 text-primary" />
+          <span className="truncate font-medium text-foreground">{currentWorkspaceLabel}</span>
+          <span className="h-1.5 w-1.5 rounded-full bg-border" />
+          <span>{currentLocale}</span>
         </div>
 
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
             <Button
               variant="ghost"
-              size="icon"
-              className="text-muted-foreground"
+              size="sm"
+              className="gap-2 rounded-full px-3 text-muted-foreground"
               title={t('common.switchLanguage')}
             >
               <Globe className="h-4 w-4" />
+              <span className="hidden text-xs font-semibold sm:inline">{currentLocale}</span>
               <span className="sr-only">{t('common.switchLanguage')}</span>
             </Button>
           </DropdownMenuTrigger>
@@ -195,8 +237,14 @@ export const TopBar: React.FC<TopBarProps> = ({
           aria-pressed={density === 'compact'}
           title={density === 'compact' ? t('common.comfortableDensity') : t('common.compactDensity')}
         >
-          {density === 'compact' ? <AlignJustify className="h-4 w-4" /> : <AlignVerticalSpaceAround className="h-4 w-4" />}
-          <span className="sr-only">Toggle density</span>
+          {density === 'compact' ? (
+            <AlignJustify className="h-4 w-4" />
+          ) : (
+            <AlignVerticalSpaceAround className="h-4 w-4" />
+          )}
+          <span className="sr-only">
+            {density === 'compact' ? t('common.comfortableDensity') : t('common.compactDensity')}
+          </span>
         </Button>
 
         <Button
@@ -208,7 +256,9 @@ export const TopBar: React.FC<TopBarProps> = ({
           title={theme === 'dark' ? t('common.lightMode') : t('common.darkMode')}
         >
           {theme === 'dark' ? <Sun className="h-4 w-4" /> : <Moon className="h-4 w-4" />}
-          <span className="sr-only">Toggle theme</span>
+          <span className="sr-only">
+            {theme === 'dark' ? t('common.lightMode') : t('common.darkMode')}
+          </span>
         </Button>
 
         <DropdownMenu>
@@ -233,11 +283,15 @@ export const TopBar: React.FC<TopBarProps> = ({
                 <DropdownMenuItem
                   key={notification.id}
                   onSelect={() => void markNotificationAsRead(notification.id)}
-                  className="flex cursor-pointer flex-col items-start gap-1"
+                  className="flex cursor-pointer flex-col items-start gap-1 rounded-lg p-3"
                 >
                   <div className="flex w-full items-start justify-between gap-2">
                     <span className="font-medium text-foreground">{notification.title}</span>
-                    {!notification.read && <span className="mt-1 h-2 w-2 rounded-full bg-primary" />}
+                    {!notification.read ? (
+                      <span className="mt-1 h-2 w-2 rounded-full bg-primary" />
+                    ) : (
+                      <CheckCircle2 className="mt-0.5 h-3.5 w-3.5 text-primary/70" />
+                    )}
                   </div>
                   <span className="text-xs text-muted-foreground">{notification.message}</span>
                 </DropdownMenuItem>
@@ -248,12 +302,22 @@ export const TopBar: React.FC<TopBarProps> = ({
 
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
-            <Button variant="ghost" className="h-10 gap-2 rounded-full px-2" aria-label="Open account menu">
+            <Button
+              variant="ghost"
+              className="h-10 gap-2 rounded-full px-2 sm:px-3"
+              aria-label={t('common.profile')}
+            >
               <Avatar className="h-8 w-8">
                 <AvatarFallback className="bg-primary/12 font-semibold text-primary">
                   {initials}
                 </AvatarFallback>
               </Avatar>
+              <div className="hidden min-w-0 text-left sm:block">
+                <p className="truncate text-sm font-semibold text-foreground">{displayName}</p>
+                {currentRoleLabel && (
+                  <p className="truncate text-xs text-muted-foreground">{currentRoleLabel}</p>
+                )}
+              </div>
             </Button>
           </DropdownMenuTrigger>
           <DropdownMenuContent align="end" className="w-64">

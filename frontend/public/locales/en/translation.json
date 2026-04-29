@@ -34,6 +34,8 @@
     "edit": "Edit",
     "create": "Create",
     "back": "Back",
+    "tryAgain": "Try Again",
+    "goHome": "Go Home",
     "tickets": "Tickets",
     "previous": "Previous",
     "next": "Next",
@@ -456,100 +458,48 @@
     }
   },
   "admin": {
-    "dashboard": {
-      "title": "Admin Command Center",
-      "subtitle": "Platform health, user governance, and data integrity overview",
-      "breadcrumb": "Admin Dashboard",
-      "kpi": {
-        "totalUsers": "Total Users",
-        "activeUsers": "Active Users",
-        "projects": "Projects",
-        "tickets": "Tickets",
-        "definitions": "KPI Definitions",
-        "table": {
-          "kpi": "KPI",
-          "formula": "Formula",
-          "source": "Source",
-          "refresh": "Refresh"
-        }
-      },
-      "backendMode": "Backend mode",
-      "odataEndpoint": "OData endpoint",
-      "activitySnapshot": "Activity snapshot",
-      "auditLog": "Audit & Activity Log"
-    },
-    "users": {
-      "title": "Users Management",
-      "subtitle": "Manage user accounts, roles, and permissions",
-      "newUser": "New User",
-      "searchPlaceholder": "Search users by name or email...",
-      "role": "Role",
-      "allRoles": "All Roles",
-      "table": {
-        "user": "User",
-        "role": "Role",
-        "skills": "Skills",
-        "availability": "Availability",
-        "status": "Status",
-        "actions": "Actions",
-        "rate": "Rate",
-        "active": "Active",
-        "inactive": "Inactive",
-        "loading": "Loading users...",
-        "empty": "No users match your filters."
-      },
-      "dialog": {
-        "createTitle": "Create User",
-        "editTitle": "Edit User",
-        "desc": "Manage account profile, role assignment, and staffing attributes.",
-        "name": "Name",
-        "email": "Email",
-        "role": "Role",
-        "selectRole": "Select role",
-        "availability": "Availability %",
-        "skills": "Skills (comma-separated)",
-        "certifications": "Certifications (comma-separated)",
-        "active": "Active account",
-        "saving": "Saving..."
-      },
-      "deleteDialog": {
-        "title": "Delete user",
-        "desc": "This will permanently remove \"{{name}}\" from the current dataset.",
-        "fallback": "This action cannot be undone."
-      },
-      "toasts": {
-        "activated": "User activated",
-        "deactivated": "User deactivated",
-        "updateStatusFailed": "Failed to update user status",
-        "requiredFields": "Name and email are required",
-        "invalidEmail": "Please enter a valid email address",
-        "invalidAvailability": "Availability must be between 0 and 100",
-        "updated": "User updated",
-        "created": "User created",
-        "saveFailed": "Failed to save user",
-        "deleteSelf": "You cannot delete the currently connected user",
-        "deleted": "User deleted",
-        "deleteFailed": "Failed to delete user"
-      }
-    },
-    "reference": {
+    "referenceData": {
       "title": "Reference Data Management",
-      "subtitle": "Manage ticket statuses, priorities, project types and skills",
-      "createTitle": "Create Reference Item",
-      "editTitle": "Edit Reference Item",
+      "subtitle": "Manage system lookup values and codes",
+      "pageSubtitle": "Manage ticket statuses, priorities, project types and skills",
+      "breadcrumb": "Reference Data",
+      "search": "Search by code or label...",
+      "add": "Add Reference Item",
+      "code": "Code *",
+      "label": "Label *",
       "type": "Type",
-      "selectType": "Select type",
-      "code": "Code",
-      "codePlaceholder": "EX: IN_PROGRESS",
-      "label": "Label",
-      "labelPlaceholder": "Ex: In Progress",
-      "order": "Order",
       "active": "Active",
-      "updating": "Updating",
-      "creating": "Creating",
-      "saving": "Saving...",
-      "search": "Search code or label...",
-      "allTypes": "All Types",
+      "order": "Order",
+      "cancel": "Cancel",
+      "save": "Save",
+      "delete": "Delete reference item",
+      "deleteItem": "Delete {{label}}",
+      "edit": "Edit {{label}}",
+      "deleteConfirm": "Delete reference item",
+      "deleteDesc": "This action cannot be undone.",
+      "deleteDescWithCode": "Delete \"{{label}}\" ({{code}}) from reference data?",
+      "yes": "Delete",
+      "form": {
+        "createTitle": "Create Reference Item",
+        "editTitle": "Edit Reference Item",
+        "typePlaceholder": "Select type",
+        "codePlaceholder": "EX: IN_PROGRESS",
+        "labelPlaceholder": "Ex: In Progress",
+        "saving": "Saving...",
+        "update": "Update",
+        "create": "Create"
+      },
+      "types": {
+        "ticketStatus": "Ticket Status",
+        "priority": "Priority",
+        "projectType": "Project Type",
+        "skill": "Skill"
+      },
+      "filters": {
+        "searchLabel": "Search reference data",
+        "typeLabel": "Filter by type",
+        "allTypes": "All Types"
+      },
       "table": {
         "type": "Type",
         "code": "Code",
@@ -559,24 +509,24 @@
         "actions": "Actions",
         "loading": "Loading reference data...",
         "empty": "No reference entries found",
+        "toggleActive": "Toggle active status for {{label}}"
+      },
+      "status": {
         "active": "Active",
         "inactive": "Inactive"
       },
-      "deleteDialog": {
-        "title": "Delete reference item",
-        "desc": "Delete \"{{label}}\" ({{code}}) from reference data?",
-        "fallback": "This action cannot be undone."
-      },
       "toasts": {
-        "requiredFields": "Code and label are required",
-        "invalidOrder": "Order must be at least 1",
-        "duplicate": "A reference item with this type and code already exists",
-        "updated": "Reference item updated",
-        "created": "Reference item created",
+        "addSuccess": "Reference item added",
+        "addFailed": "Failed to add reference item",
+        "updateSuccess": "Reference item updated",
+        "updateFailed": "Failed to update reference item",
+        "deleteSuccess": "Reference item deleted",
+        "deleteFailed": "Failed to delete reference item",
+        "createSuccess": "Reference item created",
         "saveFailed": "Failed to save reference item",
-        "statusFailed": "Failed to update status",
-        "deleted": "Reference item deleted",
-        "deleteFailed": "Failed to delete reference item"
+        "statusUpdateFailed": "Failed to update status",
+        "orderMin": "Order must be at least 1",
+        "duplicateCode": "A reference item with this type and code already exists"
       }
     }
   },
@@ -631,93 +581,37 @@
     "DEV_COORDINATOR": "Dev Coordinator"
   },
   "documentation": {
-    "title": "Documentation Objects",
-    "subtitle": "Centralized project documentation, SFDs, guides, and architecture notes",
-    "home": "Home",
-    "objects": "Objects",
-    "newObject": "New Object",
-    "searchPlaceholder": "Search objects by title, content, project...",
-    "allProjects": "All projects",
-    "allTypes": "All types",
-    "kbObjects": "Knowledge Base Objects",
-    "table": {
-      "title": "Title",
-      "type": "Type",
-      "source": "Source",
-      "project": "Project",
-      "linkedTickets": "Linked Tickets",
-      "files": "Files",
-      "author": "Author",
-      "updated": "Updated",
-      "action": "Action"
-    },
-    "loading": "Loading objects...",
-    "noObjects": "No objects found for current filters.",
-    "manual": "Manual",
-    "open": "Open",
-    "createTitle": "Create Documentation Object",
-    "titleLabel": "Title *",
-    "titlePlaceholder": "Documentation object title",
-    "typeLabel": "Type",
-    "projectLabel": "Project *",
-    "selectProject": "Select project",
-    "overviewLabel": "Overview",
-    "overviewPlaceholder": "High-level summary of this object",
-    "contentLabel": "Content *",
-    "contentPlaceholder": "Write markdown-like content for this documentation object",
-    "attachedFilesLabel": "Attached Files",
-    "relatedTicketsLabel": "Related Tickets",
-    "selectProjectFirst": "Select a project first to link tickets.",
-    "noTicketsFound": "No tickets found for this project.",
-    "cancel": "Cancel",
-    "creating": "Creating...",
-    "createObject": "Create Object",
-    "errors": {
-      "loadFailed": "Failed to load documentation objects.",
-      "filesSkipped": "{{count}} file(s) were skipped. Max size is {{size}} per file.",
-      "attachFailed": "Failed to attach one or more files",
-      "titleRequired": "Title is required",
-      "projectRequired": "Project is required",
-      "contentRequired": "Content is required",
-      "createFailed": "Failed to create object"
-    },
-    "success": {
-      "created": "Object created"
-    },
-    "types": {
-      "SFD": "SFD",
-      "GUIDE": "Guide",
-      "ARCHITECTURE_DOC": "Architecture Doc",
-      "GENERAL": "General"
-    },
-    "details": {
-      "title": "Documentation Details",
-      "subtitle": "Knowledge base article details",
-      "back": "Back",
+    "section": {
+      "title": "Related Documentation",
+      "attachExisting": "Attach Existing Documentation",
+      "createNew": "Create New Documentation",
       "loading": "Loading documentation...",
-      "notFound": "Documentation not found",
-      "notFoundDesc": "The requested article does not exist in the knowledge base.",
-      "ticket": "ticket",
-      "tickets": "tickets",
-      "file": "file",
-      "files": "files",
-      "metadata": "Metadata",
-      "author": "Author:",
-      "created": "Created:",
-      "updated": "Updated:",
-      "project": "Project:",
-      "attachedFiles": "Attached Files",
-      "noFiles": "No files attached.",
-      "download": "Download",
-      "unavailable": "Unavailable",
-      "linkedTickets": "Linked Tickets",
-      "noLinkedTickets": "No tickets are currently linked to this document.",
-      "table": {
-        "code": "Code",
-        "title": "Title",
-        "status": "Status",
-        "priority": "Priority",
-        "project": "Project"
+      "noLinked": "No documentation is linked to this ticket yet.",
+      "attachDialog": "Attach Existing Documentation",
+      "selectLabel": "Documentation Object",
+      "selectPlaceholder": "Select documentation to attach",
+      "cancel": "Cancel",
+      "attach": "Attach",
+      "attaching": "Attaching...",
+      "open": "Open",
+      "noAttachable": "No attachable documentation for this project",
+      "loadFailed": "Failed to load documentation"
+    },
+    "create": {
+      "title": "Create Documentation Object",
+      "titleLabel": "Title *",
+      "typeLabel": "Type",
+      "overviewLabel": "Overview",
+      "overviewPlaceholder": "General overview of this documentation object",
+      "contentLabel": "Content *",
+      "contentPlaceholder": "Write markdown or rich text content...",
+      "attachFilesLabel": "Attach Files",
+      "cancel": "Cancel",
+      "create": "Create",
+      "creating": "Creating...",
+      "toasts": {
+        "createSuccess": "Documentation created",
+        "createFailed": "Failed to create documentation"
       }
     }
   },
@@ -892,163 +786,20 @@
     }
   },
   "projects": {
-    "title": "Projects",
-    "subtitle": "Portfolio pipeline with smart filtering, quick edits, and KPI context",
-    "breadcrumbHome": "Home",
-    "refresh": "Refresh",
-    "newProject": "New Project",
-    "searchPlaceholder": "Search by name or description",
-    "allStatuses": "All statuses",
-    "allPriorities": "All priorities",
-    "reset": "Reset",
-    "table": {
-      "project": "Project",
-      "type": "Type",
-      "status": "Status",
-      "priority": "Priority",
-      "timeline": "Timeline",
-      "progress": "Progress",
-      "actions": "Actions"
-    },
-    "loading": "Loading projects...",
-    "noProjects": "No projects match the current filters.",
-    "createProject": "Create project",
-    "dialog": {
-      "createTitle": "Create Project",
-      "editTitle": "Edit Project",
-      "description": "Capture project planning metadata and portfolio tracking fields.",
-      "nameLabel": "Project Name",
-      "namePlaceholder": "S/4HANA Migration Program",
-      "descLabel": "Description",
-      "descPlaceholder": "Describe project scope, outcomes, and execution context",
-      "typeLabel": "Project Type",
-      "statusLabel": "Status",
-      "priorityLabel": "Priority",
-      "startDateLabel": "Start Date",
-      "endDateLabel": "End Date",
-      "progressLabel": "Progress (%)",
-      "wricefImport": "WRICEF Import (Optional)",
-      "wricefImportDesc": "Upload an Excel file containing WRICEF objects and tickets",
-      "parsing": "Parsing...",
-      "uploadExcel": "Upload Excel",
-      "objects": "{{count}} Objects",
-      "tickets": "{{count}} Tickets",
-      "noWricef": "No WRICEF file uploaded. You can add one now or later from the project details page.",
+    "abaques": {
+      "title": "Define Matrix",
+      "description": "Define estimated hours mapped to Task Nature and Complexity. This acts as a manual baseline reference.",
+      "noEntries": "No entries in the matrix yet. Click \"Add Entry\" to begin.",
+      "taskNature": "Task Nature",
+      "complexity": "Complexity",
+      "estimatedHours": "Estimated Hours",
+      "addEntry": "Add Entry",
       "cancel": "Cancel",
-      "creating": "Creating...",
-      "saving": "Saving...",
-      "saveChanges": "Save Changes"
+      "submit": "Submit"
     },
-    "deleteDialog": {
-      "title": "Delete project",
-      "description": "This will remove \"{{name}}\" from the portfolio.",
-      "fallbackDescription": "This action cannot be undone.",
-      "delete": "Delete"
-    },
-    "toasts": {
-      "loadFailed": "Failed to load projects",
-      "invalidFile": "Please upload an Excel file (.xlsx or .xls)",
-      "wricefImported": "WRICEF imported: {{count}} objects found",
-      "parseFailed": "Failed to parse WRICEF file",
-      "nameRequired": "Project name is required",
-      "datesRequired": "Start and end dates are required",
-      "invalidDates": "End date cannot be before start date",
-      "created": "Project created successfully",
-      "updated": "Project updated successfully",
-      "saveFailed": "Failed to save project",
-      "deleted": "Project deleted",
-      "deleteFailed": "Failed to delete project"
-    },
-    "details": {
-      "title": "Project Details",
-      "loading": "Loading project details...",
-      "notFound": "Project unavailable",
-      "notFoundDesc": "The requested project could not be loaded.",
-      "breadcrumbHome": "Home",
-      "subtitle": "Project cockpit with overview, tickets, team and documentation",
-      "tabs": {
-        "overview": "Overview",
-        "abaques": "Abaques",
-        "tickets": "Tickets",
-        "team": "Team",
-        "objects": "WRICEF Objects",
-        "docs": "Documentation"
-      },
-      "kpis": {
-        "onTrack": "On Track Tickets",
-        "late": "Late Tickets",
-        "blocked": "Blocked Tickets",
-        "completed": "Completed Tickets",
-        "critical": "Critical Tickets",
-        "productivity": "Productivity",
-        "actualHours": "Actual Hours",
-        "estimatedHours": "Estimated Hours",
-        "variance": "Variance"
-      },
-      "abaques": {
-        "title": "Abaque Matrix (Manual Reference)",
-        "subtitle": "Reference matrix mapping task nature and complexity to estimated effort.",
-        "nature": "Task Nature",
-        "complexity": "Complexity",
-        "hours": "Estimated Hours",
-        "edit": "Edit Matrix"
-      },
-      "documentation": {
-        "stats": {
-          "total": "Total Documents"
-        },
-        "keywords": "Tech Keywords",
-        "objects": "Documentation Objects",
-        "create": "Create Document",
-        "notes": "Project Notes (Markdown)",
-        "notesPlaceholder": "Write project documentation here (markdown supported)...",
-        "saveNotes": "Save",
-        "savingNotes": "Saving..."
-      },
-      "wricef": {
-        "stats": {
-          "totalObjects": "Total Objects",
-          "totalTickets": "Total Tickets",
-          "totalDocuments": "Total Documents"
-        },
-        "filters": {
-          "search": "Search objects...",
-          "type": "Type",
-          "allTypes": "All Types",
-          "complexity": "Complexity",
-          "allComplexity": "All Complexity",
-          "module": "Module",
-          "allModules": "All Modules",
-          "clear": "Clear Filters",
-          "createTicket": "Create Ticket",
-          "import": "Import WRICEF"
-        },
-        "pagination": {
-          "showing": "Showing",
-          "to": "to",
-          "of": "of",
-          "results": "results",
-          "pageSize": "Page size"
-        }
-      },
-      "tables": {
-        "documentation": {
-          "linkedTickets": "Linked Tickets"
-        },
-        "wricef": {
-          "objectId": "Object ID",
-          "ticketsFor": "Tickets for {{id}}",
-          "documentsFor": "Documents for {{id}}",
-          "addTicket": "Add Ticket",
-          "addDocument": "Add Document",
-          "noDocuments": "No documents for this object.",
-          "noTickets": "No tickets for this object."
-        },
-        "wricefTickets": {
-          "ticketId": "Ticket ID",
-          "liveTicket": "Live Ticket"
-        }
-      }
+    "ticketDialog": {
+      "title": "Create a new ticket manually mapping estimation, priority, and complexity.",
+      "cancel": "Cancel"
     }
   },
   "wricefValidation": {
@@ -1416,137 +1167,33 @@
       "deleteFailed": "Failed to remove comment"
     }
   },
-  "consultantTech": {
-    "certifications": {
-      "title": "My Certifications",
-      "subtitle": "Manage your professional certifications and training",
-      "noCertificationsYet": "No certifications yet. Click \"Add Certification\" to get started.",
-      "addCertificateTitle": "Add Certification",
-      "certificateNameLabel": "Certificate Name *",
-      "certificateNamePlaceholder": "e.g. SAP Certified Application Associate",
-      "issuingBodyLabel": "Issuing Body *",
-      "issuingBodyPlaceholder": "e.g. SAP",
-      "dateObtainedLabel": "Date Obtained *",
-      "expiryDateLabel": "Expiry Date",
-      "statusLabel": "Status",
-      "valid": "Valid",
-      "expiringSoon": "Expiring Soon",
-      "expired": "Expired",
-      "cancel": "Cancel",
-      "add": "Add",
-      "delete": "Delete",
-      "toasts": {
-        "addSuccess": "Certification added",
-        "addFailed": "Failed to add certification",
-        "deleteSuccess": "Certification removed",
-        "deleteFailed": "Failed to remove certification"
-      }
-    },
-    "leaves": {
-      "title": "My Leave",
-      "subtitle": "View and manage your leave requests",
-      "requestLeaveTitle": "Request Leave",
-      "startDateLabel": "Start Date *",
-      "endDateLabel": "End Date *",
-      "reasonLabel": "Reason *",
-      "reasonPlaceholder": "Describe your leave reason...",
-      "daysLabel": "Days",
-      "submitted": "Submitted",
-      "submit": "Submit",
-      "cancel": "Cancel",
-      "toasts": {
-        "requestSuccess": "Leave request submitted",
-        "requestFailed": "Failed to submit leave request",
-        "approveSuccess": "Leave approved",
-        "rejectSuccess": "Leave rejected"
-      }
-    }
+  "asyncError": {
+    "title": "Application Error",
+    "description": "A critical error occurred. This might be due to a network failure or a technical issue."
   },
-  "projects": {
-    "abaques": {
-      "title": "Define Matrix",
-      "description": "Define estimated hours mapped to Task Nature and Complexity. This acts as a manual baseline reference.",
-      "noEntries": "No entries in the matrix yet. Click \"Add Entry\" to begin.",
-      "taskNature": "Task Nature",
-      "complexity": "Complexity",
-      "estimatedHours": "Estimated Hours",
-      "addEntry": "Add Entry",
-      "cancel": "Cancel",
-      "submit": "Submit"
+  "imputationsPages": {
+    "consultantTech": {
+      "title": "My Time Entries",
+      "subtitle": "Log your working hours using the bi-weekly calendar"
     },
-    "ticketDialog": {
-      "title": "Create a new ticket manually mapping estimation, priority, and complexity.",
-      "cancel": "Cancel"
-    }
-  },
-  "documentation": {
-    "section": {
-      "title": "Related Documentation",
-      "attachExisting": "Attach Existing Documentation",
-      "createNew": "Create New Documentation",
-      "loading": "Loading documentation...",
-      "noLinked": "No documentation is linked to this ticket yet.",
-      "attachDialog": "Attach Existing Documentation",
-      "selectLabel": "Documentation Object",
-      "selectPlaceholder": "Select documentation to attach",
-      "cancel": "Cancel",
-      "attach": "Attach",
-      "attaching": "Attaching...",
-      "open": "Open",
-      "noAttachable": "No attachable documentation for this project",
-      "loadFailed": "Failed to load documentation"
+    "manager": {
+      "title": "Team Time Entries",
+      "subtitle": "View and monitor team time entries"
     },
-    "create": {
-      "title": "Create Documentation Object",
-      "titleLabel": "Title *",
-      "typeLabel": "Type",
-      "overviewLabel": "Overview",
-      "overviewPlaceholder": "General overview of this documentation object",
-      "contentLabel": "Content *",
-      "contentPlaceholder": "Write markdown or rich text content...",
-      "attachFilesLabel": "Attach Files",
-      "cancel": "Cancel",
-      "create": "Create",
-      "creating": "Creating...",
-      "toasts": {
-        "createSuccess": "Documentation created",
-        "createFailed": "Failed to create documentation"
-      }
-    }
-  },
-  "admin": {
-    "referenceData": {
-      "title": "Reference Data Management",
-      "subtitle": "Manage system lookup values and codes",
-      "search": "Search by code or label...",
-      "add": "Add Reference Item",
-      "code": "Code *",
-      "label": "Label *",
-      "type": "Type",
-      "active": "Active",
-      "order": "Order",
-      "cancel": "Cancel",
-      "save": "Save",
-      "delete": "Delete reference item",
-      "edit": "Edit {{label}}",
-      "deleteConfirm": "Delete reference item",
-      "deleteDesc": "This will remove \"{{label}}\" from the system. This action cannot be undone.",
-      "yes": "Delete",
-      "toasts": {
-        "addSuccess": "Reference item added",
-        "addFailed": "Failed to add reference item",
-        "updateSuccess": "Reference item updated",
-        "updateFailed": "Failed to update reference item",
-        "deleteSuccess": "Reference item deleted",
-        "deleteFailed": "Failed to delete reference item"
-      }
+    "devCoordinator": {
+      "title": "Time Entries & Allocation",
+      "subtitle": "Track team time entries and workload distribution"
+    },
+    "projectManager": {
+      "title": "Stratime Validation Hub",
+      "subtitle": "Validate submitted team imputations and dispatch validated periods to Stratime"
     }
   },
   "consultantTech": {
     "leaves": {
       "title": "My Leave",
       "subtitle": "View and manage your leave requests",
-      "requestLeave": "Request Leave",
+      "requestLeave": "New Request",
       "startDate": "Start Date *",
       "endDate": "End Date *",
       "reason": "Reason",
@@ -1559,13 +1206,16 @@
         "pending": "Pending",
         "approved": "Approved",
         "rejected": "Rejected",
-        "daysTaken": "Days Taken"
+        "daysTaken": "Days Taken",
+        "daysApproved": "Days Approved"
       },
       "table": {
-        "startDate": "Start Date",
-        "endDate": "End Date",
+        "startDate": "Start",
+        "endDate": "End",
+        "days": "Days",
         "reason": "Reason",
-        "status": "Status"
+        "status": "Status",
+        "submitted": "Submitted"
       },
       "errors": {
         "dateRequired": "Start and end date are required",
@@ -1575,7 +1225,105 @@
       "toasts": {
         "requestSuccess": "Leave request submitted",
         "requestFailed": "Failed to submit leave request"
+      },
+      "status": {
+        "PENDING": "Pending",
+        "APPROVED": "Approved",
+        "REJECTED": "Rejected"
+      },
+      "empty": "No leave requests yet.",
+      "dialog": {
+        "title": "New Leave Request",
+        "startDate": "Start Date *",
+        "endDate": "End Date *",
+        "reason": "Reason",
+        "reasonPlaceholder": "Optional reason..."
       }
+    },
+    "certifications": {
+      "addCta": "Add Certification",
+      "stats": {
+        "total": "Total",
+        "valid": "Valid",
+        "expired": "Expired"
+      },
+      "table": {
+        "name": "Name",
+        "issuingBody": "Issuing Body",
+        "obtained": "Obtained",
+        "expires": "Expires",
+        "status": "Status"
+      },
+      "status": {
+        "VALID": "Valid",
+        "EXPIRING_SOON": "Expiring Soon",
+        "EXPIRED": "Expired"
+      },
+      "empty": "No certifications yet. Click \"Add Certification\" to get started.",
+      "dialog": {
+        "title": "Add Certification",
+        "certificateName": "Certificate Name *",
+        "certificateNamePlaceholder": "e.g. SAP Certified Application Associate",
+        "issuingBody": "Issuing Body *",
+        "issuingBodyPlaceholder": "e.g. SAP",
+        "dateObtained": "Date Obtained *",
+        "expiryDate": "Expiry Date",
+        "status": "Status"
+      }
+    }
+  },
+  "resourceAllocation": {
+    "title": "Resource Allocation",
+    "subtitle": "Assign consultants to projects and monitor allocation rates",
+    "generic": {
+      "project": "project"
+    },
+    "notification": {
+      "title": "New Allocation Assigned",
+      "message": "You have been allocated {{percent}}% on {{project}}."
+    },
+    "form": {
+      "title": "New Allocation",
+      "consultant": "Consultant",
+      "selectUser": "Select user",
+      "project": "Project",
+      "selectProject": "Select project",
+      "allocationPercent": "Allocation %",
+      "start": "Start",
+      "end": "End",
+      "saving": "Saving...",
+      "add": "Add Allocation"
+    },
+    "matrix": {
+      "title": "Allocation Matrix",
+      "filterByProject": "Filter by project",
+      "allProjects": "All Projects",
+      "consultant": "Consultant",
+      "project": "Project",
+      "allocation": "Allocation",
+      "totalPerUser": "Total/User",
+      "period": "Period",
+      "periodValue": "{{start}} to {{end}}",
+      "loading": "Loading allocations...",
+      "empty": "No allocations found."
+    },
+    "delete": {
+      "title": "Remove allocation",
+      "description": "This allocation entry will be removed from the current dataset.",
+      "fallbackDescription": "This action cannot be undone.",
+      "remove": "Remove"
+    },
+    "toasts": {
+      "requiredFields": "User and project are required",
+      "invalidDateRange": "End date cannot be before start date",
+      "invalidPercent": "Allocation percent must be between 0 and 100",
+      "overlappingAllocation": "This consultant already has an overlapping allocation for this project",
+      "exceedsCapacity": "Allocation exceeds 100% for this user ({{total}}%)",
+      "created": "Allocation created",
+      "createFailed": "Failed to create allocation",
+      "updateFailed": "Failed to update allocation",
+      "deleted": "Allocation removed",
+      "deleteFailed": "Failed to remove allocation"
     }
   },
   "filters": {

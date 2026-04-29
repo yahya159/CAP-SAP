@@ -16,6 +16,7 @@ const { GET, POST, PATCH, DELETE, expect: _expect } = cds.test(__dirname + '/..'
 let authToken = null;
 let adminAuthToken = null;
 let consultantAuthToken = null;
+let functionalConsultantAuthToken = null;
 
 const withAuth = () => ({
   headers: authToken ? { Authorization: `Bearer ${authToken}` } : {},
@@ -27,6 +28,12 @@ const withAdminAuth = () => ({
 
 const withConsultantAuth = () => ({
   headers: consultantAuthToken ? { Authorization: `Bearer ${consultantAuthToken}` } : {},
+});
+
+const withFunctionalConsultantAuth = () => ({
+  headers: functionalConsultantAuthToken
+    ? { Authorization: `Bearer ${functionalConsultantAuthToken}` }
+    : {},
 });
 
 const ensureAuth = async () => {
@@ -54,6 +61,15 @@ const ensureConsultantAuth = async () => {
     password: 'Tech#2026',
   });
   consultantAuthToken = data.token;
+};
+
+const ensureFunctionalConsultantAuth = async () => {
+  if (functionalConsultantAuthToken) return;
+  const { data } = await POST('/odata/v4/user/authenticate', {
+    email: 'fatima.fonc@inetum.com',
+    password: 'Func#2026',
+  });
+  functionalConsultantAuthToken = data.token;
 };
 
 // ---------------------------------------------------------------------------
@@ -620,7 +636,7 @@ describe('Validation and state-machine guards', () => {
         description: 'Before update',
         type: 'GENERAL',
         projectId: requireSeedId('project1Id'),
-        authorId: requireSeedId('techId'),
+        authorId: requireSeedId('managerId'),
       },
       withAuth()
     );
@@ -634,5 +650,94 @@ describe('Validation and state-machine guards', () => {
     );
     expect(updated.updatedAt).toBeTruthy();
     expect(updated.updatedAt).not.toBe(created.updatedAt);
+  });
+
+  test('Consultant cannot read comments for an unrelated ticket', async () => {
+    await ensureConsultantAuth();
+    const ticketId = requireSeedId('foncTicketId');
+    const { data: createdComment } = await POST(
+      '/odata/v4/ticket/TicketComments',
+      {
+        ticketId,
+        message: 'Manager-only visibility check comment',
+      },
+      withAuth()
+    );
+    expect(createdComment.ID).toBeTruthy();
+
+    const { status, data } = await GET(
+      `/odata/v4/ticket/TicketComments?$filter=ticketId eq '${ticketId}'`,
+      withConsultantAuth()
+    );
+    expect(status).toBe(200);
+    expect(data.value).toEqual([]);
+  });
+
+  test('DocumentationObjects create rejects spoofed authorId', async () => {
+    try {
+      await POST(
+        '/odata/v4/core/DocumentationObjects',
+        {
+          title: 'Spoofed author test',
+          description: 'Should fail',
+          type: 'GENERAL',
+          projectId: requireSeedId('project1Id'),
+          authorId: requireSeedId('techId'),
+        },
+        withAuth()
+      );
+      fail('Should have thrown');
+    } catch (err) {
+      expect(err.response?.status ?? err.status).toBe(403);
+    }
+  });
+
+  test('Ticket create rejects spoofed createdBy', async () => {
+    try {
+      await POST(
+        '/odata/v4/ticket/Tickets',
+        {
+          projectId: requireSeedId('project1Id'),
+          createdBy: requireSeedId('techId'),
+          title: 'Spoofed creator test',
+          nature: 'PROGRAMME',
+          priority: 'LOW',
+        },
+        withAuth()
+      );
+      fail('Should have thrown');
+    } catch (err) {
+      expect(err.response?.status ?? err.status).toBe(403);
+    }
+  });
+
+  test('Ticket approval rejects non-technical assignee', async () => {
+    await ensureFunctionalConsultantAuth();
+    const { data: pendingTicket } = await POST(
+      '/odata/v4/ticket/Tickets',
+      {
+        projectId: requireSeedId('project1Id'),
+        createdBy: requireSeedId('foncId'),
+        title: 'Approval role validation test',
+        nature: 'PROGRAMME',
+        priority: 'LOW',
+      },
+      withFunctionalConsultantAuth()
+    );
+    expect(pendingTicket.ID).toBeTruthy();
+
+    try {
+      await POST(
+        `/odata/v4/ticket/Tickets('${pendingTicket.ID}')/approveTicket`,
+        {
+          techConsultantId: requireSeedId('managerId'),
+          allocatedHours: 8,
+        },
+        withAuth()
+      );
+      fail('Should have thrown');
+    } catch (err) {
+      expect(err.response?.status ?? err.status).toBe(400);
+    }
   });
 });

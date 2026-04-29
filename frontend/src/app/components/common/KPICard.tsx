@@ -142,8 +142,14 @@ export const KPICard: React.FC<KPICardProps> = ({
       : undefined;
 
   return (
-    <Card className={cn('overflow-hidden border bg-card shadow-none transition-colors hover:border-primary/40', tone.border)}>
-      <CardHeader className="pb-2">
+    <Card
+      className={cn(
+        'overflow-hidden border bg-card/95 shadow-none transition-all duration-200 hover:-translate-y-0.5 hover:shadow-lg hover:shadow-primary/5',
+        tone.border
+      )}
+    >
+      <CardHeader className="relative pb-2">
+        <div className="pointer-events-none absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-primary/35 to-transparent" />
         <div className="flex items-start justify-between gap-3">
           <div>
             <CardTitle className="text-sm font-semibold uppercase tracking-[0.08em] text-muted-foreground">
@@ -152,7 +158,12 @@ export const KPICard: React.FC<KPICardProps> = ({
             {subtitle && <p className="mt-1 text-xs text-muted-foreground">{subtitle}</p>}
           </div>
           {Icon && (
-            <span className={cn('inline-flex h-9 w-9 items-center justify-center rounded-md', tone.chip)}>
+            <span
+              className={cn(
+                'inline-flex h-10 w-10 items-center justify-center rounded-xl border border-white/40 shadow-sm',
+                tone.chip
+              )}
+            >
               <Icon className="h-4 w-4" />
             </span>
           )}
@@ -189,9 +200,9 @@ export const KPICard: React.FC<KPICardProps> = ({
                 <span>{Math.round(calculatedProgress)}%</span>
               </div>
             )}
-            <Progress 
-              value={Math.max(0, Math.min(100, calculatedProgress))} 
-              className="h-1.5"
+            <Progress
+              value={Math.max(0, Math.min(100, calculatedProgress))}
+              className="h-1.5 bg-muted/80"
             />
           </div>
         )}

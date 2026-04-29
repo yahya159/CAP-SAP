@@ -108,11 +108,11 @@ export const MesConges: React.FC = () => {
   return (
     <div className="min-h-screen bg-background">
       <PageHeader
-        title="My Leave Requests"
-        subtitle="Submit and track your leave requests"
+        title={t('consultantTech.leaves.title')}
+        subtitle={t('consultantTech.leaves.subtitle')}
         breadcrumbs={[
-          { label: 'Home', path: '/consultant-tech/dashboard' },
-          { label: 'Leave' },
+          { label: t('common.home'), path: '/consultant-tech/dashboard' },
+          { label: t('sidebar.items.Leave') },
         ]}
       />
 
@@ -120,41 +120,41 @@ export const MesConges: React.FC = () => {
         <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
           <div className="bg-card border border-border rounded-lg p-4 text-center">
             <div className="text-2xl font-semibold text-foreground">{stats.total}</div>
-            <div className="text-xs text-muted-foreground">Total Requests</div>
+            <div className="text-xs text-muted-foreground">{t('consultantTech.leaves.stats.total')}</div>
           </div>
           <div className="bg-card border border-border rounded-lg p-4 text-center">
             <div className="text-2xl font-semibold text-yellow-600">{stats.pending}</div>
-            <div className="text-xs text-muted-foreground">Pending</div>
+            <div className="text-xs text-muted-foreground">{t('consultantTech.leaves.stats.pending')}</div>
           </div>
           <div className="bg-card border border-border rounded-lg p-4 text-center">
             <div className="text-2xl font-semibold text-green-600">{stats.approved}</div>
-            <div className="text-xs text-muted-foreground">Approved</div>
+            <div className="text-xs text-muted-foreground">{t('consultantTech.leaves.stats.approved')}</div>
           </div>
           <div className="bg-card border border-border rounded-lg p-4 text-center">
             <div className="text-2xl font-semibold text-primary">{stats.daysTaken}</div>
-            <div className="text-xs text-muted-foreground">Days Approved</div>
+            <div className="text-xs text-muted-foreground">{t('consultantTech.leaves.stats.daysApproved')}</div>
           </div>
         </div>
 
         <div className="flex justify-end">
           <Button onClick={() => setShowCreate(true)}>
-            <Plus className="mr-1 h-4 w-4" /> New Request
+            <Plus className="mr-1 h-4 w-4" /> {t('consultantTech.leaves.requestLeave')}
           </Button>
         </div>
 
         {loading ? (
-          <p className="text-muted-foreground">Loading...</p>
+          <p className="text-muted-foreground">{t('common.loading')}</p>
         ) : (
           <div className="rounded-lg border bg-card overflow-x-auto">
             <Table>
               <TableHeader className="bg-muted/50">
                 <TableRow>
-                  <TableHead className="px-4">Start</TableHead>
-                  <TableHead className="px-4">End</TableHead>
-                  <TableHead className="px-4">Days</TableHead>
-                  <TableHead className="px-4">Reason</TableHead>
-                  <TableHead className="px-4">Status</TableHead>
-                  <TableHead className="px-4">Submitted</TableHead>
+                  <TableHead className="px-4">{t('consultantTech.leaves.table.startDate')}</TableHead>
+                  <TableHead className="px-4">{t('consultantTech.leaves.table.endDate')}</TableHead>
+                  <TableHead className="px-4">{t('consultantTech.leaves.table.days')}</TableHead>
+                  <TableHead className="px-4">{t('consultantTech.leaves.table.reason')}</TableHead>
+                  <TableHead className="px-4">{t('consultantTech.leaves.table.status')}</TableHead>
+                  <TableHead className="px-4">{t('consultantTech.leaves.table.submitted')}</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
@@ -167,7 +167,7 @@ export const MesConges: React.FC = () => {
                       <TableCell className="px-4 py-3 text-sm font-medium">{days}</TableCell>
                       <TableCell className="px-4 py-3 text-sm text-muted-foreground">{req.reason || '-'}</TableCell>
                       <TableCell className="px-4 py-3">
-                        <Badge className={statusColor[req.status]}>{req.status}</Badge>
+                        <Badge className={statusColor[req.status]}>{t(`consultantTech.leaves.status.${req.status}`)}</Badge>
                       </TableCell>
                       <TableCell className="px-4 py-3 text-xs text-muted-foreground">{new Date(req.createdAt).toLocaleDateString()}</TableCell>
                     </TableRow>
@@ -175,7 +175,7 @@ export const MesConges: React.FC = () => {
                 })}
                 {requests.length === 0 && (
                   <TableRow>
-                    <TableCell colSpan={6} className="h-24 text-center text-muted-foreground">No leave requests yet.</TableCell>
+                    <TableCell colSpan={6} className="h-24 text-center text-muted-foreground">{t('consultantTech.leaves.empty')}</TableCell>
                   </TableRow>
                 )}
               </TableBody>
@@ -187,26 +187,26 @@ export const MesConges: React.FC = () => {
       <Dialog open={showCreate} onOpenChange={setShowCreate}>
         <DialogContent className="max-w-md">
           <DialogHeader>
-            <DialogTitle>New Leave Request</DialogTitle>
+            <DialogTitle>{t('consultantTech.leaves.dialog.title')}</DialogTitle>
           </DialogHeader>
           <form onSubmit={(e) => void submitRequest(e)} className="space-y-4">
             <div className="grid grid-cols-2 gap-3">
               <div>
-                <Label>Start Date *</Label>
+                <Label>{t('consultantTech.leaves.dialog.startDate')}</Label>
                 <Input type="date" value={form.startDate} onChange={(e) => setForm({ ...form, startDate: e.target.value })} />
               </div>
               <div>
-                <Label>End Date *</Label>
+                <Label>{t('consultantTech.leaves.dialog.endDate')}</Label>
                 <Input type="date" value={form.endDate} onChange={(e) => setForm({ ...form, endDate: e.target.value })} />
               </div>
             </div>
             <div>
-              <Label>Reason</Label>
-              <Textarea value={form.reason} onChange={(e) => setForm({ ...form, reason: e.target.value })} rows={3} placeholder="Optional reason..." />
+              <Label>{t('consultantTech.leaves.dialog.reason')}</Label>
+              <Textarea value={form.reason} onChange={(e) => setForm({ ...form, reason: e.target.value })} rows={3} placeholder={t('consultantTech.leaves.dialog.reasonPlaceholder')} />
             </div>
             <div className="flex justify-end gap-2">
-              <Button type="button" variant="outline" onClick={() => setShowCreate(false)}>Cancel</Button>
-              <Button type="submit">Submit</Button>
+              <Button type="button" variant="outline" onClick={() => setShowCreate(false)}>{t('common.cancel')}</Button>
+              <Button type="submit">{t('consultantTech.leaves.submit')}</Button>
             </div>
           </form>
         </DialogContent>
