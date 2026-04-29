@@ -131,11 +131,11 @@ const DevCoordinatorDashboard: React.FC = () => {
                     <p className="text-sm font-medium">{ticket.title}</p>
                     <div className="flex gap-2">
                       <Badge variant="outline">{TICKET_NATURE_LABELS[ticket.nature]}</Badge>
-                      <Badge variant="secondary">{ticket.priority}</Badge>
+                      <Badge variant="secondary">{t(`entities.priority.${ticket.priority}`)}</Badge>
                     </div>
                   </div>
-                  <Button variant="outline" size="sm" onClick={(e) => { e.stopPropagation(); navigate('/dev-coordinator/ai-dispatch'); }}>
-                    Assign
+                    <Button variant="outline" size="sm" onClick={(e) => { e.stopPropagation(); navigate('/dev-coordinator/ai-dispatch'); }}>
+                      {t('coordinator.dispatch.assign')}
                   </Button>
                 </div>
               ))
@@ -165,7 +165,7 @@ const DevCoordinatorDashboard: React.FC = () => {
                 </div>
                 <div className="text-right text-xs text-muted-foreground">
                   <p>{getUserName(ticket.assignedTo)}</p>
-                  <p>{ticket.effortHours}h effort</p>
+                  <p>{t('coordinator.recentTickets.effort', { hours: ticket.effortHours })}</p>
                 </div>
               </div>
             ))}

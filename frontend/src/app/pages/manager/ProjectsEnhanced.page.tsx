@@ -459,7 +459,7 @@ export const ProjectsEnhanced: React.FC = () => {
                               variant="outline"
                               size="icon"
                               onClick={() => openEditDialog(project)}
-                              aria-label={`Edit ${project.name}`}
+                              aria-label={t('projects.table.edit', { name: project.name })}
                             >
                               <Edit3 className="h-4 w-4" />
                             </Button>
@@ -468,7 +468,7 @@ export const ProjectsEnhanced: React.FC = () => {
                               variant="outline"
                               size="icon"
                               onClick={() => setProjectPendingDelete(project)}
-                              aria-label={`Delete ${project.name}`}
+                              aria-label={t('projects.table.delete', { name: project.name })}
                             >
                               <Trash2 className="h-4 w-4" />
                             </Button>
@@ -678,12 +678,12 @@ export const ProjectsEnhanced: React.FC = () => {
                   <div className="max-h-32 overflow-y-auto space-y-1">
                     {form.wricef.objects.slice(0, 5).map((obj) => (
                       <div key={obj.id} className="text-xs p-1.5 rounded bg-muted/50">
-                        <span className="font-medium">{obj.id}</span> - {obj.title} ({form.wricef?.tickets.filter(t => t.wricefId === obj.id).length || 0} tickets)
+                        <span className="font-medium">{obj.id}</span> - {obj.title} ({t('projects.dialog.ticketCount', { count: form.wricef?.tickets.filter((ticket) => ticket.wricefId === obj.id).length || 0 })})
                       </div>
                     ))}
                     {form.wricef.objects.length > 5 && (
                       <p className="text-xs text-muted-foreground italic">
-                        ... and {form.wricef.objects.length - 5} more objects
+                        {t('projects.dialog.moreObjects', { count: form.wricef.objects.length - 5 })}
                       </p>
                     )}
                   </div>
@@ -707,8 +707,8 @@ export const ProjectsEnhanced: React.FC = () => {
                     ? t('projects.dialog.creating')
                     : t('projects.dialog.saving')
                   : dialogMode === 'create'
-                    ? t('projects.dialog.createTitle')
-                    : t('projects.dialog.saveChanges')}
+                    ? t('projects.dialog.createButton')
+                    : t('projects.dialog.updateButton')}
               </Button>
             </DialogFooter>
           </form>

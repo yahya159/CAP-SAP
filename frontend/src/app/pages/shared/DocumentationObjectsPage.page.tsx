@@ -439,7 +439,7 @@ export const DocumentationObjectsPage: React.FC = () => {
                       </TableCell>
                       <TableCell className="px-4 py-3">
                         <Badge variant={doc.sourceSystem === 'WRICEF' ? 'secondary' : 'outline'}>
-                          {doc.sourceSystem === 'WRICEF' ? 'WRICEF' : t('documentation.manual')}
+                          {doc.sourceSystem === 'WRICEF' ? t('documentation.source.wricef') : t('documentation.manual')}
                         </Badge>
                       </TableCell>
                       <TableCell className="px-4 py-3 text-sm text-muted-foreground">
@@ -497,7 +497,7 @@ export const DocumentationObjectsPage: React.FC = () => {
                     setForm((prev) => ({
                       ...prev,
                       title: value,
-                      content: prev.content || buildDefaultContent(value || 'Documentation Object'),
+                      content: prev.content || buildDefaultContent(value || t('documentation.defaultTitle')),
                     }));
                   }}
                   placeholder={t('documentation.titlePlaceholder')}

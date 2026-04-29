@@ -383,7 +383,16 @@
         "title": "Projects",
         "viewAll": "View all",
         "ticketsCount": "{{count}} tickets"
-      }
+      },
+      "validationPipeline": {
+        "title": "Stratime Validation Pipeline",
+        "openHub": "Open Validation Hub",
+        "submittedPeriods": "Submitted Periods",
+        "waitingForValidation": "Waiting for project manager validation",
+        "readyForStratime": "Ready for Stratime",
+        "readyDescription": "Validated periods pending dispatch"
+      },
+      "noTickets": "No tickets yet"
     }
   },
   "coordinator": {
@@ -449,15 +458,148 @@
     },
     "workload": {
       "title": "Workload Overview",
+      "details": "Details",
       "subtitle": "Consultant ticket assignments, effort hours, and availability",
       "available": "{{percent}}% available",
       "counts": "{{active}} active / {{done}} done",
       "effort": "{{total}}h total effort ({{active}}h active)",
       "ticketLoad": "Ticket Load",
       "noConsultants": "No consultants found"
+    },
+    "recentTickets": {
+      "title": "Recent Tickets",
+      "viewAll": "View all",
+      "effort": "{{hours}}h effort"
+    },
+    "dispatch": {
+      "assign": "Assign"
     }
   },
   "admin": {
+    "dashboard": {
+      "title": "Admin Dashboard",
+      "subtitle": "Platform health, user governance, and data integrity overview",
+      "breadcrumb": "Admin Dashboard",
+      "kpi": {
+        "totalUsers": "Total Users",
+        "activeUsers": "Active Users",
+        "projects": "Projects",
+        "tickets": "Tickets",
+        "definitions": "KPI Definitions"
+      },
+      "kpiReferences": {
+        "totalUsers": {
+          "name": "Total Users",
+          "formula": "count(all users)",
+          "source": "Users",
+          "refresh": "On dashboard load"
+        },
+        "activeUsers": {
+          "name": "Active Users",
+          "formula": "count(users where active = true)",
+          "source": "Users",
+          "refresh": "On dashboard load"
+        },
+        "projects": {
+          "name": "Projects",
+          "formula": "count(all projects)",
+          "source": "Projects",
+          "refresh": "On dashboard load"
+        },
+        "tickets": {
+          "name": "Total Tickets",
+          "formula": "count(all tickets)",
+          "source": "Tickets",
+          "refresh": "On dashboard load"
+        }
+      },
+      "table": {
+        "kpi": "KPI",
+        "formula": "Formula",
+        "source": "Source",
+        "refresh": "Refresh"
+      },
+      "systemStatus": {
+        "title": "System Status",
+        "backendMode": "Backend mode",
+        "liveApi": "Live API",
+        "connected": "Connected to SAP CAP service",
+        "odataEndpoint": "OData endpoint",
+        "activitySnapshot": "Activity snapshot",
+        "userRecords": "User records",
+        "projectEntities": "Project entities",
+        "auditEvents": "Audit events"
+      },
+      "auditTable": {
+        "timestamp": "Timestamp",
+        "user": "User",
+        "event": "Event",
+        "message": "Message",
+        "status": "Status",
+        "empty": "No audit entries available."
+      },
+      "auditStatus": {
+        "read": "Read",
+        "unread": "Unread"
+      },
+      "errors": {
+        "loadFailed": "Failed to load dashboard data. Please refresh the page."
+      }
+    },
+    "users": {
+      "title": "Users Management",
+      "subtitle": "Manage user accounts, roles, and permissions",
+      "newUser": "New User",
+      "searchPlaceholder": "Search users by name or email...",
+      "role": "Role",
+      "allRoles": "All Roles",
+      "table": {
+        "user": "User",
+        "role": "Role",
+        "skills": "Skills",
+        "availability": "Availability",
+        "status": "Status",
+        "actions": "Actions",
+        "rate": "Rate",
+        "active": "Active",
+        "inactive": "Inactive",
+        "loading": "Loading users...",
+        "empty": "No users match your filters."
+      },
+      "dialog": {
+        "createTitle": "Create User",
+        "editTitle": "Edit User",
+        "desc": "Manage account profile, role assignment, and staffing attributes.",
+        "name": "Name",
+        "email": "Email",
+        "role": "Role",
+        "selectRole": "Select role",
+        "availability": "Availability %",
+        "skills": "Skills (comma-separated)",
+        "certifications": "Certifications (comma-separated)",
+        "active": "Active account",
+        "saving": "Saving..."
+      },
+      "deleteDialog": {
+        "title": "Delete user",
+        "desc": "This will permanently remove \"{{name}}\" from the current dataset.",
+        "fallback": "This action cannot be undone."
+      },
+      "toasts": {
+        "activated": "User activated",
+        "deactivated": "User deactivated",
+        "updateStatusFailed": "Failed to update user status",
+        "requiredFields": "Name and email are required",
+        "invalidEmail": "Please enter a valid email address",
+        "invalidAvailability": "Availability must be between 0 and 100",
+        "updated": "User updated",
+        "created": "User created",
+        "saveFailed": "Failed to save user",
+        "deleteSelf": "You cannot delete the currently connected user",
+        "deleted": "User deleted",
+        "deleteFailed": "Failed to delete user"
+      }
+    },
     "referenceData": {
       "title": "Reference Data Management",
       "subtitle": "Manage system lookup values and codes",
@@ -581,6 +723,69 @@
     "DEV_COORDINATOR": "Dev Coordinator"
   },
   "documentation": {
+    "title": "Documentation Objects",
+    "subtitle": "Centralized project documentation, SFDs, guides, and architecture notes",
+    "home": "Home",
+    "objects": "Objects",
+    "newObject": "New Object",
+    "searchPlaceholder": "Search objects by title, content, project...",
+    "allProjects": "All projects",
+    "allTypes": "All types",
+    "kbObjects": "Knowledge Base Objects",
+    "loading": "Loading objects...",
+    "noObjects": "No objects found for current filters.",
+    "manual": "Manual",
+    "open": "Open",
+    "createTitle": "Create Documentation Object",
+    "titleLabel": "Title *",
+    "titlePlaceholder": "Documentation object title",
+    "typeLabel": "Type",
+    "projectLabel": "Project *",
+    "selectProject": "Select project",
+    "overviewLabel": "Overview",
+    "overviewPlaceholder": "High-level summary of this object",
+    "contentLabel": "Content *",
+    "contentPlaceholder": "Write markdown-like content for this documentation object",
+    "attachedFilesLabel": "Attached Files",
+    "relatedTicketsLabel": "Related Tickets",
+    "selectProjectFirst": "Select a project first to link tickets.",
+    "noTicketsFound": "No tickets found for this project.",
+    "cancel": "Cancel",
+    "creating": "Creating...",
+    "createObject": "Create Object",
+    "defaultTitle": "Documentation Object",
+    "source": {
+      "wricef": "WRICEF"
+    },
+    "types": {
+      "SFD": "SFD",
+      "GUIDE": "Guide",
+      "ARCHITECTURE_DOC": "Architecture Doc",
+      "GENERAL": "General"
+    },
+    "table": {
+      "title": "Title",
+      "type": "Type",
+      "source": "Source",
+      "project": "Project",
+      "linkedTickets": "Linked Tickets",
+      "files": "Files",
+      "author": "Author",
+      "updated": "Updated",
+      "action": "Action"
+    },
+    "errors": {
+      "loadFailed": "Failed to load documentation objects.",
+      "filesSkipped": "{{count}} file(s) were skipped. Max size is {{size}} per file.",
+      "attachFailed": "Failed to attach one or more files",
+      "titleRequired": "Title is required",
+      "projectRequired": "Project is required",
+      "contentRequired": "Content is required",
+      "createFailed": "Failed to create object"
+    },
+    "success": {
+      "created": "Object created"
+    },
     "section": {
       "title": "Related Documentation",
       "attachExisting": "Attach Existing Documentation",
@@ -786,6 +991,78 @@
     }
   },
   "projects": {
+    "title": "Projects",
+    "subtitle": "Portfolio pipeline with smart filtering, quick edits, and KPI context",
+    "breadcrumbHome": "Home",
+    "refresh": "Refresh",
+    "newProject": "New Project",
+    "searchPlaceholder": "Search by name or description",
+    "allStatuses": "All statuses",
+    "allPriorities": "All priorities",
+    "reset": "Reset",
+    "table": {
+      "project": "Project",
+      "type": "Type",
+      "status": "Status",
+      "priority": "Priority",
+      "timeline": "Timeline",
+      "progress": "Progress",
+      "actions": "Actions",
+      "edit": "Edit {{name}}",
+      "delete": "Delete {{name}}"
+    },
+    "loading": "Loading projects...",
+    "noProjects": "No projects match the current filters.",
+    "createProject": "Create project",
+    "dialog": {
+      "createTitle": "Create Project",
+      "editTitle": "Edit Project",
+      "description": "Capture project planning metadata and portfolio tracking fields.",
+      "nameLabel": "Project Name",
+      "namePlaceholder": "S/4HANA Migration Program",
+      "descLabel": "Description",
+      "descPlaceholder": "Describe project scope, outcomes, and execution context",
+      "typeLabel": "Project Type",
+      "statusLabel": "Status",
+      "priorityLabel": "Priority",
+      "startDateLabel": "Start Date",
+      "endDateLabel": "End Date",
+      "progressLabel": "Progress (%)",
+      "wricefImport": "WRICEF Import (Optional)",
+      "wricefImportDesc": "Upload an Excel file containing WRICEF objects and tickets",
+      "parsing": "Parsing...",
+      "uploadExcel": "Upload Excel",
+      "objects": "{{count}} Objects",
+      "tickets": "{{count}} Tickets",
+      "ticketCount": "{{count}} tickets",
+      "moreObjects": "... and {{count}} more objects",
+      "noWricef": "No WRICEF file uploaded. You can add one now or later from the project details page.",
+      "cancel": "Cancel",
+      "creating": "Creating...",
+      "saving": "Saving...",
+      "createButton": "Create Project",
+      "updateButton": "Update Project"
+    },
+    "deleteDialog": {
+      "title": "Delete project",
+      "description": "This will remove \"{{name}}\" from the portfolio.",
+      "fallbackDescription": "This action cannot be undone.",
+      "delete": "Delete"
+    },
+    "toasts": {
+      "loadFailed": "Failed to load projects",
+      "invalidFile": "Please upload an Excel file (.xlsx or .xls)",
+      "wricefImported": "WRICEF imported: {{count}} objects found",
+      "parseFailed": "Failed to parse WRICEF file",
+      "nameRequired": "Project name is required",
+      "datesRequired": "Start and end dates are required",
+      "invalidDates": "End date cannot be before start date",
+      "created": "Project created successfully",
+      "updated": "Project updated successfully",
+      "saveFailed": "Failed to save project",
+      "deleted": "Project deleted",
+      "deleteFailed": "Failed to delete project"
+    },
     "abaques": {
       "title": "Define Matrix",
       "description": "Define estimated hours mapped to Task Nature and Complexity. This acts as a manual baseline reference.",

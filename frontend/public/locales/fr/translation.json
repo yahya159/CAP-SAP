@@ -383,7 +383,16 @@
         "title": "Projets",
         "viewAll": "Tout voir",
         "ticketsCount": "{{count}} tickets"
-      }
+      },
+      "validationPipeline": {
+        "title": "Pipeline de Validation Stratime",
+        "openHub": "Ouvrir le Centre de Validation",
+        "submittedPeriods": "Périodes Soumises",
+        "waitingForValidation": "En attente de validation par le chef de projet",
+        "readyForStratime": "Prêt pour Stratime",
+        "readyDescription": "Périodes validées en attente d'envoi"
+      },
+      "noTickets": "Aucun ticket pour le moment"
     }
   },
   "coordinator": {
@@ -449,15 +458,148 @@
     },
     "workload": {
       "title": "Aperçu de la Charge de Travail",
+      "details": "Détails",
       "subtitle": "Affectations des tickets, heures d'effort et disponibilité des consultants",
       "available": "{{percent}}% disponible",
       "counts": "{{active}} actifs / {{done}} terminés",
       "effort": "{{total}}h d'effort total ({{active}}h actifs)",
       "ticketLoad": "Charge de Tickets",
       "noConsultants": "Aucun consultant trouvé"
+    },
+    "recentTickets": {
+      "title": "Tickets Récents",
+      "viewAll": "Tout voir",
+      "effort": "{{hours}}h d'effort"
+    },
+    "dispatch": {
+      "assign": "Affecter"
     }
   },
   "admin": {
+    "dashboard": {
+      "title": "Centre d'administration",
+      "subtitle": "Santé de la plateforme, gouvernance des utilisateurs et intégrité des données",
+      "breadcrumb": "Tableau de bord Admin",
+      "kpi": {
+        "totalUsers": "Utilisateurs totaux",
+        "activeUsers": "Utilisateurs actifs",
+        "projects": "Projets",
+        "tickets": "Tickets",
+        "definitions": "Définitions KPI"
+      },
+      "kpiReferences": {
+        "totalUsers": {
+          "name": "Utilisateurs totaux",
+          "formula": "count(all users)",
+          "source": "Utilisateurs",
+          "refresh": "Au chargement du tableau de bord"
+        },
+        "activeUsers": {
+          "name": "Utilisateurs actifs",
+          "formula": "count(users where active = true)",
+          "source": "Utilisateurs",
+          "refresh": "Au chargement du tableau de bord"
+        },
+        "projects": {
+          "name": "Projets",
+          "formula": "count(all projects)",
+          "source": "Projets",
+          "refresh": "Au chargement du tableau de bord"
+        },
+        "tickets": {
+          "name": "Total des Tickets",
+          "formula": "count(all tickets)",
+          "source": "Tickets",
+          "refresh": "Au chargement du tableau de bord"
+        }
+      },
+      "table": {
+        "kpi": "KPI",
+        "formula": "Formule",
+        "source": "Source",
+        "refresh": "Actualisation"
+      },
+      "systemStatus": {
+        "title": "État du système",
+        "backendMode": "Mode backend",
+        "liveApi": "API en direct",
+        "connected": "Connecté au service SAP CAP",
+        "odataEndpoint": "Point de terminaison OData",
+        "activitySnapshot": "Aperçu d'activité",
+        "userRecords": "Enregistrements utilisateurs",
+        "projectEntities": "Entités projet",
+        "auditEvents": "Événements d'audit"
+      },
+      "auditTable": {
+        "timestamp": "Horodatage",
+        "user": "Utilisateur",
+        "event": "Événement",
+        "message": "Message",
+        "status": "Statut",
+        "empty": "Aucune entrée d'audit disponible."
+      },
+      "auditStatus": {
+        "read": "Lu",
+        "unread": "Non lu"
+      },
+      "errors": {
+        "loadFailed": "Échec du chargement des données du tableau de bord. Veuillez rafraîchir la page."
+      }
+    },
+    "users": {
+      "title": "Gestion des Utilisateurs",
+      "subtitle": "Gérer les comptes utilisateurs, les rôles et les permissions",
+      "newUser": "Nouvel Utilisateur",
+      "searchPlaceholder": "Rechercher par nom ou e-mail...",
+      "role": "Rôle",
+      "allRoles": "Tous les Rôles",
+      "table": {
+        "user": "Utilisateur",
+        "role": "Rôle",
+        "skills": "Compétences",
+        "availability": "Disponibilité",
+        "status": "Statut",
+        "actions": "Actions",
+        "rate": "Taux",
+        "active": "Actif",
+        "inactive": "Inactif",
+        "loading": "Chargement des utilisateurs...",
+        "empty": "Aucun utilisateur ne correspond à vos filtres."
+      },
+      "dialog": {
+        "createTitle": "Créer un Utilisateur",
+        "editTitle": "Modifier l'Utilisateur",
+        "desc": "Gérer le profil du compte, l'affectation des rôles et les attributs de dotation.",
+        "name": "Nom",
+        "email": "E-mail",
+        "role": "Rôle",
+        "selectRole": "Sélectionner un rôle",
+        "availability": "Disponibilité %",
+        "skills": "Compétences (séparées par des virgules)",
+        "certifications": "Certifications (séparées par des virgules)",
+        "active": "Compte actif",
+        "saving": "Enregistrement..."
+      },
+      "deleteDialog": {
+        "title": "Supprimer l'utilisateur",
+        "desc": "Cela supprimera définitivement \"{{name}}\" du jeu de données actuel.",
+        "fallback": "Cette action est irréversible."
+      },
+      "toasts": {
+        "activated": "Utilisateur activé",
+        "deactivated": "Utilisateur désactivé",
+        "updateStatusFailed": "Échec de la mise à jour du statut de l'utilisateur",
+        "requiredFields": "Le nom et l'e-mail sont requis",
+        "invalidEmail": "Veuillez entrer une adresse e-mail valide",
+        "invalidAvailability": "La disponibilité doit être comprise entre 0 et 100",
+        "updated": "Utilisateur mis à jour",
+        "created": "Utilisateur créé",
+        "saveFailed": "Échec de l'enregistrement de l'utilisateur",
+        "deleteSelf": "Vous ne pouvez pas supprimer l'utilisateur actuellement connecté",
+        "deleted": "Utilisateur supprimé",
+        "deleteFailed": "Échec de la suppression de l'utilisateur"
+      }
+    },
     "referenceData": {
       "title": "Gestion des Données de Référence",
       "subtitle": "Gérer les valeurs de recherche et codes système",
@@ -581,6 +723,69 @@
     "DEV_COORDINATOR": "Coordinateur Dev"
   },
   "documentation": {
+    "title": "Objets de Documentation",
+    "subtitle": "Documentation projet centralisée, SFD, guides et notes d'architecture",
+    "home": "Accueil",
+    "objects": "Objets",
+    "newObject": "Nouvel Objet",
+    "searchPlaceholder": "Rechercher des objets par titre, contenu, projet...",
+    "allProjects": "Tous les projets",
+    "allTypes": "Tous les types",
+    "kbObjects": "Objets de la Base de Connaissances",
+    "loading": "Chargement des objets...",
+    "noObjects": "Aucun objet trouvé pour les filtres actuels.",
+    "manual": "Manuel",
+    "open": "Ouvrir",
+    "createTitle": "Créer un Objet de Documentation",
+    "titleLabel": "Titre *",
+    "titlePlaceholder": "Titre de l'objet de documentation",
+    "typeLabel": "Type",
+    "projectLabel": "Projet *",
+    "selectProject": "Sélectionner le projet",
+    "overviewLabel": "Aperçu",
+    "overviewPlaceholder": "Résumé de haut niveau de cet objet",
+    "contentLabel": "Contenu *",
+    "contentPlaceholder": "Rédigez le contenu (Markdown supporté) pour cet objet",
+    "attachedFilesLabel": "Fichiers Joints",
+    "relatedTicketsLabel": "Tickets Liés",
+    "selectProjectFirst": "Sélectionnez d'abord un projet pour lier des tickets.",
+    "noTicketsFound": "Aucun ticket trouvé pour ce projet.",
+    "cancel": "Annuler",
+    "creating": "Création...",
+    "createObject": "Créer l'Objet",
+    "defaultTitle": "Objet de documentation",
+    "source": {
+      "wricef": "WRICEF"
+    },
+    "types": {
+      "SFD": "SFD",
+      "GUIDE": "Guide",
+      "ARCHITECTURE_DOC": "Doc Architecture",
+      "GENERAL": "Général"
+    },
+    "table": {
+      "title": "Titre",
+      "type": "Type",
+      "source": "Source",
+      "project": "Projet",
+      "linkedTickets": "Tickets Liés",
+      "files": "Fichiers",
+      "author": "Auteur",
+      "updated": "Mis à jour",
+      "action": "Action"
+    },
+    "errors": {
+      "loadFailed": "Échec du chargement des objets de documentation.",
+      "filesSkipped": "{{count}} fichier(s) ignoré(s). La taille max est de {{size}} par fichier.",
+      "attachFailed": "Échec de l'attachement d'un ou plusieurs fichiers",
+      "titleRequired": "Le titre est requis",
+      "projectRequired": "Le projet est requis",
+      "contentRequired": "Le contenu est requis",
+      "createFailed": "Échec de la création de l'objet"
+    },
+    "success": {
+      "created": "Objet créé"
+    },
     "section": {
       "title": "Documentation Associée",
       "attachExisting": "Joindre une Documentation Existante",
@@ -786,6 +991,78 @@
     }
   },
   "projects": {
+    "title": "Projets",
+    "subtitle": "Pipeline du portefeuille avec filtrage intelligent, modifications rapides et contexte KPI",
+    "breadcrumbHome": "Accueil",
+    "refresh": "Actualiser",
+    "newProject": "Nouveau Projet",
+    "searchPlaceholder": "Rechercher par nom ou description",
+    "allStatuses": "Tous les statuts",
+    "allPriorities": "Toutes les priorités",
+    "reset": "Réinitialiser",
+    "table": {
+      "project": "Projet",
+      "type": "Type",
+      "status": "Statut",
+      "priority": "Priorité",
+      "timeline": "Chronologie",
+      "progress": "Progression",
+      "actions": "Actions",
+      "edit": "Modifier {{name}}",
+      "delete": "Supprimer {{name}}"
+    },
+    "loading": "Chargement des projets...",
+    "noProjects": "Aucun projet ne correspond aux filtres actuels.",
+    "createProject": "Créer un projet",
+    "dialog": {
+      "createTitle": "Créer un Projet",
+      "editTitle": "Modifier le Projet",
+      "description": "Saisissez les métadonnées de planification du projet et les champs de suivi du portefeuille.",
+      "nameLabel": "Nom du Projet",
+      "namePlaceholder": "Programme de Migration S/4HANA",
+      "descLabel": "Description",
+      "descPlaceholder": "Décrivez le périmètre, les résultats et le contexte d'exécution du projet",
+      "typeLabel": "Type de Projet",
+      "statusLabel": "Statut",
+      "priorityLabel": "Priorité",
+      "startDateLabel": "Date de Début",
+      "endDateLabel": "Date de Fin",
+      "progressLabel": "Progression (%)",
+      "wricefImport": "Import WRICEF (Optionnel)",
+      "wricefImportDesc": "Téléchargez un fichier Excel contenant des objets WRICEF et des tickets",
+      "parsing": "Analyse...",
+      "uploadExcel": "Télécharger Excel",
+      "objects": "{{count}} Objets",
+      "tickets": "{{count}} Tickets",
+      "ticketCount": "{{count}} tickets",
+      "moreObjects": "... et {{count}} objets supplémentaires",
+      "noWricef": "Aucun fichier WRICEF téléchargé. Vous pouvez en ajouter un maintenant ou plus tard depuis la page de détails du projet.",
+      "cancel": "Annuler",
+      "creating": "Création...",
+      "saving": "Enregistrement...",
+      "createButton": "Créer le projet",
+      "updateButton": "Mettre à jour le projet"
+    },
+    "deleteDialog": {
+      "title": "Supprimer le projet",
+      "description": "Cela supprimera \"{{name}}\" du portefeuille.",
+      "fallbackDescription": "Cette action est irréversible.",
+      "delete": "Supprimer"
+    },
+    "toasts": {
+      "loadFailed": "Échec du chargement des projets",
+      "invalidFile": "Veuillez télécharger un fichier Excel (.xlsx ou .xls)",
+      "wricefImported": "WRICEF importé : {{count}} objets trouvés",
+      "parseFailed": "Échec de l'analyse du fichier WRICEF",
+      "nameRequired": "Le nom du projet est requis",
+      "datesRequired": "Les dates de début et de fin sont requises",
+      "invalidDates": "La date de fin ne peut pas être antérieure à la date de début",
+      "created": "Projet créé avec succès",
+      "updated": "Projet mis à jour avec succès",
+      "saveFailed": "Échec de l'enregistrement du projet",
+      "deleted": "Projet supprimé",
+      "deleteFailed": "Échec de la suppression du projet"
+    },
     "abaques": {
       "title": "Définir la Matrice",
       "description": "Définir les heures estimées mappées à la Nature de Tâche et la Complexité. Ceci agit comme une référence de base manuelle.",

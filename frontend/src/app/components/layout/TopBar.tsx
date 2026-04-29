@@ -170,8 +170,9 @@ export const TopBar: React.FC<TopBarProps> = ({
   };
 
   const changeLanguage = (lng: string) => {
-    void i18n.changeLanguage(lng);
-    localStorage.setItem('i18nextLng', lng);
+    const normalizedLng = lng.toLowerCase();
+    void i18n.changeLanguage(normalizedLng);
+    localStorage.setItem('i18nextLng', normalizedLng);
   };
 
   return (

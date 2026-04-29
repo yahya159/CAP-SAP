@@ -1,25 +1,28 @@
 import i18n from 'i18next';
 import { initReactI18next } from 'react-i18next';
 import LanguageDetector from 'i18next-browser-languagedetector';
-import HttpApi from 'i18next-http-backend';
+import enTranslation from '../public/locales/en/translation.json';
+import frTranslation from '../public/locales/fr/translation.json';
 
 i18n
-  .use(HttpApi)
   .use(LanguageDetector)
   .use(initReactI18next)
   .init({
     fallbackLng: 'en',
     supportedLngs: ['en', 'fr'],
     debug: false,
+    lng: 'en',
     interpolation: {
       escapeValue: false,
     },
-    backend: {
-      loadPath: '/locales/{{lng}}/translation.json',
+    resources: {
+      en: { translation: enTranslation },
+      fr: { translation: frTranslation },
     },
     detection: {
       order: ['querystring', 'localStorage', 'navigator'],
       lookupLocalStorage: 'i18nextLng',
+      convertDetectedLanguage: (lng) => lng.toLowerCase().split('-')[0],
       caches: ['localStorage'],
     },
   });

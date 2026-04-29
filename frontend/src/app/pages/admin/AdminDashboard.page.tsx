@@ -10,33 +10,6 @@ import { Card, CardContent, CardHeader, CardTitle } from '../../components/ui/ca
 import { Badge } from '../../components/ui/badge';
 import { Notification } from '../../types/entities';
 
-const kpiReferences = [
-  {
-    name: 'Total Users',
-    formula: 'count(all users)',
-    source: 'Users',
-    refresh: 'On dashboard load',
-  },
-  {
-    name: 'Active Users',
-    formula: 'count(users where active = true)',
-    source: 'Users',
-    refresh: 'On dashboard load',
-  },
-  {
-    name: 'Projects',
-    formula: 'count(all projects)',
-    source: 'Projects',
-    refresh: 'On dashboard load',
-  },
-  {
-    name: 'Total Tickets',
-    formula: 'count(all tickets)',
-    source: 'Tickets',
-    refresh: 'On dashboard load',
-  },
-];
-
 export const AdminDashboard: React.FC = () => {
   const { t } = useTranslation();
   const odataEndpoint = '/odata/v4/* (4 Microservices)';
@@ -48,6 +21,32 @@ export const AdminDashboard: React.FC = () => {
     Array<Notification & { userName: string }>
   >([]);
   const [loadError, setLoadError] = useState<string | null>(null);
+  const kpiReferences = [
+    {
+      name: t('admin.dashboard.kpiReferences.totalUsers.name'),
+      formula: t('admin.dashboard.kpiReferences.totalUsers.formula'),
+      source: t('admin.dashboard.kpiReferences.totalUsers.source'),
+      refresh: t('admin.dashboard.kpiReferences.totalUsers.refresh'),
+    },
+    {
+      name: t('admin.dashboard.kpiReferences.activeUsers.name'),
+      formula: t('admin.dashboard.kpiReferences.activeUsers.formula'),
+      source: t('admin.dashboard.kpiReferences.activeUsers.source'),
+      refresh: t('admin.dashboard.kpiReferences.activeUsers.refresh'),
+    },
+    {
+      name: t('admin.dashboard.kpiReferences.projects.name'),
+      formula: t('admin.dashboard.kpiReferences.projects.formula'),
+      source: t('admin.dashboard.kpiReferences.projects.source'),
+      refresh: t('admin.dashboard.kpiReferences.projects.refresh'),
+    },
+    {
+      name: t('admin.dashboard.kpiReferences.tickets.name'),
+      formula: t('admin.dashboard.kpiReferences.tickets.formula'),
+      source: t('admin.dashboard.kpiReferences.tickets.source'),
+      refresh: t('admin.dashboard.kpiReferences.tickets.refresh'),
+    },
+  ];
 
   useEffect(() => {
     const loadData = async () => {
@@ -77,12 +76,12 @@ export const AdminDashboard: React.FC = () => {
             }))
         );
       } catch {
-        setLoadError('Failed to load dashboard data. Please refresh the page.');
+        setLoadError(t('admin.dashboard.errors.loadFailed'));
       }
     };
 
     void loadData();
-  }, []);
+  }, [t]);
 
   return (
     <div className="min-h-screen bg-transparent">
@@ -126,16 +125,16 @@ export const AdminDashboard: React.FC = () => {
                   <thead className="bg-muted/60">
                     <tr>
                       <th className="px-4 py-3 text-left text-xs uppercase tracking-[0.08em] text-muted-foreground">
-                        KPI
+                        {t('admin.dashboard.table.kpi')}
                       </th>
                       <th className="px-4 py-3 text-left text-xs uppercase tracking-[0.08em] text-muted-foreground">
-                        Formula
+                        {t('admin.dashboard.table.formula')}
                       </th>
                       <th className="px-4 py-3 text-left text-xs uppercase tracking-[0.08em] text-muted-foreground">
-                        Source
+                        {t('admin.dashboard.table.source')}
                       </th>
                       <th className="px-4 py-3 text-left text-xs uppercase tracking-[0.08em] text-muted-foreground">
-                        Refresh
+                        {t('admin.dashboard.table.refresh')}
                       </th>
                     </tr>
                   </thead>
@@ -158,36 +157,53 @@ export const AdminDashboard: React.FC = () => {
             <CardHeader>
               <CardTitle className="flex items-center gap-2 text-lg">
                 <ServerCog className="h-4 w-4 text-primary" />
-                System Status
+                {t('admin.dashboard.systemStatus.title')}
               </CardTitle>
             </CardHeader>
             <CardContent className="space-y-4">
               <div className="rounded-xl border border-border/70 bg-surface-2 p-4">
-                <p className="text-xs uppercase tracking-[0.1em] text-muted-foreground">{t('admin.dashboard.backendMode')}</p>
+                <p className="text-xs uppercase tracking-[0.1em] text-muted-foreground">
+                  {t('admin.dashboard.systemStatus.backendMode')}
+                </p>
                 <div className="mt-2 flex items-center gap-2">
-                  <Badge>Live API</Badge>
-                  <span className="text-sm text-muted-foreground">Connected to SAP CAP service</span>
+                  <Badge>{t('admin.dashboard.systemStatus.liveApi')}</Badge>
+                  <span className="text-sm text-muted-foreground">
+                    {t('admin.dashboard.systemStatus.connected')}
+                  </span>
                 </div>
               </div>
 
               <div className="rounded-xl border border-border/70 bg-surface-2 p-4">
-                <p className="text-xs uppercase tracking-[0.1em] text-muted-foreground">{t('admin.dashboard.odataEndpoint')}</p>
+                <p className="text-xs uppercase tracking-[0.1em] text-muted-foreground">
+                  {t('admin.dashboard.systemStatus.odataEndpoint')}
+                </p>
                 <p className="mt-2 break-all text-sm font-medium text-foreground">{odataEndpoint}</p>
               </div>
 
               <div className="rounded-xl border border-border/70 bg-surface-2 p-4">
-                <p className="text-xs uppercase tracking-[0.1em] text-muted-foreground">{t('admin.dashboard.activitySnapshot')}</p>
+                <p className="text-xs uppercase tracking-[0.1em] text-muted-foreground">
+                  {t('admin.dashboard.systemStatus.activitySnapshot')}
+                </p>
                 <div className="mt-3 space-y-2 text-sm text-muted-foreground">
                   <div className="flex items-center justify-between">
-                    <span className="inline-flex items-center gap-2"><Users className="h-4 w-4" />User records</span>
+                    <span className="inline-flex items-center gap-2">
+                      <Users className="h-4 w-4" />
+                      {t('admin.dashboard.systemStatus.userRecords')}
+                    </span>
                     <span className="font-semibold text-foreground">{userCount}</span>
                   </div>
                   <div className="flex items-center justify-between">
-                    <span className="inline-flex items-center gap-2"><Activity className="h-4 w-4" />Project entities</span>
+                    <span className="inline-flex items-center gap-2">
+                      <Activity className="h-4 w-4" />
+                      {t('admin.dashboard.systemStatus.projectEntities')}
+                    </span>
                     <span className="font-semibold text-foreground">{projectCount}</span>
                   </div>
                   <div className="flex items-center justify-between">
-                    <span className="inline-flex items-center gap-2"><Activity className="h-4 w-4" />Audit events</span>
+                    <span className="inline-flex items-center gap-2">
+                      <Activity className="h-4 w-4" />
+                      {t('admin.dashboard.systemStatus.auditEvents')}
+                    </span>
                     <span className="font-semibold text-foreground">{auditEvents.length}</span>
                   </div>
                 </div>
@@ -206,19 +222,19 @@ export const AdminDashboard: React.FC = () => {
                 <thead className="bg-muted/60">
                   <tr>
                     <th className="px-4 py-3 text-left text-xs uppercase tracking-[0.08em] text-muted-foreground">
-                      Timestamp
+                      {t('admin.dashboard.auditTable.timestamp')}
                     </th>
                     <th className="px-4 py-3 text-left text-xs uppercase tracking-[0.08em] text-muted-foreground">
-                      User
+                      {t('admin.dashboard.auditTable.user')}
                     </th>
                     <th className="px-4 py-3 text-left text-xs uppercase tracking-[0.08em] text-muted-foreground">
-                      Event
+                      {t('admin.dashboard.auditTable.event')}
                     </th>
                     <th className="px-4 py-3 text-left text-xs uppercase tracking-[0.08em] text-muted-foreground">
-                      Message
+                      {t('admin.dashboard.auditTable.message')}
                     </th>
                     <th className="px-4 py-3 text-left text-xs uppercase tracking-[0.08em] text-muted-foreground">
-                      Status
+                      {t('admin.dashboard.auditTable.status')}
                     </th>
                   </tr>
                 </thead>
@@ -226,7 +242,7 @@ export const AdminDashboard: React.FC = () => {
                   {auditEvents.length === 0 ? (
                     <tr>
                       <td colSpan={5} className="px-4 py-8 text-center text-sm text-muted-foreground">
-                        No audit entries available.
+                        {t('admin.dashboard.auditTable.empty')}
                       </td>
                     </tr>
                   ) : (
@@ -240,7 +256,7 @@ export const AdminDashboard: React.FC = () => {
                         <td className="px-4 py-3 text-sm text-muted-foreground">{event.message}</td>
                         <td className="px-4 py-3">
                           <Badge variant={event.read ? 'secondary' : 'default'}>
-                            {event.read ? 'Read' : 'Unread'}
+                            {event.read ? t('admin.dashboard.auditStatus.read') : t('admin.dashboard.auditStatus.unread')}
                           </Badge>
                         </td>
                       </tr>

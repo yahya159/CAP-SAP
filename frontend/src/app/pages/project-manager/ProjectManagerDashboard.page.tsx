@@ -125,7 +125,7 @@ const ProjectManagerDashboard: React.FC = () => {
                 </div>
                 <div className="text-right text-xs text-muted-foreground">
                   <p>{getUserName(ticket.assignedTo)}</p>
-                  <p>{ticket.effortHours}h effort</p>
+                  <p>{t('pm.dashboard.recentTickets.effort', { hours: ticket.effortHours })}</p>
                 </div>
               </div>
             ))}
@@ -156,7 +156,9 @@ const ProjectManagerDashboard: React.FC = () => {
                   </div>
                   <div className="text-right">
                     <p className="text-sm font-semibold">{project.progress}%</p>
-                    <p className="text-xs text-muted-foreground">{projectTickets.length} tickets</p>
+                    <p className="text-xs text-muted-foreground">
+                      {t('pm.dashboard.projects.ticketsCount', { count: projectTickets.length })}
+                    </p>
                   </div>
                 </div>
               );
