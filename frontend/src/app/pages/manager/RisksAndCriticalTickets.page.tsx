@@ -31,6 +31,8 @@ const TICKET_STATUS_TRANSITIONS: Record<TicketStatus, TicketStatus[]> = {
   REJECTED: ['NEW'],
 };
 
+const SAFE_STATUS_OPTIONS = Object.keys(TICKET_STATUS_TRANSITIONS) as TicketStatus[];
+
 const riskFromPriority = (priority: Ticket['priority']): 'LOW' | 'MEDIUM' | 'HIGH' | 'CRITICAL' => {
   if (priority === 'CRITICAL') return 'CRITICAL';
   if (priority === 'HIGH') return 'HIGH';
@@ -45,13 +47,22 @@ const priorityFromRisk = (risk: 'LOW' | 'MEDIUM' | 'HIGH' | 'CRITICAL'): Ticket[
   return 'LOW';
 };
 
-const canTransitionStatus = (from: TicketStatus, to: TicketStatus): boolean =>
-  from === to || TICKET_STATUS_TRANSITIONS[from].includes(to);
+const getTransitionsForStatus = (status: string): TicketStatus[] => {
+  const transitions = (TICKET_STATUS_TRANSITIONS as Record<string, TicketStatus[]>)[status];
+  return Array.isArray(transitions) ? transitions : [];
+};
 
-const getStatusOptions = (current: TicketStatus): TicketStatus[] => [
-  current,
-  ...TICKET_STATUS_TRANSITIONS[current],
-];
+const canTransitionStatus = (from: string, to: TicketStatus): boolean =>
+  from === to || getTransitionsForStatus(from).includes(to);
+
+const getStatusOptions = (current: string): TicketStatus[] => {
+  const transitions = getTransitionsForStatus(current);
+  if (transitions.length === 0 && !SAFE_STATUS_OPTIONS.includes(current as TicketStatus)) {
+    return SAFE_STATUS_OPTIONS;
+  }
+
+  return [current as TicketStatus, ...transitions];
+};
 
 export const RisksAndCriticalTickets: React.FC = () => {
   const { t } = useTranslation();

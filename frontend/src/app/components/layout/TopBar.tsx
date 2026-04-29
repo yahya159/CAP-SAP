@@ -19,7 +19,9 @@ import { useTranslation } from 'react-i18next';
 import { toast } from 'sonner';
 import { useAuth } from '../../context/AuthContext';
 import { useTheme } from '../../context/ThemeContext';
-import { useDensity } from '../../context/DensityContext';import { NotificationsAPI } from '../../services/odata/notificationsApi';
+import { useDensity } from '../../context/DensityContext';
+import { NotificationsAPI } from '../../services/odata/notificationsApi';
+import { getODataAuthToken } from '../../services/odata/core';
 import { Notification } from '../../types/entities';
 import { Avatar, AvatarFallback } from '../ui/avatar';
 import { Badge } from '../ui/badge';
@@ -67,20 +69,37 @@ export const TopBar: React.FC<TopBarProps> = ({
   useEffect(() => {
     if (!currentUser) return;
 
+    // Skip polling in direct/mock sessions where no backend token exists.
+    if (!getODataAuthToken()) {
+      setNotifications([]);
+      return;
+    }
+
     let mounted = true;
     let intervalId: NodeJS.Timeout;
+    let canPoll = true;
 
     const load = async () => {
-      if (!mounted) return;
+      if (!mounted || !canPoll) return;
       try {
         const notificationData = await NotificationsAPI.getByUser(currentUser.id);
         if (mounted) {
           setNotifications(notificationData.sort((a, b) => b.createdAt.localeCompare(a.createdAt)));
         }
       } catch (error) {
+        const status =
+          typeof error === 'object' && error !== null
+            ? (error as { status?: unknown }).status
+            : undefined;
+
+        if (status === 401 || status === 403) {
+          canPoll = false;
+          if (mounted) setNotifications([]);
+          return;
+        }
+
         if (mounted) {
           console.error('[TopBar] Failed to load notifications:', error);
-          // Optional: toast.error('Failed to load notifications');
         }
       }
     };
